@@ -6,6 +6,17 @@
 
 تم إعداد هذه النسخة في **2026-07-24**.
 
+## السكربتات والأتمتة (Scripts)
+
+توجد جميع سكربتات الأتمتة الخاصة بالبيئة داخل مجلد `scripts/`:
+
+| السكربت | الوظيفة |
+|---|---|
+| [set-taskbar-autohide.ps1](file:///C:/Users/moham/Documents/myenv/scripts/set-taskbar-autohide.ps1) | تفعيل/إلغاء الإخفاء التلقائي لشريط مهام Windows عبر السجل وإعادة تشغيل Explorer. |
+| [set-ctrl-backspace.ps1](file:///C:/Users/moham/Documents/myenv/scripts/set-ctrl-backspace.ps1) | ربط اختصار `Ctrl+Backspace` لحذف الكلمة كاملة في PowerShell وتثبيته داخل ملف `$PROFILE`. |
+| [disable-alt-shift-lang.ps1](file:///C:/Users/moham/Documents/myenv/scripts/disable-alt-shift-lang.ps1) | إيقاف اختصار `Shift+Alt` لتغيير اللغة والإبقاء فقط على `Win+Space` لتجنب التغيير العشوائي للغة. |
+| [setup-all.ps1](file:///C:/Users/moham/Documents/myenv/scripts/setup-all.ps1) | السكربت الرئيسي لتطبيق كل إعدادات البيئة بضغطة واحدة (Junctions, Auto-Hide, PSReadLine, Alt+Shift Disable, Stop Zebar, Reload YASB). |
+
 ## الملفات الحية
 
 | المكوّن | الملف | المسار |
@@ -18,16 +29,6 @@
 | YASB | config.yaml | [فتح الملف](file:///C:/Users/moham/Documents/myenv/yasb/config.yaml) — `C:\Users\moham\Documents\myenv\yasb\config.yaml` |
 | YASB | styles.css | [فتح المظهر](file:///C:/Users/moham/Documents/myenv/yasb/styles.css) — `C:\Users\moham\Documents\myenv\yasb\styles.css` |
 | YASB | yasb.log | [فتح السجل](file:///C:/Users/moham/Documents/myenv/yasb/yasb.log) — `C:\Users\moham\Documents\myenv\yasb\yasb.log` |
-
-## السكربتات والأتمتة (Scripts)
-
-توجد جميع سكربتات الأتمتة الخاصة بالبيئة داخل مجلد `scripts/`:
-
-| السكربت | الوظيفة |
-|---|---|
-| [set-taskbar-autohide.ps1](file:///C:/Users/moham/Documents/myenv/scripts/set-taskbar-autohide.ps1) | تفعيل/إلغاء الإخفاء التلقائي لشريط مهام Windows عبر السجل وإعادة تشغيل Explorer. |
-| [set-ctrl-backspace.ps1](file:///C:/Users/moham/Documents/myenv/scripts/set-ctrl-backspace.ps1) | ربط اختصار `Ctrl+Backspace` لحذف الكلمة كاملة في PowerShell وثبيته داخل ملف `$PROFILE`. |
-| [setup-all.ps1](file:///C:/Users/moham/Documents/myenv/scripts/setup-all.ps1) | السكربت الرئيسي لتطبيق كل إعدادات البيئة بضغطة واحدة (Junctions, Auto-Hide, PSReadLine, Stop Zebar, Reload YASB). |
 
 النسخ القديمة محفوظة داخل:
 
@@ -57,6 +58,7 @@
 - الهوامش العلوية والجانبية والسفلية: `0px` في GlazeWM؛ تبدأ النوافذ عند `y=34px`، أي مباشرة بعد شريط YASB دون فراغ إضافي.
 - YASB يستخدم `windows_app_bar: true`، لذلك يحتفظ Windows بمساحة الشريط.
 - أثناء تبديل مساحات العمل: GlazeWM يستخدم `hide_method: cloak` للانتقال الفوري، مع إيقاف YASB animation وblur لتقليل الوميض وإعادة الرسم.
+- launcher البرامج: `Alt+Q` يفتح dialog مركزية من `scripts/app-launcher.ps1`؛ اكتب اسم البرنامج ثم اضغط Enter، وسيُفتح داخل workspace الحالي.
 - ثيم YASB الحالي: `Midnight Aurora`، بألوان navy/cyan، أزرار workspace واضحة، وقوائم منبثقة متناسقة.
 - Zebar ما زال مفعلاً عبر starter `glzr-io.starter` وwidget `with-glazewm` بالـpreset `default`.
 
