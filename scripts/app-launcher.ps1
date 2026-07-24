@@ -38,10 +38,11 @@ try {
         exit 0
     }
 
+    # Create WPF Window
     $window = New-Object System.Windows.Window
     $window.Title = 'myenv-app-launcher'
-    $window.Width = 720
-    $window.Height = 520
+    $window.Width = 680
+    $window.Height = 480
     $window.WindowStartupLocation = [System.Windows.WindowStartupLocation]::CenterScreen
     $window.WindowStyle = [System.Windows.WindowStyle]::None
     $window.ResizeMode = [System.Windows.ResizeMode]::NoResize
@@ -50,27 +51,30 @@ try {
     $window.AllowsTransparency = $true
     $window.Background = [System.Windows.Media.Brushes]::Transparent
 
+    # Root Border - Sharp Dark Classic Theme (0px CornerRadius)
     $rootBorder = New-Object System.Windows.Controls.Border
-    $rootBorder.CornerRadius = New-Object System.Windows.CornerRadius(14)
+    $rootBorder.CornerRadius = New-Object System.Windows.CornerRadius(0)
     $rootBorder.BorderThickness = New-Object System.Windows.Thickness(1)
-    $rootBorder.BorderBrush = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Color]::FromArgb(210,56,189,248))
-    $rootBorder.Background = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Color]::FromArgb(238,15,23,42))
-    $rootBorder.Padding = New-Object System.Windows.Thickness(18)
+    $rootBorder.BorderBrush = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Color]::FromRgb(55,55,55))
+    $rootBorder.Background = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Color]::FromArgb(246,14,14,14))
+    $rootBorder.Padding = New-Object System.Windows.Thickness(16)
 
     $layout = New-Object System.Windows.Controls.Grid
     [void]$layout.RowDefinitions.Add((New-Object System.Windows.Controls.RowDefinition))
     [void]$layout.RowDefinitions.Add((New-Object System.Windows.Controls.RowDefinition))
     [void]$layout.RowDefinitions.Add((New-Object System.Windows.Controls.RowDefinition))
 
+    # Header Row
     $header = New-Object System.Windows.Controls.Grid
     [void]$header.ColumnDefinitions.Add((New-Object System.Windows.Controls.ColumnDefinition))
+    
     $closeButton = New-Object System.Windows.Controls.Button
-    $closeButton.Content = '×'
-    $closeButton.FontSize = 22
-    $closeButton.Width = 34
-    $closeButton.Height = 30
+    $closeButton.Content = '✕'
+    $closeButton.FontSize = 14
+    $closeButton.Width = 28
+    $closeButton.Height = 28
     $closeButton.HorizontalAlignment = [System.Windows.HorizontalAlignment]::Right
-    $closeButton.Background = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Color]::FromArgb(35,125,211,252))
+    $closeButton.Background = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Color]::FromArgb(40,255,255,255))
     $closeButton.Foreground = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Colors]::White)
     $closeButton.BorderThickness = New-Object System.Windows.Thickness(0)
     $closeButton.ToolTip = 'Close (Esc)'
@@ -79,35 +83,36 @@ try {
     [System.Windows.Controls.Grid]::SetColumn($closeButton,0)
 
     $title = New-Object System.Windows.Controls.TextBlock
-    $title.Text = 'Open application'
-    $title.FontSize = 18
-    $title.FontWeight = [System.Windows.FontWeights]::SemiBold
-    $title.Foreground = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Color]::FromRgb(226,232,240))
+    $title.Text = 'APPLICATION LAUNCHER'
+    $title.FontSize = 13
+    $title.FontWeight = [System.Windows.FontWeights]::Bold
+    $title.Foreground = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Color]::FromRgb(200,200,200))
     $title.VerticalAlignment = [System.Windows.VerticalAlignment]::Center
     [void]$header.Children.Add($title)
     [System.Windows.Controls.Grid]::SetColumn($title,0)
-    $title.Margin = New-Object System.Windows.Thickness(4,0,48,0)
+    $title.Margin = New-Object System.Windows.Thickness(2,0,36,0)
     [void]$layout.Children.Add($header)
     [System.Windows.Controls.Grid]::SetRow($header,0)
 
+    # Search Box - Sharp Rectangular Input
     $search = New-Object System.Windows.Controls.TextBox
-    $search.Height = 42
-    $search.FontSize = 18
-    $search.Padding = New-Object System.Windows.Thickness(12,7,12,7)
-    $search.Margin = New-Object System.Windows.Thickness(0,14,0,0)
-    $search.Background = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Color]::FromArgb(170,30,41,59))
+    $search.Height = 38
+    $search.FontSize = 15
+    $search.Padding = New-Object System.Windows.Thickness(10,6,10,6)
+    $search.Margin = New-Object System.Windows.Thickness(0,12,0,0)
+    $search.Background = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Color]::FromRgb(26,26,26))
     $search.Foreground = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Colors]::White)
-    $search.BorderBrush = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Color]::FromRgb(56,189,248))
+    $search.BorderBrush = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Color]::FromRgb(70,70,70))
     $search.BorderThickness = New-Object System.Windows.Thickness(1)
-    $search.ToolTip = 'Type an application name'
     [void]$layout.Children.Add($search)
     [System.Windows.Controls.Grid]::SetRow($search,1)
 
+    # App List Box
     $list = New-Object System.Windows.Controls.ListBox
-    $list.Margin = New-Object System.Windows.Thickness(0,14,0,0)
-    $list.FontSize = 16
+    $list.Margin = New-Object System.Windows.Thickness(0,12,0,0)
+    $list.FontSize = 14
     $list.Background = [System.Windows.Media.Brushes]::Transparent
-    $list.Foreground = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Color]::FromRgb(226,232,240))
+    $list.Foreground = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Color]::FromRgb(240,240,240))
     $list.BorderThickness = New-Object System.Windows.Thickness(0)
     [void]$layout.Children.Add($list)
     [System.Windows.Controls.Grid]::SetRow($list,2)
@@ -115,69 +120,86 @@ try {
     $rootBorder.Child = $layout
     $window.Content = $rootBorder
 
+    # Robust Icon Extraction Helper
     $iconCache = @{}
     function Get-AppIcon($path) {
         if ($iconCache.ContainsKey($path)) { return $iconCache[$path] }
         try {
-            $shell = New-Object -ComObject WScript.Shell
-            $shortcut = $shell.CreateShortcut($path)
-            $target = $shortcut.TargetPath
-            if ($target -and (Test-Path $target) -and [System.IO.Path]::GetExtension($target) -ieq '.exe') {
-                $icon = [System.Drawing.Icon]::ExtractAssociatedIcon($target)
-                if ($icon) {
-                    $source = [System.Windows.Interop.Imaging]::CreateBitmapSourceFromHIcon(
-                        $icon.Handle,
-                        (New-Object System.Windows.Int32Rect(0,0,$icon.Width,$icon.Height)),
-                        [System.Windows.Media.Imaging.BitmapSizeOptions]::FromEmpty()
-                    )
-                    $source.Freeze()
-                    $icon.Dispose()
-                    $iconCache[$path] = $source
-                    return $source
+            $icon = [System.Drawing.Icon]::ExtractAssociatedIcon($path)
+            if (-not $icon) {
+                $shell = New-Object -ComObject WScript.Shell
+                $shortcut = $shell.CreateShortcut($path)
+                if ($shortcut.TargetPath -and (Test-Path $shortcut.TargetPath)) {
+                    $icon = [System.Drawing.Icon]::ExtractAssociatedIcon($shortcut.TargetPath)
                 }
+            }
+            if ($icon) {
+                $source = [System.Windows.Interop.Imaging]::CreateBitmapSourceFromHIcon(
+                    $icon.Handle,
+                    [System.Windows.Int32Rect]::Empty,
+                    [System.Windows.Media.Imaging.BitmapSizeOptions]::FromEmpty()
+                )
+                $source.Freeze()
+                $icon.Dispose()
+                $iconCache[$path] = $source
+                return $source
             }
         } catch {}
         $iconCache[$path] = $null
         return $null
     }
 
+    # Filter & Render Apps List
     $refresh = {
         $query = $search.Text.Trim().ToLowerInvariant()
         $list.Items.Clear()
         $matches = if ([string]::IsNullOrWhiteSpace($query)) {
-            $apps | Select-Object -First 40
+            $apps | Select-Object -First 35
         } else {
-            $apps | Where-Object { $_.Name.ToLowerInvariant().Contains($query) } | Select-Object -First 40
+            $apps | Where-Object { $_.Name.ToLowerInvariant().Contains($query) } | Select-Object -First 35
         }
+
         foreach ($app in $matches) {
             $item = New-Object System.Windows.Controls.ListBoxItem
-            $item.Padding = New-Object System.Windows.Thickness(10,7,10,7)
-            $item.Background = [System.Windows.Media.Brushes]::Transparent
+            $item.Padding = New-Object System.Windows.Thickness(8,6,8,6)
+            $item.Margin = New-Object System.Windows.Thickness(0,1,0,1)
+            $item.Background = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Color]::FromArgb(180,22,22,22))
+            $item.BorderThickness = New-Object System.Windows.Thickness(1)
+            $item.BorderBrush = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Color]::FromArgb(80,60,60,60))
             $item.Tag = $app
 
             $row = New-Object System.Windows.Controls.StackPanel
             $row.Orientation = [System.Windows.Controls.Orientation]::Horizontal
-            $icon = New-Object System.Windows.Controls.Image
-            $icon.Width = 26
-            $icon.Height = 26
-            $icon.Margin = New-Object System.Windows.Thickness(0,0,12,0)
-            $icon.Source = Get-AppIcon $app.Path
-            [void]$row.Children.Add($icon)
 
+            # Icon Element
+            $iconSource = Get-AppIcon $app.Path
+            if ($iconSource) {
+                $img = New-Object System.Windows.Controls.Image
+                $img.Width = 22
+                $img.Height = 22
+                $img.Margin = New-Object System.Windows.Thickness(0,0,10,0)
+                $img.Source = $iconSource
+                [void]$row.Children.Add($img)
+            }
+
+            # Label Element
             $label = New-Object System.Windows.Controls.TextBlock
             $label.Text = $app.Name
             $label.VerticalAlignment = [System.Windows.VerticalAlignment]::Center
-            $label.Foreground = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Color]::FromRgb(226,232,240))
+            $label.Foreground = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Color]::FromRgb(240,240,240))
+            $label.FontWeight = [System.Windows.FontWeights]::Medium
             [void]$row.Children.Add($label)
 
             $item.Content = $row
             $item.Add_MouseEnter({
                 param($sender,$event)
-                $sender.Background = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Color]::FromArgb(45,125,211,252))
+                $sender.Background = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Color]::FromRgb(45,45,45))
+                $sender.BorderBrush = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Color]::FromRgb(100,100,100))
             })
             $item.Add_MouseLeave({
                 param($sender,$event)
-                $sender.Background = [System.Windows.Media.Brushes]::Transparent
+                $sender.Background = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Color]::FromArgb(180,22,22,22))
+                $sender.BorderBrush = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Color]::FromArgb(80,60,60,60))
             })
             [void]$list.Items.Add($item)
         }
@@ -202,7 +224,10 @@ try {
             $window.Close()
             $event.Handled = $true
         } elseif ($event.Key -eq [System.Windows.Input.Key]::Down) {
-            $list.Focus()
+            if ($list.Items.Count -gt 0) {
+                $list.Focus()
+                $list.SelectedIndex = 0
+            }
             $event.Handled = $true
         }
     })
@@ -215,15 +240,19 @@ try {
         } elseif ($event.Key -eq [System.Windows.Input.Key]::Escape) {
             $window.Close()
             $event.Handled = $true
+        } elseif ($event.Key -eq [System.Windows.Input.Key]::Up -and $list.SelectedIndex -eq 0) {
+            $search.Focus()
+            $event.Handled = $true
         }
     })
+
     $window.Add_ContentRendered({
         $search.Focus()
         & $refresh
     })
 
     $timer = New-Object System.Windows.Threading.DispatcherTimer
-    $timer.Interval = New-Object System.TimeSpan(0,0,0,0,120)
+    $timer.Interval = [System.TimeSpan]::FromMilliseconds(100)
     $timer.Add_Tick({
         if ($closeEvent.WaitOne(0) -or (Test-Path $closeFile)) {
             $window.Close()
