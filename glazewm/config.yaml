@@ -175,8 +175,13 @@ keybindings:
   - commands: ['wm-toggle-pause']
     bindings: ['alt+shift+p']
 
+  # Change tiling direction (Toggle, Vertical, Horizontal)
   - commands: ['toggle-tiling-direction']
     bindings: ['alt+v']
+  - commands: ['set-tiling-direction vertical']
+    bindings: ['alt+shift+v']
+  - commands: ['set-tiling-direction horizontal']
+    bindings: ['alt+ctrl+v']
 
   - commands: ['wm-cycle-focus']
     bindings: ['alt+space']
