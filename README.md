@@ -19,6 +19,16 @@
 | YASB | styles.css | [فتح المظهر](file:///C:/Users/moham/Documents/myenv/yasb/styles.css) — `C:\Users\moham\Documents\myenv\yasb\styles.css` |
 | YASB | yasb.log | [فتح السجل](file:///C:/Users/moham/Documents/myenv/yasb/yasb.log) — `C:\Users\moham\Documents\myenv\yasb\yasb.log` |
 
+## السكربتات والأتمتة (Scripts)
+
+توجد جميع سكربتات الأتمتة الخاصة بالبيئة داخل مجلد `scripts/`:
+
+| السكربت | الوظيفة |
+|---|---|
+| [set-taskbar-autohide.ps1](file:///C:/Users/moham/Documents/myenv/scripts/set-taskbar-autohide.ps1) | تفعيل/إلغاء الإخفاء التلقائي لشريط مهام Windows عبر السجل وإعادة تشغيل Explorer. |
+| [set-ctrl-backspace.ps1](file:///C:/Users/moham/Documents/myenv/scripts/set-ctrl-backspace.ps1) | ربط اختصار `Ctrl+Backspace` لحذف الكلمة كاملة في PowerShell وثبيته داخل ملف `$PROFILE`. |
+| [setup-all.ps1](file:///C:/Users/moham/Documents/myenv/scripts/setup-all.ps1) | السكربت الرئيسي لتطبيق كل إعدادات البيئة بضغطة واحدة (Junctions, Auto-Hide, PSReadLine, Stop Zebar, Reload YASB). |
+
 النسخ القديمة محفوظة داخل:
 
 `C:\Users\moham\Documents\myenv\_legacy_originals`

@@ -148,10 +148,6 @@ workspaces:
 window_rules:
   - commands: ['ignore']
     match:
-      # Ignores the centered myenv application launcher.
-      - window_title: { equals: 'myenv-app-launcher' }
-        window_process: { regex: 'powershell|pwsh' }
-
       # Ignores any Zebar windows.
       - window_process: { equals: 'zebar' }
 
@@ -241,10 +237,6 @@ keybindings:
   # Change focus from tiling windows -> floating -> fullscreen.
   - commands: ['wm-cycle-focus']
     bindings: ['alt+space']
-
-  # Centered application search dialog for the current workspace.
-  - commands: ['shell-exec powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File C:\Users\moham\Documents\myenv\scripts\app-launcher.ps1']
-    bindings: ['alt+q']
 
   # Change the focused window to be floating.
   - commands: ['toggle-floating --centered']
