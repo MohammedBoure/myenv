@@ -60,5 +60,4 @@ foreach ($key in $keys) {
     Set-ItemProperty -Path $key -Name HistoryBufferSize -Type DWord -Value 50
     Set-ItemProperty -Path $key -Name VirtualTerminalLevel -Type DWord -Value 1
 }
-
-Write-Host 'Black background (40% transparency) console theme applied successfully.' -ForegroundColor Green
+# Theme applied silently on profile load.

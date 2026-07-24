@@ -384,3 +384,83 @@ Current thread's C stack trace (most recent call first):
 2026-07-24 22:08:20,332 [INFO] [MainThread] [root/bar_helper.py:594]: AppBarManager need to re-register 2 bars
 2026-07-24 22:08:21,124 [INFO] [MainThread] [root/bar_helper.py:603]: Re-registered AppBar for primary-bar_PLAYER MSG12_4da195f9 (space reservation + fullscreen)
 2026-07-24 22:08:22,156 [INFO] [MainThread] [root/bar_helper.py:603]: Re-registered AppBar for primary-bar_L20T-1 ECO_0e7e6077 (space reservation + fullscreen)
+Windows fatal exception: code 0x8001010d
+
+Thread 0x00001d04 [asyncio_0] (most recent call first):
+  File "C:\hostedtoolcache\windows\Python\3.14.6\x64\Lib\threading.py", line 373 in wait
+  File "C:\hostedtoolcache\windows\Python\3.14.6\x64\Lib\threading.py", line 670 in wait
+  File "C:\hostedtoolcache\windows\Python\3.14.6\x64\Lib\concurrent\futures\thread.py", line 73 in run
+  File "C:\hostedtoolcache\windows\Python\3.14.6\x64\Lib\concurrent\futures\thread.py", line 86 in run
+  File "C:\hostedtoolcache\windows\Python\3.14.6\x64\Lib\concurrent\futures\thread.py", line 119 in _worker
+  File "C:\hostedtoolcache\windows\Python\3.14.6\x64\Lib\threading.py", line 1024 in run
+  File "C:\hostedtoolcache\windows\Python\3.14.6\x64\Lib\threading.py", line 1082 in _bootstrap_inner
+  File "C:\hostedtoolcache\windows\Python\3.14.6\x64\Lib\threading.py", line 1044 in _bootstrap
+
+Thread 0x00000570 [Thread-5] (most recent call first):
+  File "C:\hostedtoolcache\windows\Python\3.14.6\x64\Lib\threading.py", line 369 in wait
+  File "C:\hostedtoolcache\windows\Python\3.14.6\x64\Lib\queue.py", line 199 in get
+  File "D:\a\yasb\yasb\venv\Lib\site-packages\watchdog\observers\api.py", line 379 in dispatch_events
+  File "D:\a\yasb\yasb\venv\Lib\site-packages\watchdog\observers\api.py", line 213 in run
+  File "C:\hostedtoolcache\windows\Python\3.14.6\x64\Lib\threading.py", line 1082 in _bootstrap_inner
+  File "C:\hostedtoolcache\windows\Python\3.14.6\x64\Lib\threading.py", line 1044 in _bootstrap
+
+Thread 0x00001164 [SystemEventListener] (most recent call first):
+  File "D:\a\yasb\yasb\src\core\utils\win32\event_listener.py", line 69 in run
+
+Thread 0x00004368 [WindowsNotificationEventListener] (most recent call first):
+  File "C:\hostedtoolcache\windows\Python\3.14.6\x64\Lib\asyncio\windows_events.py", line 778 in _poll
+  File "C:\hostedtoolcache\windows\Python\3.14.6\x64\Lib\asyncio\windows_events.py", line 446 in select
+  File "C:\hostedtoolcache\windows\Python\3.14.6\x64\Lib\asyncio\base_events.py", line 2018 in _run_once
+  File "C:\hostedtoolcache\windows\Python\3.14.6\x64\Lib\asyncio\base_events.py", line 677 in run_forever
+  File "C:\hostedtoolcache\windows\Python\3.14.6\x64\Lib\asyncio\base_events.py", line 706 in run_until_complete
+  File "D:\a\yasb\yasb\src\core\widgets\services\notifications\windows_notification.py", line 101 in run
+
+Thread 0x000046d8 [Thread-6] (most recent call first):
+  File "D:\a\yasb\yasb\venv\Lib\site-packages\watchdog\observers\winapi.py", line 326 in read_directory_changes
+  File "D:\a\yasb\yasb\venv\Lib\site-packages\watchdog\observers\winapi.py", line 380 in read_events
+  File "D:\a\yasb\yasb\venv\Lib\site-packages\watchdog\observers\read_directory_changes.py", line 67 in _read_events
+  File "D:\a\yasb\yasb\venv\Lib\site-packages\watchdog\observers\read_directory_changes.py", line 70 in queue_events
+  File "D:\a\yasb\yasb\venv\Lib\site-packages\watchdog\observers\api.py", line 158 in run
+  File "C:\hostedtoolcache\windows\Python\3.14.6\x64\Lib\threading.py", line 1082 in _bootstrap_inner
+  File "C:\hostedtoolcache\windows\Python\3.14.6\x64\Lib\threading.py", line 1044 in _bootstrap
+
+Thread 0x00004e8c [MemoryWorker] (most recent call first):
+  File "D:\a\yasb\yasb\src\core\widgets\services\memory\memory_api.py", line 244 in run
+
+Thread 0x00004ff8 [CpuWorker] (most recent call first):
+  File "D:\a\yasb\yasb\src\core\widgets\services\cpu\cpu_api.py", line 340 in run
+
+Thread 0x00003a4c [_EventWorker] (most recent call first):
+  File "D:\a\yasb\yasb\venv\Lib\site-packages\qasync\_windows.py", line 147 in _poll
+  File "D:\a\yasb\yasb\venv\Lib\site-packages\qasync\_windows.py", line 72 in select
+  File "D:\a\yasb\yasb\venv\Lib\site-packages\qasync\_windows.py", line 199 in run
+
+Thread 0x00002d20 [LogPipeServer] (most recent call first):
+  File "D:\a\yasb\yasb\src\core\utils\win32\bindings\kernel32.py", line 288 in ConnectNamedPipe
+  File "D:\a\yasb\yasb\src\core\utils\cli_server.py", line 138 in _run_server
+  File "C:\hostedtoolcache\windows\Python\3.14.6\x64\Lib\threading.py", line 1024 in run
+  File "C:\hostedtoolcache\windows\Python\3.14.6\x64\Lib\threading.py", line 1082 in _bootstrap_inner
+  File "C:\hostedtoolcache\windows\Python\3.14.6\x64\Lib\threading.py", line 1044 in _bootstrap
+
+Thread 0x000040cc [CLIPipeServer] (most recent call first):
+  File "D:\a\yasb\yasb\src\core\utils\win32\bindings\kernel32.py", line 288 in ConnectNamedPipe
+  File "D:\a\yasb\yasb\src\core\utils\cli_server.py", line 235 in _run_server
+  File "C:\hostedtoolcache\windows\Python\3.14.6\x64\Lib\threading.py", line 1024 in run
+  File "C:\hostedtoolcache\windows\Python\3.14.6\x64\Lib\threading.py", line 1082 in _bootstrap_inner
+  File "C:\hostedtoolcache\windows\Python\3.14.6\x64\Lib\threading.py", line 1044 in _bootstrap
+
+Current thread 0x000033cc (most recent call first):
+  File "D:\a\yasb\yasb\venv\Lib\site-packages\qasync\__init__.py", line 404 in run_forever
+  File "D:\a\yasb\yasb\venv\Lib\site-packages\qasync\__init__.py", line 428 in run_until_complete
+  File "main.py", line 100 in main
+  File "main.py", line 203 in <module>
+  File "D:\a\yasb\yasb\venv\Lib\site-packages\freeze_core\initscripts\console.py", line 27 in run
+  File "D:\a\yasb\yasb\venv\Lib\site-packages\freeze_core\initscripts\__startup__.py", line 137 in run
+
+Current thread's C stack trace (most recent call first):
+  <cannot get C stack on this system>
+2026-07-25 00:37:57,746 [INFO] [CLIPipeServer] [cli_server/cli_server.py:257]: CLI server received command: reload
+2026-07-25 00:37:57,779 [INFO] [CLIPipeServer] [root/controller.py:21]: Reloading Application from CLI...
+2026-07-25 00:37:57,884 [INFO] [CLIPipeServer] [cli_server/cli_server.py:114]: Log pipe server stopped
+2026-07-25 00:37:58,023 [INFO] [MainThread] [root/bar_manager.py:119]: Stopping WindowsNotificationEventListener...
+2026-07-25 00:37:58,035 [INFO] [MainThread] [root/bar_manager.py:119]: Stopping SystemEventListener...
