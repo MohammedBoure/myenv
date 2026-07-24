@@ -130,7 +130,7 @@ try {
     $list.Background = [System.Windows.Media.Brushes]::Transparent
     $list.Foreground = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Color]::FromRgb(240,240,240))
     $list.BorderThickness = New-Object System.Windows.Thickness(0)
-    $list.ScrollViewer.HorizontalScrollBarVisibility = [System.Windows.Controls.ScrollBarVisibility]::Disabled
+    [System.Windows.Controls.ScrollViewer]::SetHorizontalScrollBarVisibility($list, [System.Windows.Controls.ScrollBarVisibility]::Disabled)
 
     [void]$layout.Children.Add($list)
     [System.Windows.Controls.Grid]::SetRow($list, 2)
