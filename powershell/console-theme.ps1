@@ -48,8 +48,8 @@ foreach ($key in $keys) {
     Set-ItemProperty -Path $key -Name FontFamily -Type DWord -Value 54
     Set-ItemProperty -Path $key -Name FontSize -Type DWord -Value 1048576
     Set-ItemProperty -Path $key -Name FontWeight -Type DWord -Value 400
-    # WindowAlpha: 153 = 60% opacity / 40% transparency
-    Set-ItemProperty -Path $key -Name WindowAlpha -Type DWord -Value 153
+    # WindowAlpha: 173 = 68% opacity / 32% transparency
+    Set-ItemProperty -Path $key -Name WindowAlpha -Type DWord -Value 173
     Set-ItemProperty -Path $key -Name CursorColor -Type DWord -Value (Convert-HexToConsoleColor '#FFFFFF')
     Set-ItemProperty -Path $key -Name CursorType -Type DWord -Value 1
     Set-ItemProperty -Path $key -Name CursorSize -Type DWord -Value 25
