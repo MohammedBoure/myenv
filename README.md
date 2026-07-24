@@ -1,173 +1,153 @@
-# MyEnv: GlazeWM + Zebar + YASB
+# MyEnv: Professional Windows Desktop Environment (GlazeWM + YASB)
 
-هذه هي بيئة سطح المكتب المخصصة لهذا الجهاز. الملفات الحية موجودة داخل:
+A high-performance, keyboard-driven tiling desktop environment for Windows developers. Centralized, fully version-controlled, and automated.
 
-`C:\Users\moham\Documents\myenv`
+- **Workspace Directory**: `C:\Users\moham\Documents\myenv`
+- **Updated Date**: `2026-07-25`
 
-تم إعداد هذه النسخة في **2026-07-24**.
+---
 
-## الملفات الحية
+## 🚀 Key Environment Features
 
-| المكوّن | الملف | المسار |
+### 1. YASB (Yet Another Status Bar) - Classic Sharp Dark Theme
+- **Fully Transparent Bar**: Background set to `transparent` (`0px` top gap).
+- **Sharp Edge Design System**: Global `border-radius: 0px !important` across all bar widgets, workspace buttons, popups, and tooltips.
+- **Obsidian Dark Aesthetic**: High-contrast silver-white text (`#f5f5f5`) on deep obsidian popups (`rgba(14, 14, 14, 0.96)`) with subtle rectangular borders (`1px solid #2a2a2a`).
+- **Date & Time Widget**: Displays complete date and time format (`Fri, 24 Jul • 21:33`).
+- **Focus-Aware Workspace Highlighting**:
+  - **Focused Screen Active Workspace**: Stark White (`#ffffff`, bold black text `#000000`).
+  - **Secondary Screen Active Workspace**: Distinct Gray (`#555555`, white text `#ffffff`).
+  - **Inactive Workspaces**: Dark Slate (`rgba(18, 18, 18, 0.65)`).
+- **Vertical Centering**: Explicit Qt `qproperty-alignment: 'AlignVCenter'` for icon and text alignment.
+- **Zero Background Conflicts**: Zebar background process disabled and removed from Startup.
+
+### 2. Windows Taskbar Auto-Hide
+- **Automated Auto-Hide**: Primary (`StuckRects3`) and Multi-Monitor (`MMStuckRects3`) registry settings set to `3` (Auto-Hide Enabled).
+- **Screen Real Estate**: Maximum vertical height reserved for IDEs, code editors, and terminal windows.
+
+### 3. Application Launcher (`Alt + Q`)
+- **Centered Search Dialog**: Custom WPF search interface (`scripts/app-launcher.ps1`).
+- **Sharp Dark Theme**: `0px` corner radius, `#0e0e0e` background, `#373737` border.
+- **24x24 App Icons**: Robust icon extraction via `[System.Windows.Media.Imaging.BitmapSizeOptions]::FromEmptyOptions()`.
+- **Instant Floating Rule**: GlazeWM rule set to `set-floating --centered` & `ignore` on `.*myenv-app-launcher.*` to float instantly over all windows without layout jitter.
+
+### 4. PowerShell Environment & Console Theme
+- **Centralized Profile**: `powershell/profile.ps1` automatically loaded by `$PROFILE`.
+- **Dev Tools PATH**: `dotnet`, `flutter`, `jdk-17`, `Android SDK`, `kotlin`, `msys64`, `php`, `composer`, `nodejs`, `npm`.
+- **True Black Console Theme**: `#000000` background with **32% Transparency** (`WindowAlpha = 173` / 68% opacity).
+- **PSReadLine**: `Ctrl+Backspace` for backward word deletion (`BackwardKillWord`), history predictions (`ListView`), and Tab menu completion.
+
+### 5. CMD (Command Prompt) Auto-Completion & Macros
+- **Tab Auto-Completion**: File and path completion enabled via Registry (`CompletionChar = 9`, `PathCompletionChar = 9`).
+- **AutoRun Initialization**: `scripts/cmd-init.cmd` registered under `HKCU:\Software\Microsoft\Command Processor\AutoRun`.
+- **Doskey Aliases**: `ls`, `ll`, `la`, `clear`, `croot`, `gs`, `ga`, `gc`, `gp`, `gl`.
+- **Colored Prompt**: Displays timestamp, username, computer name, and current path.
+
+### 6. Windows Language Switcher Hotkeys
+- **Alt+Shift Disabled**: Registry settings (`HKCU:\Keyboard Layout\Toggle`) disable `Alt+Shift` and `Ctrl+Shift` to prevent accidental language changes during coding.
+- **Win+Space Only**: `Win+Space` is configured as the sole input language switcher.
+
+---
+
+## 📂 Project Structure & Central Files
+
+| Component | File / Path | Action |
 |---|---|---|
-| GlazeWM | config.yaml | [فتح الملف](file:///C:/Users/moham/Documents/myenv/glazewm/config.yaml) — `C:\Users\moham\Documents\myenv\glazewm\config.yaml` |
-| GlazeWM | errors.log | [فتح السجل](file:///C:/Users/moham/Documents/myenv/glazewm/errors.log) — `C:\Users\moham\Documents\myenv\glazewm\errors.log` |
-| Zebar | settings.json | [فتح الملف](file:///C:/Users/moham/Documents/myenv/zebar/settings.json) — `C:\Users\moham\Documents\myenv\zebar\settings.json` |
-| Zebar | starter metadata | [فتح الملف](file:///C:/Users/moham/Documents/myenv/zebar/.marketplace/glzr-io.starter.json) — `C:\Users\moham\Documents\myenv\zebar\.marketplace\glzr-io.starter.json` |
-| Zebar | errors.log | [فتح السجل](file:///C:/Users/moham/Documents/myenv/zebar/errors.log) — `C:\Users\moham\Documents\myenv\zebar\errors.log` |
-| YASB | config.yaml | [فتح الملف](file:///C:/Users/moham/Documents/myenv/yasb/config.yaml) — `C:\Users\moham\Documents\myenv\yasb\config.yaml` |
-| YASB | styles.css | [فتح المظهر](file:///C:/Users/moham/Documents/myenv/yasb/styles.css) — `C:\Users\moham\Documents\myenv\yasb\styles.css` |
-| YASB | yasb.log | [فتح السجل](file:///C:/Users/moham/Documents/myenv/yasb/yasb.log) — `C:\Users\moham\Documents\myenv\yasb\yasb.log` |
+| **GlazeWM Config** | [glazewm/config.yaml](file:///C:/Users/moham/Documents/myenv/glazewm/config.yaml) | Main tiling WM rules, keybindings, workspaces |
+| **YASB Config** | [yasb/config.yaml](file:///C:/Users/moham/Documents/myenv/yasb/config.yaml) | Bar widgets, date/time format, alignment |
+| **YASB Styles** | [yasb/styles.css](file:///C:/Users/moham/Documents/myenv/yasb/styles.css) | Sharp dark theme, transparent bar, workspace colors |
+| **PowerShell Profile** | [powershell/profile.ps1](file:///C:/Users/moham/Documents/myenv/powershell/profile.ps1) | Single source of truth for PowerShell `$PROFILE` |
+| **PowerShell Theme** | [powershell/midnight-aurora.ps1](file:///C:/Users/moham/Documents/myenv/powershell/midnight-aurora.ps1) | PSReadLine options, colors, custom prompt |
+| **Console Theme** | [powershell/console-theme.ps1](file:///C:/Users/moham/Documents/myenv/powershell/console-theme.ps1) | Black console background & 32% transparency |
+| **CMD Macro Script** | [scripts/cmd-init.cmd](file:///C:/Users/moham/Documents/myenv/scripts/cmd-init.cmd) | Doskey aliases and prompt styling for `cmd.exe` |
 
-النسخ القديمة محفوظة داخل:
+---
 
-`C:\Users\moham\Documents\myenv\_legacy_originals`
+## 🛠️ Automation Scripts (`scripts/`)
 
-## مسارات التشغيل
+| Script | Path | Description |
+|---|---|---|
+| **`setup-all.ps1`** | [scripts/setup-all.ps1](file:///C:/Users/moham/Documents/myenv/scripts/setup-all.ps1) | Master setup script: applies junctions, taskbar autohide, PSReadLine, CMD autorun, Alt+Shift disable, and reloads YASB. |
+| **`set-taskbar-autohide.ps1`** | [scripts/set-taskbar-autohide.ps1](file:///C:/Users/moham/Documents/myenv/scripts/set-taskbar-autohide.ps1) | Toggles Windows Taskbar auto-hide in Registry and restarts Explorer. |
+| **`set-ctrl-backspace.ps1`** | [scripts/set-ctrl-backspace.ps1](file:///C:/Users/moham/Documents/myenv/scripts/set-ctrl-backspace.ps1) | Binds `Ctrl+Backspace` for word deletion in PSReadLine and saves to `$PROFILE`. |
+| **`disable-alt-shift-lang.ps1`** | [scripts/disable-alt-shift-lang.ps1](file:///C:/Users/moham/Documents/myenv/scripts/disable-alt-shift-lang.ps1) | Disables `Alt+Shift` language switching in Registry, leaving `Win+Space` as primary. |
+| **`set-cmd-autocompletion.ps1`** | [scripts/set-cmd-autocompletion.ps1](file:///C:/Users/moham/Documents/myenv/scripts/set-cmd-autocompletion.ps1) | Enables CMD Tab auto-completion and registers `cmd-init.cmd` in Registry AutoRun. |
+| **`app-launcher.ps1`** | [scripts/app-launcher.ps1](file:///C:/Users/moham/Documents/myenv/scripts/app-launcher.ps1) | Fast WPF application launcher search dialog (`Alt + Q`). |
 
-- GlazeWM: المسار القديم `C:\Users\moham\.glzr\glazewm` أصبح junction إلى `myenv\\glazewm`، ومتغير المستخدم `GLAZEWM_CONFIG_PATH` واختصار Startup موجهان إلى نفس الملف المركزي.
-- Zebar: `C:\Program Files\glzr.io\Zebar\zebar.exe`
-- YASB: `C:\Program Files\YASB\yasb.exe`
-- أداة YASB: `C:\Program Files\YASB\yasbc.exe`
+---
 
-## الحالة المركزية للإعدادات
+## ⌨️ GlazeWM Keybindings Cheat Sheet
 
-- Zebar: المسار القديم `C:\Users\moham\.glzr\zebar` أصبح junction إلى `myenv\zebar`.
-- YASB: المسار القديم `C:\Users\moham\.config\yasb` أصبح junction إلى `myenv\yasb`.
-- GlazeWM: المسار القديم `C:\Users\moham\.glzr\glazewm` أصبح junction إلى `myenv\\glazewm`، ومتغير المستخدم `GLAZEWM_CONFIG_PATH` واختصار Startup موجهان إلى نفس الملف المركزي.
-
-مرجع GlazeWM الرسمي يدعم تحديد ملف إعداد مخصص عبر `start --config="..."` أو عبر `GLAZEWM_CONFIG_PATH`.
-
-## الشريط العلوي والمسافات
-
-- ارتفاع شريط YASB: `34px`.
-- `padding.top` في YASB: `0`، حتى يلتصق الشريط بأعلى الشاشة.
-- `outer_gap.top` في GlazeWM: `0px`؛ لأن `windows_app_bar` يحجز ارتفاع YASB مرة واحدة، وأي قيمة إضافية كانت تصنع فجوة ثانية.
-- `inner_gap`: `0px`، لذلك لا توجد مسافة بين النوافذ.
-- الهوامش العلوية والجانبية والسفلية: `0px` في GlazeWM؛ تبدأ النوافذ عند `y=34px`، أي مباشرة بعد شريط YASB دون فراغ إضافي.
-- YASB يستخدم `windows_app_bar: true`، لذلك يحتفظ Windows بمساحة الشريط.
-- أثناء تبديل مساحات العمل: GlazeWM يستخدم `hide_method: cloak` للانتقال الفوري، مع إيقاف YASB animation وblur لتقليل الوميض وإعادة الرسم.
-- جميع إعدادات PowerShell والـPATH والـenvironment variables أصبحت مركزية في `powershell/profile.ps1` داخل myenv؛ ملفات WindowsPowerShell القديمة تعمل كـredirect فقط.
-- PowerShell console theme: `powershell/console-theme.ps1` يضبط واجهة Windows Console كاملة: Cascadia Mono، خلفية slate رمادية مائلة للأزرق (#334155) مع شفافية 50% والنص أبيضاً، نص أبيض، ألوان syntax، المؤشر، حجم النافذة وVirtual Terminal.
-- PowerShell theme: `powershell/midnight-aurora.ps1`؛ prompt Midnight Aurora، ألوان PSReadLine، Git branch، وaliases `ll/la/gs/croot`.
-- launcher البرامج: `Alt+Q` يفتح dialog مركزية من `scripts/app-launcher.ps1` بأيقونات البرامج وثيم شفاف جزئياً مشابه للشريط العلوي؛ اكتب اسم البرنامج ثم Enter، وللإغلاق استخدم Esc أو زر `×`.
-- ثيم YASB الحالي: `Midnight Aurora`، بألوان navy/cyan، أزرار workspace واضحة، وقوائم منبثقة متناسقة.
-- Zebar ما زال مفعلاً عبر starter `glzr-io.starter` وwidget `with-glazewm` بالـpreset `default`.
-
-## شريط Windows السفلي
-
-تم تثبيت الإخفاء التلقائي في Windows (`StuckRects3.Settings[8] = 2`) وكذلك سجلات كل شاشة في `MMStuckRects3`، ثم أُعيد تشغيل Explorer لتطبيقه. لذلك لا يظهر الشريط السفلي إلا عند تحريك المؤشر إلى الحافة السفلية للشاشة. إذا بقي ظاهراً، راجع: Settings > Personalization > Taskbar > Taskbar behaviors > Automatically hide the taskbar.
-
-## الاختصارات الأساسية في GlazeWM
-
-### التركيز والتحكم في النوافذ
-
-| الاختصار | الوظيفة |
+### Window & Focus Controls
+| Keybinding | Action |
 |---|---|
-| `Alt+H` أو `Alt+←` | التركيز على النافذة اليسرى |
-| `Alt+L` أو `Alt+→` | التركيز على النافذة اليمنى |
-| `Alt+K` أو `Alt+↑` | التركيز على النافذة العلوية |
-| `Alt+J` أو `Alt+↓` | التركيز على النافذة السفلية |
-| `Alt+Shift+H/L/K/J` أو الأسهم | نقل النافذة المركّزة في الاتجاه المحدد |
-| `Alt+U` | تصغير العرض بنسبة 2% |
-| `Alt+P` | زيادة العرض بنسبة 2% |
-| `Alt+O` | زيادة الارتفاع بنسبة 2% |
-| `Alt+I` | تصغير الارتفاع بنسبة 2% |
-| `Alt+R` ثم H/J/K/L أو الأسهم | الدخول إلى وضع تغيير الحجم |
-| `Enter` أو `Esc` داخل وضع الحجم | الخروج من وضع تغيير الحجم |
-| `Alt+V` | تبديل اتجاه tiling الأفقي/العمودي |
-| `Alt+Space` | التبديل بين tiling وfloating وfullscreen |
-| `Alt+Shift+Space` | جعل النافذة floating ومتمركزة |
-| `Alt+T` | إعادة النافذة إلى tiling |
-| `Alt+F` | fullscreen |
-| `Alt+M` | تصغير النافذة |
-| `Alt+Shift+Q` | إغلاق النافذة |
-| `Alt+Shift+P` | إيقاف تحكم GlazeWM مؤقتاً؛ اضغطه مرة أخرى للعودة |
+| `Alt + H / ←` | Focus left window |
+| `Alt + L / →` | Focus right window |
+| `Alt + K / ↑` | Focus top window |
+| `Alt + J / ↓` | Focus bottom window |
+| `Alt + Shift + H/L/K/J` | Move focused window in direction |
+| `Alt + Space` | Cycle window focus (tiling -> floating -> fullscreen) |
+| `Alt + Shift + Space` | Toggle window floating (centered) |
+| `Alt + T` | Return window to tiling state |
+| `Alt + F` | Toggle window fullscreen |
+| `Alt + M` | Toggle window minimize |
+| `Alt + Shift + Q` | Close focused window |
 
-الحالة الافتراضية للنوافذ الجديدة هي tiling. لا يوجد في هذه النسخة اختصار مستقل لـmaximize؛ `Alt+F` هو اختصار fullscreen، وإعداد fullscreen الحالي لا يفرض maximize قبل fullscreen.
-
-### مساحات العمل والشاشات
-
-التوزيع الحالي المثبت حسب شاشات الجهاز:
-
-- الشاشة اليسرى `DISPLAY1` (monitor index `0`): المساحات `1–5`.
-- الشاشة اليمنى `DISPLAY8` (monitor index `1`): المساحات `6–10`.
-- `Alt+PageUp` يستخدم `focus --prev-workspace`، و`Alt+PageDown` يستخدم `focus --next-workspace`؛ التنقل مباشر بين كل المساحات بالترتيب، بما فيها المساحات الفارغة.
-
-| الاختصار | الوظيفة |
+### Tiling Layout Direction Controls
+| Keybinding | Action |
 |---|---|
-| `Alt+1` إلى `Alt+5` | الانتقال إلى مساحة على الشاشة اليسرى |
-| `Alt+6` إلى `Alt+0` | الانتقال إلى مساحة على الشاشة اليمنى؛ `Alt+0` تعني workspace 10 |
-| `Alt+Shift+1` إلى `Alt+Shift+5` | نقل النافذة إلى مساحة 1–5 ثم الانتقال إليها |
-| `Alt+Shift+6` إلى `Alt+Shift+0` | نقل النافذة إلى مساحة 6–10 ثم الانتقال إليها |
-| `Alt+PageDown` | المساحة النشطة التالية |
-| `Alt+PageUp` | المساحة النشطة السابقة |
-| `Alt+S` | المساحة النشطة التالية |
-| `Alt+A` | المساحة النشطة السابقة |
-| `Alt+D` | العودة إلى المساحة الأخيرة |
-| `Alt+Shift+A` | نقل مساحة العمل كاملة إلى الشاشة اليسرى |
-| `Alt+Shift+F` | نقل مساحة العمل كاملة إلى الشاشة اليمنى |
-| `Alt+Shift+D` | نقل مساحة العمل إلى الشاشة العلوية |
-| `Alt+Shift+S` | نقل مساحة العمل إلى الشاشة السفلية |
+| `Alt + V` | Toggle tiling split direction (Horizontal <-> Vertical) |
+| `Alt + Shift + V` | **Force Vertical Split** (stack new window underneath) |
+| `Alt + Ctrl + V` | **Force Horizontal Split** (place new window side-by-side) |
+| `Alt + Shift + W` | Redraw all windows layout tree |
 
-`Alt+Shift+7` ينقل النافذة إلى workspace 7 على الشاشة اليمنى، لأن workspace 7 مربوط صراحةً بـmonitor index 1.
-
-### الأوامر والصيانة
-
-| الاختصار | الوظيفة |
+### Resizing Windows
+| Keybinding | Action |
 |---|---|
-| `Alt+Enter` | فتح CMD |
-| `Alt+Ctrl+Enter` | فتح Windows PowerShell |
-| `Alt+Shift+R` | إعادة تحميل config.yaml |
-| `Alt+Shift+W` | إعادة رسم النوافذ |
-| `Alt+Shift+E` | الخروج الآمن من GlazeWM |
+| `Alt + U` / `Alt + P` | Decrease / Increase window width (2%) |
+| `Alt + I` / `Alt + O` | Decrease / Increase window height (2%) |
+| `Alt + R` | Enter Interactive Resize Mode (Use HJKL / Arrows, `Esc`/`Enter` to exit) |
 
-Windows Terminal (`wt.exe`) غير مثبت حالياً، لذلك لم أسجل له اختصاراً غير عامل. بعد تثبيته يمكن إضافة `shell-exec wt` إلى `config.yaml`.
+### Workspaces & Multi-Monitor Navigation
+- **Left Display `DISPLAY1` (Monitor Index 0)**: Workspaces `1` to `5`
+- **Right Display `DISPLAY8` (Monitor Index 1)**: Workspaces `6` to `10`
 
-## الإقلاع التلقائي
-
-| البرنامج | آلية التشغيل |
+| Keybinding | Action |
 |---|---|
-| GlazeWM | `GlazeWM.lnk` داخل مجلد Startup، ويستخدم `start --config="C:\Users\moham\Documents\myenv\glazewm\config.yaml"` |
-| Zebar | `Zebar.lnk` داخل Startup مع الوسيط `startup` |
-| YASB | قيمة `YASB` في `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` |
+| `Alt + 1..5` | Focus workspace 1-5 (Left Monitor) |
+| `Alt + 6..0` | Focus workspace 6-10 (Right Monitor, `Alt+0` = 10) |
+| `Alt + Shift + 1..0` | Move window to workspace 1-10 and focus it |
+| `Alt + PageUp` / `Alt + A` | Focus previous active workspace |
+| `Alt + PageDown` / `Alt + S` | Focus next active workspace |
+| `Alt + D` | Focus recent workspace |
+| `Alt + Shift + A/F/D/S` | Move workspace to Left / Right / Top / Bottom monitor |
 
-مجلد Startup:
+### Applications & Management
+| Keybinding | Action |
+|---|---|
+| `Alt + Q` | Launch App Launcher Search Dialog (`app-launcher.ps1`) |
+| `Alt + Enter` | Launch Command Prompt (`cmd.exe`) |
+| `Alt + Ctrl + Enter` | Launch Windows PowerShell (`powershell.exe`) |
+| `Alt + Shift + R` | Reload GlazeWM configuration (`config.yaml`) |
+| `Alt + Shift + E` | Exit GlazeWM safely |
+| `Alt + Shift + P` | Toggle Pause GlazeWM window management |
 
-`C:\Users\moham\AppData\Roaming\Microsoft\Windows\Start Menu\Programs\Startup`
+---
 
-## التشغيل والاختبار اليدوي
+## 🔗 Directory Junctions & Startup
 
+Central environment directory junctions:
 ```powershell
-& 'C:\Program Files\glzr.io\GlazeWM\glazewm.exe' start --config='C:\Users\moham\Documents\myenv\glazewm\config.yaml'
-& 'C:\Program Files\glzr.io\Zebar\zebar.exe' startup
-& 'C:\Program Files\YASB\yasbc.exe' start
+C:\Users\moham\.config\yasb  -> C:\Users\moham\Documents\myenv\yasb
+C:\Users\moham\.glzr\glazewm -> C:\Users\moham\Documents\myenv\glazewm
+C:\Users\moham\.glzr\zebar   -> C:\Users\moham\Documents\myenv\zebar
 ```
 
-فحص العمليات:
+Startup configuration:
+- **GlazeWM**: `GlazeWM.lnk` in Startup folder pointing to `myenv/glazewm/config.yaml`.
+- **YASB**: `YASB` registry entry in `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`.
 
+To run master setup at any time:
 ```powershell
-Get-Process glazewm,zebar,yasb -ErrorAction SilentlyContinue
+powershell -ExecutionPolicy Bypass -File "C:\Users\moham\Documents\myenv\scripts\setup-all.ps1"
 ```
-
-فحص junctions:
-
-```powershell
-Get-Item 'C:\Users\moham\.glzr\zebar','C:\Users\moham\.config\yasb' |
-  Select-Object FullName,LinkType,Target
-```
-
-## التراجع
-
-- احذف `GlazeWM.lnk` و`Zebar.lnk` من مجلد Startup.
-- شغّل `& 'C:\Program Files\YASB\yasbc.exe' disable-autostart`.
-- أعد قيمة `GLAZEWM_CONFIG_PATH` أو احذفها من User Environment Variables.
-- لا تحذف `_legacy_originals` قبل التأكد من أن البيئة الجديدة تعمل.
-
-## مراجع
-
-- [GlazeWM configuration and custom config path](https://github.com/glzr-io/glazewm#config-documentation)
-- [Microsoft: automatically hide the taskbar](https://support.microsoft.com/en-us/windows/experience/personalization/customize-the-taskbar-in-windows)
-
-
-`Ctrl+Super+←/→` اختصار خاص بـWindows للتنقل بين Virtual Desktops، وليس اختصار GlazeWM لمساحات العمل. وقد يتدخل Windows أو يغيّر الشاشة/السطح الافتراضي. كذلك الضغط على `Super` وحده يفتح قائمة Start؛ لذلك تستخدم هذه البيئة اختصارات `Alt` ولا تعتمد على Super.
