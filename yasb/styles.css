@@ -1,0 +1,378 @@
+/*
+  YASB Classic Sharp Dark & Transparent Theme
+  Modern, sharp-edged, high-end classic aesthetic.
+*/
+
+:root {
+    --yasb-bar-bg: transparent;
+    --yasb-surface-alt: #1a1a1a;
+    --yasb-bar-border: #2a2a2a;
+    --yasb-popup-bg: rgba(14, 14, 14, 0.96);
+    --yasb-dialog-bg: #121212;
+    --yasb-dialog-surface: #1c1c1c;
+    --yasb-white-alpha-03: rgba(255, 255, 255, 0.03);
+    --yasb-white-alpha-04: rgba(255, 255, 255, 0.04);
+    --yasb-white-alpha-05: rgba(255, 255, 255, 0.05);
+    --yasb-white-alpha-06: rgba(255, 255, 255, 0.06);
+    --yasb-white-alpha-07: rgba(255, 255, 255, 0.07);
+    --yasb-white-alpha-08: rgba(255, 255, 255, 0.08);
+    --yasb-white-alpha-10: rgba(255, 255, 255, 0.10);
+    --yasb-white-alpha-15: rgba(255, 255, 255, 0.15);
+    --yasb-white-alpha-20: rgba(255, 255, 255, 0.20);
+    --yasb-white-alpha-30: rgba(255, 255, 255, 0.30);
+    --yasb-fg: #f5f5f5;
+    --yasb-fg-muted: #9e9e9e;
+    --yasb-icon-fg: #e0e0e0;
+    --yasb-tooltip-bg: #101010;
+    --yasb-tooltip-border: #333333;
+    --yasb-accent: #ffffff;
+    --yasb-accent-hover: #e0e0e0;
+    --yasb-accent-fg: #000000;
+    --icons-font: "Segoe Fluent Icons";
+    --icons-font-fallback: "JetBrainsMono NFP", "JetBrainsMono Nerd Font Propo";
+    --system-font: "Segoe UI Variable", "Segoe UI", sans-serif;
+}
+
+/* Global Sharp Edge Defaults */
+* {
+    font-size: 12px;
+    font-weight: 500;
+    font-family: var(--system-font);
+    color: var(--yasb-fg);
+    border-radius: 0px !important;
+}
+
+/* Bar Container - Fully Transparent */
+.yasb-bar {
+    background-color: transparent !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 2px 8px;
+}
+
+/* Base Widget Styling - Sharp Classic Block */
+.widget {
+    padding: 2px 8px;
+    margin: 2px 3px;
+    border-radius: 0px !important;
+    background-color: rgba(18, 18, 18, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    transition: background-color 0.15s, border-color 0.15s;
+}
+
+.widget:hover,
+.home-widget:hover,
+.clock-widget:hover,
+.volume-widget:hover,
+.cpu-widget:hover,
+.memory-widget:hover,
+.power-menu-widget:hover,
+.github-widget:hover,
+.microphone-widget:hover,
+.active-window-widget:hover {
+    background-color: rgba(35, 35, 35, 0.85);
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+.widget .icon {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--yasb-icon-fg);
+    font-family: var(--icons-font);
+    padding-right: 5px;
+}
+
+.widget .label {
+    color: var(--yasb-fg);
+    font-weight: 600;
+    letter-spacing: 0.2px;
+}
+
+/* Tooltip */
+.tooltip {
+    background-color: var(--yasb-tooltip-bg);
+    border-radius: 0px !important;
+    color: var(--yasb-fg);
+    padding: 6px 12px;
+    font-size: 11px;
+    font-family: var(--system-font);
+    font-weight: 600;
+    margin-top: 4px;
+    border: 1px solid var(--yasb-tooltip-border);
+}
+
+/* Context Menu */
+.context-menu,
+.context-menu .menu-checkbox {
+    background-color: var(--yasb-popup-bg);
+    padding: 4px 0px;
+    font-family: var(--system-font);
+    font-weight: 600;
+    font-size: 12px;
+    color: var(--yasb-fg);
+    border-radius: 0px !important;
+}
+
+.context-menu {
+    border-radius: 0px !important;
+    border: 1px solid var(--yasb-bar-border);
+}
+
+.context-menu::item,
+.context-menu .menu-checkbox {
+    background-color: transparent;
+    padding: 6px 14px;
+    margin: 2px 4px;
+    border-radius: 0px !important;
+    min-width: 110px;
+}
+
+.context-menu::item:selected,
+.context-menu .menu-checkbox:hover {
+    background-color: var(--yasb-white-alpha-15);
+    color: #ffffff;
+}
+
+/* GlazeWM Workspaces - Classic Sharp Rectangles */
+.glazewm-workspaces {
+    background-color: transparent;
+    border: none;
+    padding: 0;
+    margin: 0 2px;
+}
+
+.glazewm-workspaces .ws-btn {
+    color: #a0a0a0;
+    background-color: rgba(18, 18, 18, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    margin: 2px 2px;
+    padding: 2px 10px;
+    outline: none;
+    font-family: var(--system-font);
+    font-weight: 600;
+    border-radius: 0px !important;
+    min-width: 28px;
+    transition: all 0.15s ease-in-out;
+}
+
+.glazewm-workspaces .ws-btn:hover {
+    background-color: rgba(45, 45, 45, 0.85);
+    border-color: rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+}
+
+.glazewm-workspaces .ws-btn.populated {
+    color: #e0e0e0;
+    background-color: rgba(32, 32, 32, 0.80);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Active workspace on UNFOCUSED / SECONDARY monitor -> Gray */
+.glazewm-workspaces .ws-btn.active_populated,
+.glazewm-workspaces .ws-btn.active_empty,
+.glazewm-workspaces .ws-btn.active {
+    color: #ffffff !important;
+    background-color: #555555 !important;
+    border: 1px solid #777777 !important;
+    font-weight: 600;
+}
+
+/* Active workspace on CURRENTLY FOCUSED monitor -> Stark White */
+.glazewm-workspaces .ws-btn.focused_populated,
+.glazewm-workspaces .ws-btn.focused_empty,
+.glazewm-workspaces .ws-btn.focused {
+    color: #000000 !important;
+    background-color: #ffffff !important;
+    border: 1px solid #ffffff !important;
+    font-weight: 700;
+}
+
+/* Clock Widget Specifics */
+.clock-widget {
+    background-color: rgba(18, 18, 18, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 2px 10px;
+}
+
+.clock-widget .label {
+    font-weight: 700;
+    letter-spacing: 0.3px;
+}
+
+.clock-widget .icon.alarm {
+    color: #ffffff;
+    padding-left: 4px;
+}
+
+.clock-popup.alarm,
+.clock-popup.timer,
+.clock-popup.calendar {
+    min-width: 460px;
+    background-color: var(--yasb-popup-bg);
+    border: 1px solid var(--yasb-bar-border);
+    border-radius: 0px !important;
+}
+
+.clock-popup.calendar .calendar-table,
+.clock-popup.calendar .calendar-table::item {
+    background-color: transparent;
+    color: rgba(240, 240, 240, 0.85);
+    font-family: var(--system-font);
+    margin: 0;
+    padding: 0;
+    border: none;
+    outline: none;
+    border-radius: 0px !important;
+}
+
+.clock-popup.calendar .calendar-table::item:selected {
+    color: #000000;
+    font-weight: bold;
+    background-color: #ffffff;
+    border-radius: 0px !important;
+}
+
+/* Home Widget & Menu */
+.home-widget {
+    background-color: rgba(25, 25, 25, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.home-menu {
+    background-color: var(--yasb-popup-bg);
+    border: 1px solid var(--yasb-bar-border);
+    border-radius: 0px !important;
+}
+
+.home-menu .menu-item {
+    color: var(--yasb-fg);
+    padding: 8px 48px 8px 16px;
+    font-family: var(--system-font);
+    font-weight: 600;
+    border-radius: 0px !important;
+}
+
+.home-menu .menu-item:hover {
+    background-color: rgba(255, 255, 255, 0.10);
+    color: #ffffff;
+}
+
+.home-menu .separator {
+    max-height: 1px;
+    background-color: rgba(255, 255, 255, 0.10);
+}
+
+/* Power Menu Popup */
+.power-menu-compact {
+    min-width: 260px;
+    background-color: var(--yasb-popup-bg);
+    border: 1px solid var(--yasb-bar-border);
+    border-radius: 0px !important;
+}
+
+.power-menu-compact .profile-info .profile-username {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--yasb-fg);
+}
+
+.power-menu-compact .buttons {
+    margin: 0 12px 12px 12px;
+    border-radius: 0px !important;
+    background-color: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+}
+
+.power-menu-compact .button {
+    padding: 8px 16px;
+    background-color: transparent;
+    border: none;
+    border-radius: 0px !important;
+}
+
+.power-menu-compact .button.hover {
+    background-color: rgba(255, 255, 255, 0.10);
+}
+
+/* Audio & Microphone Menus */
+.audio-menu,
+.microphone-menu {
+    background-color: var(--yasb-popup-bg);
+    min-width: 310px;
+    border: 1px solid var(--yasb-bar-border);
+    border-radius: 0px !important;
+}
+
+.audio-menu .audio-container .device,
+.microphone-menu .microphone-container .device {
+    background-color: transparent;
+    border: none;
+    padding: 6px 8px;
+    margin: 2px 0;
+    font-size: 12px;
+    border-radius: 0px !important;
+}
+
+.audio-menu .audio-container .device.selected,
+.microphone-menu .microphone-container .device.selected {
+    background-color: rgba(255, 255, 255, 0.12);
+    border-left: 2px solid #ffffff;
+}
+
+.audio-menu .audio-container .device:hover,
+.microphone-menu .microphone-container .device:hover {
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+/* CPU & Memory Popups */
+.cpu-popup,
+.memory-popup {
+    background-color: var(--yasb-popup-bg);
+    border: 1px solid var(--yasb-bar-border);
+    min-width: 400px;
+    max-width: 400px;
+    border-radius: 0px !important;
+}
+
+.cpu-popup .stats .stat-item,
+.memory-popup .stats .stat-item {
+    background-color: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 0px !important;
+    padding: 8px 12px;
+    margin: 8px;
+}
+
+.cpu-popup .cpu-graph,
+.memory-popup .memory-graph {
+    color: #ffffff;
+}
+
+/* Active Window Widget */
+.active-window-widget {
+    background-color: rgba(18, 18, 18, 0.50);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.active-window-widget .label {
+    color: #e0e0e0;
+    font-weight: 500;
+}
+
+/* GitHub Menu */
+.github-menu {
+    background-color: var(--yasb-popup-bg);
+    border: 1px solid var(--yasb-bar-border);
+    border-radius: 0px !important;
+}
+
+.github-menu .contents .section {
+    margin: 0 12px;
+    background-color: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 0px !important;
+}
+
+.github-menu .contents .item {
+    border-radius: 0px !important;
+}
