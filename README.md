@@ -47,6 +47,9 @@
 - الهوامش العلوية والجانبية والسفلية: `0px` في GlazeWM؛ تبدأ النوافذ عند `y=34px`، أي مباشرة بعد شريط YASB دون فراغ إضافي.
 - YASB يستخدم `windows_app_bar: true`، لذلك يحتفظ Windows بمساحة الشريط.
 - أثناء تبديل مساحات العمل: GlazeWM يستخدم `hide_method: cloak` للانتقال الفوري، مع إيقاف YASB animation وblur لتقليل الوميض وإعادة الرسم.
+- جميع إعدادات PowerShell والـPATH والـenvironment variables أصبحت مركزية في `powershell/profile.ps1` داخل myenv؛ ملفات WindowsPowerShell القديمة تعمل كـredirect فقط.
+- PowerShell console theme: `powershell/console-theme.ps1` يضبط واجهة Windows Console كاملة: Cascadia Mono، خلفية slate رمادية مائلة للأزرق (#334155) مع شفافية 50% والنص أبيضاً، نص أبيض، ألوان syntax، المؤشر، حجم النافذة وVirtual Terminal.
+- PowerShell theme: `powershell/midnight-aurora.ps1`؛ prompt Midnight Aurora، ألوان PSReadLine، Git branch، وaliases `ll/la/gs/croot`.
 - launcher البرامج: `Alt+Q` يفتح dialog مركزية من `scripts/app-launcher.ps1` بأيقونات البرامج وثيم شفاف جزئياً مشابه للشريط العلوي؛ اكتب اسم البرنامج ثم Enter، وللإغلاق استخدم Esc أو زر `×`.
 - ثيم YASB الحالي: `Midnight Aurora`، بألوان navy/cyan، أزرار workspace واضحة، وقوائم منبثقة متناسقة.
 - Zebar ما زال مفعلاً عبر starter `glzr-io.starter` وwidget `with-glazewm` بالـpreset `default`.
