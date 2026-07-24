@@ -80,12 +80,14 @@
     color: var(--yasb-icon-fg);
     font-family: var(--icons-font);
     padding-right: 5px;
+    qproperty-alignment: 'AlignVCenter';
 }
 
 .widget .label {
     color: var(--yasb-fg);
     font-weight: 600;
     letter-spacing: 0.2px;
+    qproperty-alignment: 'AlignVCenter';
 }
 
 /* Tooltip */

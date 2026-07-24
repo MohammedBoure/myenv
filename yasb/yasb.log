@@ -478,3 +478,16 @@ Current thread's C stack trace (most recent call first):
 2026-07-25 00:38:05,381 [INFO] [MainThread] [root/bar_helper.py:594]: AppBarManager need to re-register 2 bars
 2026-07-25 00:38:06,370 [INFO] [MainThread] [root/bar_helper.py:603]: Re-registered AppBar for primary-bar_PLAYER MSG12_8ff80114 (space reservation + fullscreen)
 2026-07-25 00:38:07,423 [INFO] [MainThread] [root/bar_helper.py:603]: Re-registered AppBar for primary-bar_L20T-1 ECO_9b9ebe83 (space reservation + fullscreen)
+2026-07-25 01:04:47,422 [INFO] [CLIPipeServer] [cli_server/cli_server.py:257]: CLI server received command: reload
+2026-07-25 01:04:47,423 [INFO] [CLIPipeServer] [root/controller.py:21]: Reloading Application from CLI...
+2026-07-25 01:04:47,533 [INFO] [CLIPipeServer] [cli_server/cli_server.py:114]: Log pipe server stopped
+2026-07-25 01:04:48,034 [INFO] [Thread-8 (_restart_pipe_server)] [cli_server/cli_server.py:114]: Log pipe server stopped
+2026-07-25 01:04:48,034 [INFO] [Thread-9 (_run_server)] [cli_server/cli_server.py:216]: CLI server started v1.1.7
+2026-07-25 01:04:48,035 [INFO] [Thread-8 (_restart_pipe_server)] [cli_server/cli_server.py:106]: Log pipe server started
+2026-07-25 01:04:48,577 [INFO] [MainThread] [root/bar_manager.py:119]: Stopping WindowsNotificationEventListener...
+2026-07-25 01:04:48,583 [INFO] [MainThread] [root/bar_manager.py:119]: Stopping SystemEventListener...
+2026-07-25 01:04:48,648 [INFO] [MainThread] [root/log.py:104]: YASB v2.0.5
+2026-07-25 01:04:48,649 [INFO] [CLIPipeServer] [cli_server/cli_server.py:216]: CLI server started v1.1.7
+2026-07-25 01:04:48,650 [INFO] [MainThread] [cli_server/cli_server.py:106]: Log pipe server started
+2026-07-25 01:04:48,651 [INFO] [MainThread] [root/main.py:48]: Waiting for previous YASB instance to exit...
+2026-07-25 01:04:48,902 [INFO] [MainThread] [root/main.py:74]: Previous instance exited, continuing startup.
