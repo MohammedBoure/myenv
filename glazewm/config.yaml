@@ -109,6 +109,8 @@ window_rules:
       # Native Windows dialogs (#32770) and file/folder pickers
       - window_class: { equals: '#32770' }
       - window_title: { regex: '(?i)^(Open|Save As|Select File|Select Folder|Browse|Properties|Settings|Preferences|Export|Import)$' }
+      # Developer Rule: Any window with [Float] or [Dialog] or 'jaber' in title opens as Floating
+      - window_title: { regex: '(?i).*(float|dialog|popup|jaber).*' }
 
   - commands: ['ignore']
     match:
