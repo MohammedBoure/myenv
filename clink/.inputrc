@@ -1,16 +1,14 @@
 # MyEnv Clink Readline Configuration
-# No F8 / Fn key required!
 
-# 1. Up Arrow (↑) -> Opens Interactive Command History List Menu directly
-"Up": clink-popup-history
-"Down": history-search-forward
+# 1. Ctrl+Space & F7 -> Opens the exact native Boxed Command History Popup Menu (F7 History Menu)
+"\C-@": clink-popup-history
+"Control-space": clink-popup-history
+"\C- ": clink-popup-history
+"F7": clink-popup-history
 
-# 2. Tab Key -> File & Directory Completion Menu
+# 2. Tab Key -> File, Directory & Path Completion Menu in ALL cases
+"\t": clink-completion-popup
 "Tab": clink-completion-popup
 
-# 3. Ctrl+Space / Ctrl+R -> Interactive Command History Menu
-"Control-space": clink-popup-history
-"Control-r": clink-popup-history
-
-# 4. Standard Left & Right Arrows -> Move Cursor Character-by-Character for editing text
-# (Left and Right arrows move cursor character-by-character natively)
+# 3. Standard Text Editing & Cursor Movement:
+# Left (←) and Right (→) arrows move character-by-character to edit text

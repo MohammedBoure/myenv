@@ -35,6 +35,7 @@
 | `gc` | `git commit -m` | عمل Commit في Git مع إضافة الرسالة مباشرة |
 | `gp` | `git push` | رفع التغييرات إلى السيرفر البعيد (Remote) |
 | `gl` | `git log -n 10` | عرض أحدث 10 سجلات Commit في Git |
+| `sudo` | `RunAs Administrator` | تشغيل CMD كمسؤول أو تنفيذ أمر بصلحيات الأدمن |
 
 ---
 

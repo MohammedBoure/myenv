@@ -73,3 +73,18 @@ if (-not [Console]::IsInputRedirected -and -not [Console]::IsOutputRedirected) {
         fastfetch -c $fastConfig
     }
 }
+
+# Sudo Utility Function for PowerShell (Elevates command or opens elevated PowerShell)
+function sudo {
+    if ($args.Count -eq 0) {
+        Start-Process powershell -Verb RunAs
+    } else {
+        $exe = $args[0]
+        if ($args.Count -gt 1) {
+            $cmdArgs = $args[1..($args.Count - 1)] -join ' '
+            Start-Process -FilePath $exe -ArgumentList $cmdArgs -Verb RunAs
+        } else {
+            Start-Process -FilePath $exe -Verb RunAs
+        }
+    }
+}

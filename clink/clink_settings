@@ -1,43 +1,34 @@
 # MyEnv - Clink Custom Settings for CMD
-# Strict History-Only & Automatic Suggestion List Display Configuration
+# Default File/Path Completion & F7 History Popup Configuration
 
-# 1. Enable Real-Time Inline Auto-Suggestions (History Only)
+# 1. File & Path Completion Active by Default
 autosuggest.enable = true
-autosuggest.strategy = match_history
+autosuggest.strategy = completion match_history
 color.autosuggest = 8
 
-# 2. Display Interactive Suggestion List AUTOMATICALLY As You Type (No keypress needed!)
-suggestionlist.default = true
-suggestionlist.hide_hints = false
-suggestionlist.num_history = 5
-
-# 3. Disable System PATH Executable Completion Dump (No python.exe, msconfig.exe in popup!)
-exec.commands = false
-exec.path = false
-
-# 4. Case-Insensitive File & Path Completion
+# 2. Popup Completion Menu for Files, Folders & Paths
+match.completion_type = popup
+match.popup_limit = 15
 match.ignore_case = relaxed
 match.ignore_accent = true
-match.completion_type = popup
-match.popup_limit = 12
 
-# 5. Persistent History & Auto-Saving
+# Enable directory & file completion
+exec.dirs = true
+exec.files = true
+exec.commands = true
+exec.path = true
+
+# 3. Persistent History & Auto-Saving
 history.save = true
 history.sticky_search = true
 history.dont_dedupe = false
 history.ignore_space = true
 
-# 6. Sharp Obsidian Dark Color Theme for Clink Menus
+# 4. Obsidian Dark Theme Colors
 color.popup = default
 color.popup_border = bright black
 color.popup_select = black on bright white
 color.popup_header = bright cyan
-color.suggestionlist_dim = bright black
-color.suggestionlist_highlight = bright white
-color.suggestionlist_selected = black on bright white
-color.suggestion = bright black
-color.cmd = bold white
-color.doskey = bold cyan
 
-# 7. Direct2D Performance
+# 5. Direct2D Performance
 terminal.d2d = true
