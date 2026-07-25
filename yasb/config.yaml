@@ -42,7 +42,9 @@ bars:
       center:
       - clock
       right:
+      - traffic
       - cpu
+      - gpu
       - memory
       - github
       - microphone
@@ -172,11 +174,17 @@ widgets:
     options:
       hide_if_offline: true
       monitor_exclusive: false
+  traffic:
+    type: yasb.traffic.TrafficWidget
+    options:
+      label: "<span>\uDB80\uDF3D</span> \uDB80\uDF35 {download_speed}  \uDB80\uDF36 {upload_speed}"
+      label_alt: "<span>\uDB80\uDF3D</span> Down: {download_speed} | Up: {upload_speed} | Today: {today_downloaded}"
+      update_interval: 1000
   cpu:
     type: yasb.cpu.CpuWidget
     options:
-      label: "<span>\uE950</span> {info[percent][total]}%"
-      label_alt: '{info[freq][current]} MHz'
+      label: "<span>\uE950</span> CPU {info[percent][total]}% ({info[freq][current]} MHz)"
+      label_alt: "<span>\uE950</span> CPU: {info[percent][total]}% | Freq: {info[freq][current]} MHz"
       update_interval: 2000
       hide_decimal: true
       menu:
@@ -189,12 +197,19 @@ widgets:
         on_left: toggle_menu
         on_middle: do_nothing
         on_right: toggle_label
+  gpu:
+    type: yasb.gpu.GpuWidget
+    options:
+      label: "<span>\uDB82\uDCC5</span> GPU {info[utilization]}%  {info[temp]}°C  ({info[mem_used]}/{info[mem_total]})"
+      label_alt: "<span>\uDB82\uDCC5</span> GPU Utilization: {info[utilization]}% | Temp: {info[temp]}°C | VRAM: {info[mem_used]}/{info[mem_total]}"
+      gpu_index: 0
+      update_interval: 2000
   memory:
     type: yasb.memory.MemoryWidget
     options:
-      label: "<span>\uE9D9</span> {virtual_mem_free}"
-      label_alt: "<span>\uEFC5</span> VIRT: {virtual_mem_percent}% SWAP: {swap_mem_percent}%"
-      update_interval: 5000
+      label: "<span>\uE9D9</span> RAM {virtual_mem_percent}% ({virtual_mem_used}/{virtual_mem_total})"
+      label_alt: "<span>\uE9D9</span> VIRT: {virtual_mem_percent}% ({virtual_mem_used}/{virtual_mem_total}) | SWAP: {swap_mem_percent}%"
+      update_interval: 2000
       hide_decimal: true
       callbacks:
         on_left: toggle_menu

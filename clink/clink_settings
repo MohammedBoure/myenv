@@ -1,0 +1,8 @@
+# MyEnv - Clink Custom Settings for CMD
+# History Auto-Suggestions & Completion Configuration
+
+autosuggest.enable = true
+autosuggest.strategy = match_history completion
+color.autosuggest = 8
+history.dont_dedupe = false
+terminal.d2d = true

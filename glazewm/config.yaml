@@ -80,14 +80,14 @@ workspaces:
     bind_to_monitor: 0
   - name: '5'
     bind_to_monitor: 0
+  - name: '6'
+    bind_to_monitor: 0
+  - name: '7'
+    bind_to_monitor: 0
+  - name: '8'
+    bind_to_monitor: 0
 
   # Right monitor DISPLAY8 (monitor index 1)
-  - name: '6'
-    bind_to_monitor: 1
-  - name: '7'
-    bind_to_monitor: 1
-  - name: '8'
-    bind_to_monitor: 1
   - name: '9'
     bind_to_monitor: 1
   - name: '10'
@@ -98,6 +98,17 @@ window_rules:
     match:
       # Ignores the centered myenv application launcher.
       - window_title: { regex: '.*myenv-app-launcher.*' }
+
+  # Always tile terminals (CMD, PowerShell, Windows Terminal)
+  - commands: ['set-tiling']
+    match:
+      - window_process: { regex: '(?i)^(cmd|powershell|pwsh|WindowsTerminal|conhost)$' }
+
+  - commands: ['set-floating --centered']
+    match:
+      # Native Windows dialogs (#32770) and file/folder pickers
+      - window_class: { equals: '#32770' }
+      - window_title: { regex: '(?i)^(Open|Save As|Select File|Select Folder|Browse|Properties|Settings|Preferences|Export|Import)$' }
 
   - commands: ['ignore']
     match:
@@ -184,7 +195,7 @@ keybindings:
     bindings: ['alt+ctrl+v']
 
   - commands: ['wm-cycle-focus']
-    bindings: ['alt+space']
+    bindings: ['alt+space', 'alt+grave', 'alt+w']
 
   # Centered application search dialog (Alt+Q)
   - commands: ['shell-exec powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File C:\Users\moham\Documents\myenv\scripts\app-launcher.ps1']

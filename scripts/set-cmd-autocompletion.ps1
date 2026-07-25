@@ -25,4 +25,10 @@ if (Test-Path $initScript) {
     Write-Host "CMD AutoRun script registered: $initScript" -ForegroundColor Green
 }
 
-Write-Host "CMD Auto-Completion and Doskey Macros configured successfully." -ForegroundColor Green
+# 3. Install & Configure Clink for Command History Auto-Suggestions
+$installClink = 'C:\Users\moham\Documents\myenv\scripts\install-clink.ps1'
+if (Test-Path $installClink) {
+    & $installClink
+}
+
+Write-Host "CMD Auto-Completion, Clink History Auto-Suggestions, and Doskey Macros configured successfully." -ForegroundColor Green
