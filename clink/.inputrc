@@ -1,7 +1,7 @@
 # MyEnv Clink Readline Configuration
-# Map Ctrl+Space EXACTLY to win-history-list (The F7 Boxed History Menu: ┌──── History ────┐)
+# Map Ctrl+Space and Alt+H to win-history-list (The F7 Boxed History Menu: ┌──── History ────┐)
 
-# 1. All representations of Ctrl+Space bound to win-history-list (Exact F7 History Menu)
+# 1. Ctrl+Space & Alt+H bound to win-history-list (Exact F7 History Menu)
 "\C-@": win-history-list
 "C-@": win-history-list
 "\C- ": win-history-list
@@ -9,9 +9,11 @@
 "Control-space": win-history-list
 "Control-@": win-history-list
 "\e[32;5u": win-history-list
+"\eh": win-history-list
 
 # 2. F7 key
 "F7": win-history-list
+"\e[18~": win-history-list
 
 # 3. Tab Key -> File, Directory & Path Completion Menu
 "\t": clink-completion-popup
