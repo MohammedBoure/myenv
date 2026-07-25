@@ -1,19 +1,33 @@
 # MyEnv - Clink Custom Settings for CMD
-# Interactive List/Popup Completion & History Configuration (PSReadLine ListView style for CMD)
+# Obsidian Dark Theme & Dual Navigation Configuration
 
 # 1. Enable Real-Time Inline Auto-Suggestions from Command History
 autosuggest.enable = true
 autosuggest.strategy = match_history completion
 color.autosuggest = 8
 
-# 2. Interactive Popup List Completion (Displays completion menu underneath command line like PowerShell)
+# 2. Popup Completion Menu & Limit
 match.completion_type = popup
-match.popup_limit = 15
+match.popup_limit = 12
 cmd.completion_type = popup
 
-# 3. History Configuration
+# 3. Persistent History & Auto-Saving (No F2 required)
+history.save = true
+history.sticky_search = true
 history.dont_dedupe = false
 history.ignore_space = true
 
-# 4. Direct2D Rendering for Fast Menu Drawing
+# 4. Sharp Obsidian Dark Color Theme for Clink Menus
+color.popup = default
+color.popup_border = bright black
+color.popup_select = black on bright white
+color.popup_header = bright cyan
+color.suggestionlist_dim = bright black
+color.suggestionlist_highlight = bright white
+color.suggestionlist_selected = black on bright white
+color.suggestion = bright black
+color.cmd = bold white
+color.doskey = bold cyan
+
+# 5. Performance
 terminal.d2d = true

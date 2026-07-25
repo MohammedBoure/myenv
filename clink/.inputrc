@@ -1,18 +1,20 @@
 # MyEnv Clink Readline Configuration
-# Dual Completion System for CMD:
-# - Tab: Files, Folders & Command Completion Menu
-# - Ctrl+Space / Shift+Tab / Ctrl+R / F7: Command History Popup Menu
+# Dual Navigation System for CMD:
+# - Up / Down Arrows (↑ / ↓): History Search Backward / Forward (سجل الأوامر)
+# - Right / Left Arrows (→ / ←) & Tab: Path & File Completion (التحرك في المسار والقبول)
 
-# 1. Tab Key -> File, Folder & Directory Completion Menu
+# 1. Up & Down Arrows -> History Search Backward / Forward matching typed prefix
+"\e[A": history-search-backward
+"\e[B": history-search-forward
+
+# 2. Right Arrow -> Accept Suggestion & Move Forward in Path
+"\e[C": clink-accept-suggestion
+
+# 3. Tab -> Interactive File & Path Completion Menu
 "\t": clink-completion-popup
 
-# 2. Ctrl+Space & Shift+Tab -> Command History List Menu
+# 4. Ctrl+Space / Shift+Tab / F7 -> Interactive History Menu
 "\C-@": clink-popup-history
 "Control-space": clink-popup-history
 "\e[Z": clink-popup-history
-
-# 3. Ctrl+R -> Interactive Search Command History
 "\C-r": clink-popup-history
-
-# 4. F8 -> Search History Matching Typed Prefix
-"\e[19~": history-search-backward
