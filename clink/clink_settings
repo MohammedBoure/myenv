@@ -1,12 +1,14 @@
 # MyEnv - Clink Custom Settings for CMD
-# Actual Command History & Standard Text Editing Configuration
+# Case-Insensitive Matching & Dual Completion Configuration
 
-# 1. History-Only Auto-Suggestions (Only actual commands run previously, NO system executables dump)
+# 1. Enable Real-Time Inline Auto-Suggestions (History + Completion)
 autosuggest.enable = true
-autosuggest.strategy = match_history
+autosuggest.strategy = match_history completion
 color.autosuggest = 8
 
-# 2. Completion Type for Files & Directories
+# 2. Case-Insensitive File & Path Completion (e.g. 'cd desk' -> 'Desktop')
+match.ignore_case = relaxed
+match.ignore_accent = true
 match.completion_type = popup
 match.popup_limit = 12
 
