@@ -78,5 +78,6 @@ if (Test-Path $clinkSrcSettings) {
     if (Test-Path "$myenvPath\clink\.inputrc") {
         Copy-Item -Path "$myenvPath\clink\.inputrc" -Destination "$clinkTargetDir\.inputrc" -Force
     }
-    Write-Host "Applied Clink settings & dual completion .inputrc to $clinkTargetDir." -ForegroundColor Green
+    Copy-Item -Path "$myenvPath\clink\*.lua" -Destination "$clinkTargetDir\" -Force -ErrorAction SilentlyContinue
+    Write-Host "Applied Clink settings, .inputrc, and Lua scripts to $clinkTargetDir." -ForegroundColor Green
 }
