@@ -16,9 +16,11 @@ doskey gl=git log -n 10 $1
 :: Prompt Styling
 prompt $E[36m$T[0..5]$E[0m $E[32m%USERNAME%@%COMPUTERNAME%$E[0m $E[34m$P$E[0m $E[35m$+$E[0m$G 
 
-:: Inject Clink for History Auto-Suggestions if present
-where clink >nul 2>&1
-if %errorlevel% equ 0 (
-    clink inject --quiet
+:: Add Clink to PATH & Inject Clink for History Auto-Suggestions & Popup Menus
+set "PATH=%LOCALAPPDATA%\clink\bin;%PATH%"
+if exist "%LOCALAPPDATA%\clink\bin\clink.exe" (
+    "%LOCALAPPDATA%\clink\bin\clink.exe" inject --quiet
+) else (
+    where clink >nul 2>&1 && clink inject --quiet
 )
 
