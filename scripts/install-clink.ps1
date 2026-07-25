@@ -69,11 +69,14 @@ if ($clinkExe) {
     Write-Host "Warning: Could not locate Clink executable." -ForegroundColor Yellow
 }
 
-# 3. Apply Clink Settings from myenv\clink\clink_settings
+# 3. Apply Clink Settings & .inputrc from myenv\clink
 if (Test-Path $clinkSrcSettings) {
     if (-not (Test-Path $clinkTargetDir)) {
         New-Item -ItemType Directory -Path $clinkTargetDir -Force | Out-Null
     }
     Copy-Item -Path $clinkSrcSettings -Destination $clinkTargetSettings -Force
-    Write-Host "Applied Clink history auto-suggestions settings to $clinkTargetSettings." -ForegroundColor Green
+    if (Test-Path "$myenvPath\clink\.inputrc") {
+        Copy-Item -Path "$myenvPath\clink\.inputrc" -Destination "$clinkTargetDir\.inputrc" -Force
+    }
+    Write-Host "Applied Clink settings & dual completion .inputrc to $clinkTargetDir." -ForegroundColor Green
 }
