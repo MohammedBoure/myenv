@@ -1,8 +1,19 @@
 # MyEnv - Clink Custom Settings for CMD
-# History Auto-Suggestions & Completion Configuration
+# Interactive List/Popup Completion & History Configuration (PSReadLine ListView style for CMD)
 
+# 1. Enable Real-Time Inline Auto-Suggestions from Command History
 autosuggest.enable = true
 autosuggest.strategy = match_history completion
 color.autosuggest = 8
+
+# 2. Interactive Popup List Completion (Displays completion menu underneath command line like PowerShell)
+match.completion_type = popup
+match.popup_limit = 15
+cmd.completion_type = popup
+
+# 3. History Configuration
 history.dont_dedupe = false
+history.ignore_space = true
+
+# 4. Direct2D Rendering for Fast Menu Drawing
 terminal.d2d = true
