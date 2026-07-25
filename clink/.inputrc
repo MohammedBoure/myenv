@@ -1,14 +1,22 @@
 # MyEnv Clink Readline Configuration
+# Universal Key Map for Ctrl+Space -> F7 Boxed History Popup Menu
 
-# 1. Ctrl+Space & F7 -> Opens the exact native Boxed Command History Popup Menu (F7 History Menu)
+# 1. All representations of Ctrl+Space bound to clink-popup-history (Exact F7 Boxed Menu)
 "\C-@": clink-popup-history
-"Control-space": clink-popup-history
+"C-@": clink-popup-history
 "\C- ": clink-popup-history
-"F7": clink-popup-history
+"C-Space": clink-popup-history
+"Control-space": clink-popup-history
+"Control-@": clink-popup-history
+"\e[32;5u": clink-popup-history
 
-# 2. Tab Key -> File, Directory & Path Completion Menu in ALL cases
+# 2. F7 key
+"F7": clink-popup-history
+"\e[18~": clink-popup-history
+
+# 3. Tab Key -> File, Directory & Path Completion Menu
 "\t": clink-completion-popup
 "Tab": clink-completion-popup
 
-# 3. Standard Text Editing & Cursor Movement:
-# Left (←) and Right (→) arrows move character-by-character to edit text
+# 4. Standard Text Editing & Cursor Movement (Character-by-character text editing)
+# Left (←) and Right (→) arrows move character-by-character natively

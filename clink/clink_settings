@@ -1,7 +1,8 @@
 # MyEnv - Clink Custom Settings for CMD
 # Default File/Path Completion & F7 History Popup Configuration
 
-# 1. File & Path Completion Active by Default
+# 1. Enable Real-Time Inline Auto-Suggestions & Windows Keybindings
+clink.default_bindings = windows
 autosuggest.enable = true
 autosuggest.strategy = completion match_history
 color.autosuggest = 8
