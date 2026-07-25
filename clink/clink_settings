@@ -1,17 +1,16 @@
 # MyEnv - Clink Custom Settings for CMD
-# Obsidian Dark Theme & Dual Navigation Configuration
+# Actual Command History & Standard Text Editing Configuration
 
-# 1. Enable Real-Time Inline Auto-Suggestions from Command History
+# 1. History-Only Auto-Suggestions (Only actual commands run previously, NO system executables dump)
 autosuggest.enable = true
-autosuggest.strategy = match_history completion
+autosuggest.strategy = match_history
 color.autosuggest = 8
 
-# 2. Popup Completion Menu & Limit
+# 2. Completion Type for Files & Directories
 match.completion_type = popup
 match.popup_limit = 12
-cmd.completion_type = popup
 
-# 3. Persistent History & Auto-Saving (No F2 required)
+# 3. Persistent History & Auto-Saving
 history.save = true
 history.sticky_search = true
 history.dont_dedupe = false
@@ -29,5 +28,5 @@ color.suggestion = bright black
 color.cmd = bold white
 color.doskey = bold cyan
 
-# 5. Performance
+# 5. Direct2D Performance
 terminal.d2d = true
