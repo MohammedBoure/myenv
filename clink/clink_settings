@@ -1,28 +1,33 @@
 # MyEnv - Clink Custom Settings for CMD
-# Strict History-Only Matching Configuration
+# Strict History-Only & Automatic Suggestion List Display Configuration
 
 # 1. Enable Real-Time Inline Auto-Suggestions (History Only)
 autosuggest.enable = true
 autosuggest.strategy = match_history
 color.autosuggest = 8
 
-# 2. Disable System PATH Executable Completion Dump (No python.exe, msconfig.exe in popup!)
+# 2. Display Interactive Suggestion List AUTOMATICALLY As You Type (No keypress needed!)
+suggestionlist.default = true
+suggestionlist.hide_hints = false
+suggestionlist.num_history = 5
+
+# 3. Disable System PATH Executable Completion Dump (No python.exe, msconfig.exe in popup!)
 exec.commands = false
 exec.path = false
 
-# 3. Case-Insensitive File & Path Completion
+# 4. Case-Insensitive File & Path Completion
 match.ignore_case = relaxed
 match.ignore_accent = true
 match.completion_type = popup
 match.popup_limit = 12
 
-# 4. Persistent History & Auto-Saving
+# 5. Persistent History & Auto-Saving
 history.save = true
 history.sticky_search = true
 history.dont_dedupe = false
 history.ignore_space = true
 
-# 5. Sharp Obsidian Dark Color Theme for Clink Menus
+# 6. Sharp Obsidian Dark Color Theme for Clink Menus
 color.popup = default
 color.popup_border = bright black
 color.popup_select = black on bright white
@@ -34,5 +39,5 @@ color.suggestion = bright black
 color.cmd = bold white
 color.doskey = bold cyan
 
-# 6. Direct2D Performance
+# 7. Direct2D Performance
 terminal.d2d = true

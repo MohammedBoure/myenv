@@ -1,18 +1,16 @@
 # MyEnv Clink Readline Configuration
-# Named Key Bindings for Portable Windows Navigation:
+# No F8 / Fn key required!
 
-# 1. Standard Left & Right Arrows -> Move Cursor Character-by-Character (Editing Text)
-# (Left and Right arrows are handled natively by Readline for editing text)
-
-# 2. Up & Down Arrows (↑ / ↓) -> History Search Matching Typed Prefix
-"Up": history-search-backward
+# 1. Up Arrow (↑) -> Opens Interactive Command History List Menu directly
+"Up": clink-popup-history
 "Down": history-search-forward
 
-# 3. Tab Key -> File, Folder & Directory Completion Menu (Case-Insensitive)
+# 2. Tab Key -> File & Directory Completion Menu
 "Tab": clink-completion-popup
 
-# 4. Ctrl+Space / F7 / Ctrl+R -> Interactive Command History Popup Menu
+# 3. Ctrl+Space / Ctrl+R -> Interactive Command History Menu
 "Control-space": clink-popup-history
 "Control-r": clink-popup-history
-"F7": clink-popup-history
-"F8": history-search-backward
+
+# 4. Standard Left & Right Arrows -> Move Cursor Character-by-Character for editing text
+# (Left and Right arrows move cursor character-by-character natively)
