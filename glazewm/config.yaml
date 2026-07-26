@@ -1,6 +1,7 @@
 general:
   # Commands to run when the WM has started.
-  startup_commands: []
+  startup_commands:
+    - 'shell-exec powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File C:\Users\moham\Documents\myenv\scripts\smart-tiling-direction.ps1'
 
   # Commands to run just before the WM is shutdown.
   shutdown_commands: []
@@ -199,9 +200,9 @@ keybindings:
   - commands: ['wm-cycle-focus']
     bindings: ['alt+space', 'alt+grave', 'alt+w']
 
-  # Centered application search dialog (Alt+Q)
+  # Centered application search dialog (Alt+Shift+Q)
   - commands: ['shell-exec powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File C:\Users\moham\Documents\myenv\scripts\app-launcher.ps1']
-    bindings: ['alt+q']
+    bindings: ['alt+shift+q']
 
   - commands: ['toggle-floating --centered']
     bindings: ['alt+shift+space']
@@ -216,7 +217,7 @@ keybindings:
     bindings: ['alt+m']
 
   - commands: ['close']
-    bindings: ['alt+shift+q']
+    bindings: ['alt+q']
 
   - commands: ['wm-exit']
     bindings: ['alt+shift+e']

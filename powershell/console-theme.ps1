@@ -30,6 +30,10 @@ $palette = @{
 
 $keys = @(
     'HKCU:\Console',
+    'HKCU:\Console\%SystemRoot%_System32_cmd.exe',
+    'HKCU:\Console\%SystemRoot%_SysWOW64_cmd.exe',
+    'HKCU:\Console\C:_Windows_System32_cmd.exe',
+    'HKCU:\Console\C:_Windows_SysWOW64_cmd.exe',
     'HKCU:\Console\%SystemRoot%_System32_WindowsPowerShell_v1.0_powershell.exe',
     'HKCU:\Console\%SystemRoot%_SysWOW64_WindowsPowerShell_v1.0_powershell.exe',
     'HKCU:\Console\Windows PowerShell',

@@ -3,6 +3,8 @@
 
 # 1. Enable Real-Time Inline Auto-Suggestions (History Only - No PATH executable completion dump!)
 autosuggest.enable = true
+autosuggest.inline = true
+autosuggest.hint = true
 autosuggest.strategy = match_history
 color.autosuggest = 8
 

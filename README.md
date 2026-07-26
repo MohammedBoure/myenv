@@ -109,7 +109,7 @@ A high-performance, keyboard-driven tiling desktop environment for Windows devel
 | `Alt + T` | Return window to tiling state |
 | `Alt + F` | Toggle window fullscreen |
 | `Alt + M` | Toggle window minimize |
-| `Alt + Shift + Q` | Close focused window |
+| `Alt + Q` | Close focused window |
 
 ### Tiling Layout Direction Controls
 | Keybinding | Action |
@@ -143,9 +143,11 @@ A high-performance, keyboard-driven tiling desktop environment for Windows devel
 ### Applications & Management
 | Keybinding | Action |
 |---|---|
-| `Alt + Q` | Launch App Launcher Search Dialog (`app-launcher.ps1`) |
+| `Alt + Shift + Q` | Launch App Launcher Search Dialog (`app-launcher.ps1`) |
 | `Alt + Enter` | Launch Command Prompt (`cmd.exe`) |
 | `Alt + Ctrl + Enter` | Launch Windows PowerShell (`powershell.exe`) |
+| `Alt + Ctrl + T` | Open PowerShell at current File Explorer directory (`open-terminal-here.ps1`) |
+| `Alt + Shift + T` | Open CMD at current File Explorer directory (`open-terminal-here.ps1`) |
 | `Alt + Shift + R` | Reload GlazeWM configuration (`config.yaml`) |
 | `Alt + Shift + E` | Exit GlazeWM safely |
 | `Alt + Shift + P` | Toggle Pause GlazeWM window management |

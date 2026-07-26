@@ -11,7 +11,7 @@
 "F7": win-history-list
 
 # 3. Tab Key -> File, Directory & Path Completion Menu
-"\t": clink-completion-popup
-"Tab": clink-completion-popup
+"\t": clink-popup-complete
+"Tab": clink-popup-complete
 
 # 4. Standard Text Editing & Cursor Movement (Left and Right arrows move character-by-character natively)

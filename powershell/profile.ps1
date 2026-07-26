@@ -74,17 +74,18 @@ if (-not [Console]::IsInputRedirected -and -not [Console]::IsOutputRedirected) {
     }
 }
 
-# Sudo Utility Function for PowerShell (Elevates command or opens elevated PowerShell)
+# Sudo Utility Function for PowerShell (Elevates command or opens elevated PowerShell in current working directory)
 function sudo {
+    $currentDir = (Get-Location).ProviderPath
     if ($args.Count -eq 0) {
-        Start-Process powershell -Verb RunAs
+        Start-Process powershell -WorkingDirectory $currentDir -ArgumentList "-NoExit -Command Set-Location -LiteralPath '$currentDir'" -Verb RunAs
     } else {
         $exe = $args[0]
         if ($args.Count -gt 1) {
             $cmdArgs = $args[1..($args.Count - 1)] -join ' '
-            Start-Process -FilePath $exe -ArgumentList $cmdArgs -Verb RunAs
+            Start-Process -FilePath $exe -ArgumentList $cmdArgs -WorkingDirectory $currentDir -Verb RunAs
         } else {
-            Start-Process -FilePath $exe -Verb RunAs
+            Start-Process -FilePath $exe -WorkingDirectory $currentDir -Verb RunAs
         }
     }
 }
