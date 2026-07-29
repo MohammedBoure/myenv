@@ -1,0 +1,21 @@
+# watch_config_changes: Automatically reload borders whenever the config file is modified.
+watch_config_changes: True
+
+# enable_logging: Log messages (info, warnings, and errors) to a file.
+enable_logging: True
+
+# rendering_backend: Type of renderer. Supported values: V2, Legacy.
+rendering_backend: V2
+
+# Global configuration options for Windows 10 Focused Window Border
+global:
+  border_width: 3
+  border_offset: 0
+  border_radius: Square
+  border_z_order: AboveWindow
+  follow_native_border: False
+  initialize_delay: 0
+  unminimize_delay: 0
+
+  active_color: "#ffffff"
+  inactive_color: "#00000000"

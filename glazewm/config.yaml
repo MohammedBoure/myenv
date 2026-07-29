@@ -1,7 +1,8 @@
 general:
   # Commands to run when the WM has started.
   startup_commands:
-    - 'shell-exec powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File C:\Users\moham\Documents\myenv\scripts\smart-tiling-direction.ps1'
+    - 'shell-exec powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File %USERPROFILE%\Documents\myenv\scripts\smart-tiling-direction.ps1'
+    - 'shell-exec powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File %USERPROFILE%\Documents\myenv\scripts\focused-window-border.ps1'
 
   # Commands to run just before the WM is shutdown.
   shutdown_commands: []
@@ -49,7 +50,7 @@ window_effects:
   other_windows:
     border:
       enabled: true
-      color: '#444444'
+      color: '#202020'
     hide_title_bar:
       enabled: false
     corner_style:
@@ -201,8 +202,24 @@ keybindings:
     bindings: ['alt+space', 'alt+grave', 'alt+w']
 
   # Centered application search dialog (Alt+Shift+Q)
-  - commands: ['shell-exec powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File C:\Users\moham\Documents\myenv\scripts\app-launcher.ps1']
+  - commands: ['shell-exec powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File %USERPROFILE%\Documents\myenv\scripts\app-launcher.ps1']
     bindings: ['alt+shift+q']
+
+  # Direct Full Screenshot (Alt+Shift+S)
+  - commands: ['shell-exec powershell.exe -sta -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File %USERPROFILE%\Documents\myenv\scripts\capture-screenshot.ps1']
+    bindings: ['alt+shift+s']
+
+  # Open Task Manager (Alt+Shift+X)
+  - commands: ['shell-exec taskmgr.exe']
+    bindings: ['alt+shift+x']
+
+  # Toggle Master Audio Mute (Alt+Shift+M)
+  - commands: ['shell-exec powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File %USERPROFILE%\Documents\myenv\scripts\toggle-mute.ps1']
+    bindings: ['alt+shift+m']
+
+  # Toggle Window Transparency 80% / 100% (Alt+Shift+Z)
+  - commands: ['shell-exec powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File %USERPROFILE%\Documents\myenv\scripts\toggle-window-transparency.ps1']
+    bindings: ['alt+shift+z']
 
   - commands: ['toggle-floating --centered']
     bindings: ['alt+shift+space']
@@ -278,7 +295,7 @@ keybindings:
   - commands: ['move-workspace --direction up']
     bindings: ['alt+shift+d']
   - commands: ['move-workspace --direction down']
-    bindings: ['alt+shift+s']
+    bindings: ['alt+shift+down', 'alt+shift+g']
 
   # Move Window to Workspace
   - commands: ['move --workspace 1', 'focus --workspace 1']

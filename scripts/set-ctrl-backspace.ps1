@@ -12,7 +12,9 @@ Write-Host "Configuring Ctrl+Backspace word deletion in PowerShell..." -Foregrou
 try {
     if (Get-Module -Name PSReadLine) {
         Set-PSReadLineKeyHandler -Key Ctrl+Backspace -Function BackwardKillWord
-        Write-Host "Applied Ctrl+Backspace handler in current session." -ForegroundColor Green
+        Set-PSReadLineKeyHandler -Key Ctrl+v -Function Paste
+        Set-PSReadLineKeyHandler -Key Ctrl+c -Function CopyOrCancelLine
+        Write-Host "Applied Ctrl+Backspace, Ctrl+C, and Ctrl+V handlers in current session." -ForegroundColor Green
     }
 } catch {
     Write-Warning "Could not bind in current session: $_"
@@ -26,10 +28,12 @@ if (-not (Test-Path $profileDir)) {
 
 $profileSnippet = @"
 
-# Enable Ctrl+Backspace word deletion
+# Enable Ctrl+Backspace, Ctrl+C, and Ctrl+V key handlers
 if (-not [Console]::IsInputRedirected -and -not [Console]::IsOutputRedirected) {
     try {
         Set-PSReadLineKeyHandler -Key Ctrl+Backspace -Function BackwardKillWord
+        Set-PSReadLineKeyHandler -Key Ctrl+v -Function Paste
+        Set-PSReadLineKeyHandler -Key Ctrl+c -Function CopyOrCancelLine
     } catch {}
 }
 "@

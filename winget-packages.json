@@ -1,0 +1,204 @@
+{
+	"$schema" : "https://aka.ms/winget-packages.schema.2.0.json",
+	"CreationDate" : "2026-07-27T13:36:56.981-00:00",
+	"Sources" : 
+	[
+		{
+			"Packages" : 
+			[
+				{
+					"PackageIdentifier" : "Git.Git",
+					"Version" : "2.54.0"
+				},
+				{
+					"PackageIdentifier" : "RARLab.WinRAR",
+					"Version" : "7.22.0"
+				},
+				{
+					"PackageIdentifier" : "Microsoft.VCRedist.2010.x64",
+					"Version" : "10.0.40219"
+				},
+				{
+					"PackageIdentifier" : "Oracle.JavaRuntimeEnvironment",
+					"Version" : "8.0.4010.10"
+				},
+				{
+					"PackageIdentifier" : "BlenderFoundation.Blender",
+					"Version" : "5.2.0"
+				},
+				{
+					"PackageIdentifier" : "AmN.yasb",
+					"Version" : "2.0.5"
+				},
+				{
+					"PackageIdentifier" : "EclipseAdoptium.Temurin.21.JDK",
+					"Version" : "21.0.11.10"
+				},
+				{
+					"PackageIdentifier" : "glzr-io.glazewm",
+					"Version" : "3.10.1"
+				},
+				{
+					"PackageIdentifier" : "Oracle.MySQL",
+					"Version" : "5.7.44"
+				},
+				{
+					"PackageIdentifier" : "PuTTY.PuTTY",
+					"Version" : "0.84.0.0"
+				},
+				{
+					"PackageIdentifier" : "Microsoft.VisualStudio.2022.BuildTools",
+					"Version" : "< 17.14.35"
+				},
+				{
+					"PackageIdentifier" : "AnyDesk.AnyDesk",
+					"Version" : "ad 9.6.7"
+				},
+				{
+					"PackageIdentifier" : "Tonec.InternetDownloadManager",
+					"Version" : "6.43.2"
+				},
+				{
+					"PackageIdentifier" : "Microsoft.Edge",
+					"Version" : "150.0.4078.83"
+				},
+				{
+					"PackageIdentifier" : "OBSProject.OBSStudio",
+					"Version" : "32.1.2"
+				},
+				{
+					"PackageIdentifier" : "Valve.Steam",
+					"Version" : "2.10.91.91"
+				},
+				{
+					"PackageIdentifier" : "Microsoft.VCRedist.2015+.x64",
+					"Version" : "14.51.36247.0"
+				},
+				{
+					"PackageIdentifier" : "Microsoft.DotNet.SDK.10",
+					"Version" : "10.0.203"
+				},
+				{
+					"PackageIdentifier" : "Microsoft.VCRedist.2012.x86",
+					"Version" : "11.0.61030.0"
+				},
+				{
+					"PackageIdentifier" : "ETXSoftwareInc.DuckDns",
+					"Version" : "1.0.5"
+				},
+				{
+					"PackageIdentifier" : "Microsoft.VCRedist.2015+.x86",
+					"Version" : "14.51.36247.0"
+				},
+				{
+					"PackageIdentifier" : "Python.Launcher",
+					"Version" : "> 3.13.5"
+				},
+				{
+					"PackageIdentifier" : "Microsoft.VCRedist.2010.x86",
+					"Version" : "10.0.40219"
+				},
+				{
+					"PackageIdentifier" : "Microsoft.WindowsSDK.10.0.26100",
+					"Version" : "10.0.26100.7705"
+				},
+				{
+					"PackageIdentifier" : "Microsoft.VCRedist.2012.x64",
+					"Version" : "11.0.61030.0"
+				},
+				{
+					"PackageIdentifier" : "Bitwarden.Bitwarden",
+					"Version" : "2026.6.1"
+				},
+				{
+					"PackageIdentifier" : "ArduinoSA.IDE.stable",
+					"Version" : "2.3.10"
+				},
+				{
+					"PackageIdentifier" : "Fastfetch-cli.Fastfetch",
+					"Version" : "2.66.0"
+				},
+				{
+					"PackageIdentifier" : "Gyan.FFmpeg",
+					"Version" : "8.1.2"
+				},
+				{
+					"PackageIdentifier" : "Microsoft.OneDrive",
+					"Version" : "26.108.0607.0002"
+				},
+				{
+					"PackageIdentifier" : "Rustlang.Rustup",
+					"Version" : "1.29.0"
+				},
+				{
+					"PackageIdentifier" : "Python.Python.3.14",
+					"Version" : "3.14.5"
+				},
+				{
+					"PackageIdentifier" : "Microsoft.VisualStudioCode",
+					"Version" : "1.130.0"
+				},
+				{
+					"PackageIdentifier" : "Google.AntigravityIDE",
+					"Version" : "2.1.1"
+				},
+				{
+					"PackageIdentifier" : "Python.Python.3.12",
+					"Version" : "3.12.8"
+				},
+				{
+					"PackageIdentifier" : "Microsoft.AppInstaller",
+					"Version" : "1.29.280.0"
+				},
+				{
+					"PackageIdentifier" : "Microsoft.DotNet.Native.Runtime",
+					"Version" : "2.2.28604.0"
+				},
+				{
+					"PackageIdentifier" : "Microsoft.UI.Xaml.2.7",
+					"Version" : "7.2409.9001.0"
+				},
+				{
+					"PackageIdentifier" : "Microsoft.UI.Xaml.2.8",
+					"Version" : "8.2501.31001.0"
+				},
+				{
+					"PackageIdentifier" : "Microsoft.VCLibs.Desktop.14",
+					"Version" : "14.0.33728.0"
+				},
+				{
+					"PackageIdentifier" : "Microsoft.VCLibs.14",
+					"Version" : "14.0.33519.0"
+				},
+				{
+					"PackageIdentifier" : "Microsoft.WindowsAppRuntime.1.5",
+					"Version" : "1.5.9"
+				},
+				{
+					"PackageIdentifier" : "Microsoft.WindowsAppRuntime.1.6",
+					"Version" : "1.6.9"
+				},
+				{
+					"PackageIdentifier" : "Microsoft.WindowsAppRuntime.1.7",
+					"Version" : "1.7.9"
+				},
+				{
+					"PackageIdentifier" : "Microsoft.WindowsAppRuntime.1.8",
+					"Version" : "1.8.9"
+				},
+				{
+					"PackageIdentifier" : "Microsoft.WindowsTerminal",
+					"Version" : "1.24.11911.0"
+				}
+			],
+			"SourceDetails" : 
+			{
+				"Argument" : "https://cdn.winget.microsoft.com/cache",
+				"Identifier" : "Microsoft.Winget.Source_8wekyb3d8bbwe",
+				"Name" : "winget",
+				"Type" : "Microsoft.PreIndexed.Package"
+			}
+		}
+	],
+	"WinGetVersion" : "1.29.280"
+}

@@ -19,14 +19,15 @@ Set-ItemProperty -Path $cmdKey -Name 'PathCompletionChar' -Type DWord -Value 9
 Set-ItemProperty -Path $cmdKey -Name 'EnableExtensions' -Type DWord -Value 1
 
 # 2. Register AutoRun Script for CMD
-$initScript = 'C:\Users\moham\Documents\myenv\scripts\cmd-init.cmd'
+$myenvPath = Split-Path -Parent $PSScriptRoot
+$initScript = Join-Path $myenvPath "scripts\cmd-init.cmd"
 if (Test-Path $initScript) {
     Set-ItemProperty -Path $cmdKey -Name 'AutoRun' -Type String -Value "`"$initScript`""
     Write-Host "CMD AutoRun script registered: $initScript" -ForegroundColor Green
 }
 
 # 3. Install & Configure Clink for Command History Auto-Suggestions
-$installClink = 'C:\Users\moham\Documents\myenv\scripts\install-clink.ps1'
+$installClink = Join-Path $myenvPath "scripts\install-clink.ps1"
 if (Test-Path $installClink) {
     & $installClink
 }

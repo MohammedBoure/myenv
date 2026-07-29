@@ -2,8 +2,8 @@
 
 A high-performance, keyboard-driven tiling desktop environment for Windows developers. Centralized, fully version-controlled, and automated.
 
-- **Workspace Directory**: `C:\Users\moham\Documents\myenv`
-- **Updated Date**: `2026-07-25`
+- **Workspace Directory**: `%USERPROFILE%\Documents\myenv` (or `$env:USERPROFILE\Documents\myenv`)
+- **Updated Date**: `2026-07-27`
 
 ---
 
@@ -13,11 +13,11 @@ A high-performance, keyboard-driven tiling desktop environment for Windows devel
 
 | التوثيق | المكون | الوصف | رابط الملف |
 |---|---|---|---|
-| 💻 **CMD Documentation** | Command Prompt | دليل اختصارات Doskey وأداة Clink والإكمال التلقائي | [docs/cmd.md](file:///c:/Users/moham/Documents/myenv/docs/cmd.md) |
-| ⚡ **PowerShell Documentation** | PowerShell Profile | إعدادات PSReadLine وثيم Midnight Aurora الشفاف | [docs/powershell.md](file:///c:/Users/moham/Documents/myenv/docs/powershell.md) |
-| 🪟 **GlazeWM Documentation** | Tiling WM | دليل كافة اختصارات لوحة المفاتيح والتقسيم ومساحات العمل | [docs/glazewm.md](file:///c:/Users/moham/Documents/myenv/docs/glazewm.md) |
-| 📊 **YASB Documentation** | Status Bar | تفاصيل الثيم الداكن الشفاف والأزرار والـ Widgets | [docs/yasb.md](file:///c:/Users/moham/Documents/myenv/docs/yasb.md) |
-| ⚙️ **Automation Scripts** | PowerShell Scripts | دليل جميع سكريبتات الأتمتة وإعادة التهيئة المباشرة | [docs/automation-scripts.md](file:///c:/Users/moham/Documents/myenv/docs/automation-scripts.md) |
+| 💻 **CMD Documentation** | Command Prompt | دليل اختصارات Doskey وأداة Clink والإكمال التلقائي | [docs/cmd.md](file:///%USERPROFILE%/Documents/myenv/docs/cmd.md) |
+| ⚡ **PowerShell Documentation** | PowerShell Profile | إعدادات PSReadLine وثيم Midnight Aurora الشفاف | [docs/powershell.md](file:///%USERPROFILE%/Documents/myenv/docs/powershell.md) |
+| 🪟 **GlazeWM Documentation** | Tiling WM | دليل كافة اختصارات لوحة المفاتيح والتقسيم ومساحات العمل | [docs/glazewm.md](file:///%USERPROFILE%/Documents/myenv/docs/glazewm.md) |
+| 📊 **YASB Documentation** | Status Bar | تفاصيل الثيم الداكن الشفاف والأزرار والـ Widgets | [docs/yasb.md](file:///%USERPROFILE%/Documents/myenv/docs/yasb.md) |
+| ⚙️ **Automation Scripts** | PowerShell Scripts | دليل جميع سكريبتات الأتمتة وإعادة التهيئة المباشرة | [docs/automation-scripts.md](file:///%USERPROFILE%/Documents/myenv/docs/automation-scripts.md) |
 
 ---
 
@@ -46,7 +46,7 @@ A high-performance, keyboard-driven tiling desktop environment for Windows devel
 - **Instant Floating Rule**: GlazeWM rule set to `set-floating --centered` & `ignore` on `.*myenv-app-launcher.*` to float instantly over all windows without layout jitter.
 
 ### 4. PowerShell Environment & Console Theme
-- **Centralized Profile**: `powershell/profile.ps1` automatically loaded by `$PROFILE`.
+- **Centralized Profile**: `powershell/profile.ps1` automatically loaded by `$PROFILE` (uses dynamic `$env:USERPROFILE`).
 - **Dev Tools PATH**: `dotnet`, `flutter`, `jdk-17`, `Android SDK`, `kotlin`, `msys64`, `php`, `composer`, `nodejs`, `npm`.
 - **True Black Console Theme**: `#000000` background with **32% Transparency** (`WindowAlpha = 173` / 68% opacity).
 - **PSReadLine**: `Ctrl+Backspace` for backward word deletion (`BackwardKillWord`), history predictions (`ListView`), and Tab menu completion.
@@ -58,7 +58,11 @@ A high-performance, keyboard-driven tiling desktop environment for Windows devel
 - **Doskey Aliases**: `ls`, `ll`, `la`, `clear`, `croot`, `gs`, `ga`, `gc`, `gp`, `gl`.
 - **Colored Prompt**: Displays timestamp, username, computer name, and current path.
 
-### 6. Windows Language Switcher Hotkeys
+### 6. Package Manifest & Auto Restoration (`winget-packages.json`)
+- **Package Manifest**: Central `winget-packages.json` storing developer tool IDs & versions for seamless system bootstrapping.
+- **Automated Restore**: `scripts/install-packages.ps1` restores all tools via `winget import`.
+
+### 7. Windows Language Switcher Hotkeys
 - **Alt+Shift Disabled**: Registry settings (`HKCU:\Keyboard Layout\Toggle`) disable `Alt+Shift` and `Ctrl+Shift` to prevent accidental language changes during coding.
 - **Win+Space Only**: `Win+Space` is configured as the sole input language switcher.
 
@@ -68,14 +72,15 @@ A high-performance, keyboard-driven tiling desktop environment for Windows devel
 
 | Component | File / Path | Action |
 |---|---|---|
-| **GlazeWM Config** | [glazewm/config.yaml](file:///C:/Users/moham/Documents/myenv/glazewm/config.yaml) | Main tiling WM rules, keybindings, workspaces |
-| **YASB Config** | [yasb/config.yaml](file:///C:/Users/moham/Documents/myenv/yasb/config.yaml) | Bar widgets, date/time format, alignment |
-| **YASB Styles** | [yasb/styles.css](file:///C:/Users/moham/Documents/myenv/yasb/styles.css) | Sharp dark theme, transparent bar, workspace colors |
-| **PowerShell Profile** | [powershell/profile.ps1](file:///C:/Users/moham/Documents/myenv/powershell/profile.ps1) | Single source of truth for PowerShell `$PROFILE` |
-| **PowerShell Theme** | [powershell/midnight-aurora.ps1](file:///C:/Users/moham/Documents/myenv/powershell/midnight-aurora.ps1) | PSReadLine options, colors, custom prompt |
-| **Console Theme** | [powershell/console-theme.ps1](file:///C:/Users/moham/Documents/myenv/powershell/console-theme.ps1) | Black console background & 32% transparency |
-| **CMD Macro Script** | [scripts/cmd-init.cmd](file:///C:/Users/moham/Documents/myenv/scripts/cmd-init.cmd) | Doskey aliases, Clink injection, and prompt styling for `cmd.exe` |
-| **Clink Settings** | [clink/clink_settings](file:///C:/Users/moham/Documents/myenv/clink/clink_settings) | Clink history auto-suggestions configuration |
+| **GlazeWM Config** | [glazewm/config.yaml](file:///%USERPROFILE%/Documents/myenv/glazewm/config.yaml) | Main tiling WM rules, keybindings, workspaces |
+| **YASB Config** | [yasb/config.yaml](file:///%USERPROFILE%/Documents/myenv/yasb/config.yaml) | Bar widgets, date/time format, alignment |
+| **YASB Styles** | [yasb/styles.css](file:///%USERPROFILE%/Documents/myenv/yasb/styles.css) | Sharp dark theme, transparent bar, workspace colors |
+| **PowerShell Profile** | [powershell/profile.ps1](file:///%USERPROFILE%/Documents/myenv/powershell/profile.ps1) | Single source of truth for PowerShell `$PROFILE` |
+| **PowerShell Theme** | [powershell/midnight-aurora.ps1](file:///%USERPROFILE%/Documents/myenv/powershell/midnight-aurora.ps1) | PSReadLine options, colors, custom prompt |
+| **Console Theme** | [powershell/console-theme.ps1](file:///%USERPROFILE%/Documents/myenv/powershell/console-theme.ps1) | Black console background & 32% transparency |
+| **CMD Macro Script** | [scripts/cmd-init.cmd](file:///%USERPROFILE%/Documents/myenv/scripts/cmd-init.cmd) | Doskey aliases, Clink injection, and prompt styling for `cmd.exe` |
+| **Clink Settings** | [clink/clink_settings](file:///%USERPROFILE%/Documents/myenv/clink/clink_settings) | Clink history auto-suggestions configuration |
+| **Package Manifest** | [winget-packages.json](file:///%USERPROFILE%/Documents/myenv/winget-packages.json) | Exported Winget package manifest for developer tools |
 
 ---
 
@@ -83,13 +88,14 @@ A high-performance, keyboard-driven tiling desktop environment for Windows devel
 
 | Script | Path | Description |
 |---|---|---|
-| **`setup-all.ps1`** | [scripts/setup-all.ps1](file:///C:/Users/moham/Documents/myenv/scripts/setup-all.ps1) | Master setup script: applies junctions, taskbar autohide, PSReadLine, Clink installation, CMD autorun, Alt+Shift disable, and reloads YASB. |
-| **`set-taskbar-autohide.ps1`** | [scripts/set-taskbar-autohide.ps1](file:///C:/Users/moham/Documents/myenv/scripts/set-taskbar-autohide.ps1) | Toggles Windows Taskbar auto-hide in Registry and restarts Explorer. |
-| **`set-ctrl-backspace.ps1`** | [scripts/set-ctrl-backspace.ps1](file:///C:/Users/moham/Documents/myenv/scripts/set-ctrl-backspace.ps1) | Binds `Ctrl+Backspace` for word deletion in PSReadLine and saves to `$PROFILE`. |
-| **`disable-alt-shift-lang.ps1`** | [scripts/disable-alt-shift-lang.ps1](file:///C:/Users/moham/Documents/myenv/scripts/disable-alt-shift-lang.ps1) | Disables `Alt+Shift` language switching in Registry, leaving `Win+Space` as primary. |
-| **`set-cmd-autocompletion.ps1`** | [scripts/set-cmd-autocompletion.ps1](file:///C:/Users/moham/Documents/myenv/scripts/set-cmd-autocompletion.ps1) | Enables CMD Tab auto-completion, triggers `install-clink.ps1`, and registers `cmd-init.cmd` AutoRun. |
-| **`install-clink.ps1`** | [scripts/install-clink.ps1](file:///C:/Users/moham/Documents/myenv/scripts/install-clink.ps1) | Installs Clink via `winget`, enables Clink AutoRun, and applies `clink_settings` from `myenv`. |
-| **`app-launcher.ps1`** | [scripts/app-launcher.ps1](file:///C:/Users/moham/Documents/myenv/scripts/app-launcher.ps1) | Fast WPF application launcher search dialog (`Alt + Q`). |
+| **`setup-all.ps1`** | [scripts/setup-all.ps1](file:///%USERPROFILE%/Documents/myenv/scripts/setup-all.ps1) | Master setup script: applies junctions, taskbar autohide, PSReadLine, Clink, Winget packages, CMD autorun, Alt+Shift disable, and reloads YASB. |
+| **`install-packages.ps1`** | [scripts/install-packages.ps1](file:///%USERPROFILE%/Documents/myenv/scripts/install-packages.ps1) | Restores/installs all developer packages from `winget-packages.json`. |
+| **`set-taskbar-autohide.ps1`** | [scripts/set-taskbar-autohide.ps1](file:///%USERPROFILE%/Documents/myenv/scripts/set-taskbar-autohide.ps1) | Toggles Windows Taskbar auto-hide in Registry and restarts Explorer. |
+| **`set-ctrl-backspace.ps1`** | [scripts/set-ctrl-backspace.ps1](file:///%USERPROFILE%/Documents/myenv/scripts/set-ctrl-backspace.ps1) | Binds `Ctrl+Backspace` for word deletion in PSReadLine and saves to `$PROFILE`. |
+| **`disable-alt-shift-lang.ps1`** | [scripts/disable-alt-shift-lang.ps1](file:///%USERPROFILE%/Documents/myenv/scripts/disable-alt-shift-lang.ps1) | Disables `Alt+Shift` language switching in Registry, leaving `Win+Space` as primary. |
+| **`set-cmd-autocompletion.ps1`** | [scripts/set-cmd-autocompletion.ps1](file:///%USERPROFILE%/Documents/myenv/scripts/set-cmd-autocompletion.ps1) | Enables CMD Tab auto-completion, triggers `install-clink.ps1`, and registers `cmd-init.cmd` AutoRun. |
+| **`install-clink.ps1`** | [scripts/install-clink.ps1](file:///%USERPROFILE%/Documents/myenv/scripts/install-clink.ps1) | Installs Clink via `winget`, enables Clink AutoRun, and applies `clink_settings` from `myenv`. |
+| **`app-launcher.ps1`** | [scripts/app-launcher.ps1](file:///%USERPROFILE%/Documents/myenv/scripts/app-launcher.ps1) | Fast WPF application launcher search dialog (`Alt + Q`). |
 
 
 ---

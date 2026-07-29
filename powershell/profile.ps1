@@ -15,22 +15,26 @@ $env:LC_ALL = 'en_US.UTF-8'
 $env:VISUAL = 'code --wait'
 $env:EDITOR = 'code --wait'
 
+# Dynamic User Profile and Repository Path
+$userProfile = $env:USERPROFILE
+$myenvDir = Join-Path $userProfile "Documents\myenv"
+
 # Central development environment paths.
 $pathsToAdd = @(
-    'C:\Users\moham\AppData\Local\Microsoft\WindowsApps',
+    "$userProfile\AppData\Local\Microsoft\WindowsApps",
     'C:\Program Files\dotnet',
-    'C:\Users\moham\development\flutter\bin',
-    'C:\Users\moham\development\jdk-17.0.19+10\bin',
-    'C:\Users\moham\AppData\Local\Android\Sdk\cmdline-tools\latest\bin',
-    'C:\Users\moham\AppData\Local\Android\Sdk\platform-tools',
-    'C:\Users\moham\AppData\Local\Android\Sdk\emulator',
+    "$userProfile\development\flutter\bin",
+    "$userProfile\development\jdk-17.0.19+10\bin",
+    "$userProfile\AppData\Local\Android\Sdk\cmdline-tools\latest\bin",
+    "$userProfile\AppData\Local\Android\Sdk\platform-tools",
+    "$userProfile\AppData\Local\Android\Sdk\emulator",
     'C:\Windows\System32\WindowsPowerShell\v1.0',
-    'C:\Users\moham\development\kotlin\bin',
-    'C:\Users\moham\development\msys64\ucrt64\bin',
-    'C:\Users\moham\development\php',
-    'C:\Users\moham\AppData\Roaming\Composer\vendor\bin',
-    'C:\Users\moham\development\nodejs',
-    'C:\Users\moham\AppData\Roaming\npm'
+    "$userProfile\development\kotlin\bin",
+    "$userProfile\development\msys64\ucrt64\bin",
+    "$userProfile\development\php",
+    "$userProfile\AppData\Roaming\Composer\vendor\bin",
+    "$userProfile\development\nodejs",
+    "$userProfile\AppData\Roaming\npm"
 )
 foreach ($p in $pathsToAdd) {
     if (Test-Path -LiteralPath $p) {
@@ -42,33 +46,33 @@ foreach ($p in $pathsToAdd) {
 }
 
 $env:DOTNET_ROOT = 'C:\Program Files\dotnet'
-$env:JAVA_HOME = 'C:\Users\moham\development\jdk-17.0.19+10'
-$env:ANDROID_HOME = 'C:\Users\moham\AppData\Local\Android\Sdk'
-$env:ANDROID_SDK_ROOT = 'C:\Users\moham\AppData\Local\Android\Sdk'
-$env:KOTLIN_HOME = 'C:\Users\moham\development\kotlin'
-$env:MSYS2_ROOT = 'C:\Users\moham\development\msys64'
-$env:PHP_HOME = 'C:\Users\moham\development\php'
-$env:PHPRC = 'C:\Users\moham\development\php'
-$env:COMPOSER_HOME = 'C:\Users\moham\AppData\Roaming\Composer'
-$env:NODE_HOME = 'C:\Users\moham\development\nodejs'
-$env:NPM_CONFIG_PREFIX = 'C:\Users\moham\AppData\Roaming\npm'
+$env:JAVA_HOME = "$userProfile\development\jdk-17.0.19+10"
+$env:ANDROID_HOME = "$userProfile\AppData\Local\Android\Sdk"
+$env:ANDROID_SDK_ROOT = "$userProfile\AppData\Local\Android\Sdk"
+$env:KOTLIN_HOME = "$userProfile\development\kotlin"
+$env:MSYS2_ROOT = "$userProfile\development\msys64"
+$env:PHP_HOME = "$userProfile\development\php"
+$env:PHPRC = "$userProfile\development\php"
+$env:COMPOSER_HOME = "$userProfile\AppData\Roaming\Composer"
+$env:NODE_HOME = "$userProfile\development\nodejs"
+$env:NPM_CONFIG_PREFIX = "$userProfile\AppData\Roaming\npm"
 
 # Keep PowerShell modules under myenv when present.
-$myenvModules = 'C:\Users\moham\Documents\myenv\powershell\Modules'
+$myenvModules = Join-Path $myenvDir "powershell\Modules"
 if (Test-Path $myenvModules) {
     $env:PSModulePath = $myenvModules + ';' + $env:PSModulePath
 }
 
-$themePath = 'C:\Users\moham\Documents\myenv\powershell\midnight-aurora.ps1'
+$themePath = Join-Path $myenvDir "powershell\midnight-aurora.ps1"
 if (Test-Path $themePath) { . $themePath }
 
-$consoleThemePath = 'C:\Users\moham\Documents\myenv\powershell\console-theme.ps1'
+$consoleThemePath = Join-Path $myenvDir "powershell\console-theme.ps1"
 if (Test-Path $consoleThemePath) { . $consoleThemePath }
 
 # Fastfetch is optional and uses the centralized config.
 if (-not [Console]::IsInputRedirected -and -not [Console]::IsOutputRedirected) {
     $fastfetch = Get-Command fastfetch -ErrorAction SilentlyContinue
-    $fastConfig = 'C:\Users\moham\.config\fastfetch\config.jsonc'
+    $fastConfig = Join-Path $userProfile ".config\fastfetch\config.jsonc"
     if ($fastfetch -and (Test-Path $fastConfig)) {
         fastfetch -c $fastConfig
     }

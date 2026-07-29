@@ -7,7 +7,7 @@
 #>
 
 $ErrorActionPreference = 'Stop'
-$myenvPath = "C:\Users\moham\Documents\myenv"
+$myenvPath = Split-Path -Parent $PSScriptRoot
 $clinkSrcSettings = "$myenvPath\clink\clink_settings"
 $clinkTargetDir = "$env:LOCALAPPDATA\clink"
 $clinkTargetSettings = "$clinkTargetDir\clink_settings"

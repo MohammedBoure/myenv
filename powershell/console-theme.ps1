@@ -59,6 +59,8 @@ foreach ($key in $keys) {
     Set-ItemProperty -Path $key -Name CursorSize -Type DWord -Value 25
     Set-ItemProperty -Path $key -Name QuickEdit -Type DWord -Value 1
     Set-ItemProperty -Path $key -Name InsertMode -Type DWord -Value 1
+    Set-ItemProperty -Path $key -Name InterceptCopyPaste -Type DWord -Value 1
+    Set-ItemProperty -Path $key -Name FilterOnPaste -Type DWord -Value 0
     Set-ItemProperty -Path $key -Name HistoryNoDup -Type DWord -Value 1
     Set-ItemProperty -Path $key -Name NumberOfHistoryBuffers -Type DWord -Value 4
     Set-ItemProperty -Path $key -Name HistoryBufferSize -Type DWord -Value 50

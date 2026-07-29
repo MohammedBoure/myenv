@@ -13,12 +13,42 @@ $script:MyEnvTheme = @{
 }
 
 try {
+    # Ensure myenv tools (fzf) are in PATH
+    $fzfToolsPath = "$env:USERPROFILE\Documents\myenv\tools\fzf"
+    if (Test-Path $fzfToolsPath) {
+        if ($env:PATH -notlike "*$fzfToolsPath*") {
+            $env:PATH = "$fzfToolsPath;$env:PATH"
+        }
+    }
+
     Set-PSReadLineOption -EditMode Windows
     Set-PSReadLineOption -PredictionSource History
     Set-PSReadLineOption -PredictionViewStyle ListView
     Set-PSReadLineOption -BellStyle None
     Set-PSReadLineKeyHandler -Key Tab -Function MenuComplete
     Set-PSReadLineKeyHandler -Key Ctrl+Backspace -Function BackwardKillWord
+    Set-PSReadLineKeyHandler -Key Ctrl+v -Function Paste
+    Set-PSReadLineKeyHandler -Key Ctrl+c -Function CopyOrCancelLine
+
+    # FZF Interactive History Search (Ctrl+R)
+    Set-PSReadLineKeyHandler -Chord 'Ctrl+r' -ScriptBlock {
+        $histPath = (Get-PSReadLineOption).HistorySavePath
+        if (Test-Path $histPath) {
+            $selected = Get-Content $histPath -Encoding UTF8 | Select-Object -Unique | fzf --height 40% --layout=reverse --prompt="Search History > "
+            if ($selected) {
+                [Microsoft.PowerShell.PSConsoleReadLine]::RevertLine()
+                [Microsoft.PowerShell.PSConsoleReadLine]::Insert($selected)
+            }
+        }
+    }
+
+    # FZF Interactive File Search (Ctrl+T)
+    Set-PSReadLineKeyHandler -Chord 'Ctrl+t' -ScriptBlock {
+        $selected = Get-ChildItem -Recurse -File -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName | fzf --height 40% --layout=reverse --prompt="Search Files > "
+        if ($selected) {
+            [Microsoft.PowerShell.PSConsoleReadLine]::Insert("`"$selected`"")
+        }
+    }
     Set-PSReadLineOption -Colors @{
         Command   = 'Cyan'
         Parameter = 'Yellow'
