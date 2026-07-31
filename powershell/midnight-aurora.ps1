@@ -104,3 +104,29 @@ function ll { Get-ChildItem -Force | Format-Table Mode,LastWriteTime,Length,Name
 function la { Get-ChildItem -Force }
 function gs { git status }
 function croot { Set-Location $HOME }
+
+# Copy Command Output to Clipboard while displaying in Terminal
+function cb {
+    begin {
+        $pipelineItems = [System.Collections.Generic.List[string]]::new()
+    }
+    process {
+        if ($_) {
+            $str = Out-String -InputObject $_
+            Write-Output $_
+            $pipelineItems.Add($str.TrimEnd())
+        }
+    }
+    end {
+        if ($args.Count -gt 0) {
+            $cmdStr = $args -join ' '
+            $out = Invoke-Expression $cmdStr | Tee-Object -Variable _cbCaptured
+            if ($_cbCaptured) {
+                ($_cbCaptured | Out-String).TrimEnd() | Set-Clipboard
+            }
+        } elseif ($pipelineItems.Count -gt 0) {
+            ($pipelineItems -join "`r`n").TrimEnd() | Set-Clipboard
+        }
+    }
+}
+Set-Alias -Name c -Value cb -Option ReadOnly, AllScope -ErrorAction SilentlyContinue

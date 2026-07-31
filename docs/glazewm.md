@@ -67,8 +67,9 @@
 | `Alt + Shift + X` | **فتح مدير المهام الفوري (Task Manager)** |
 | `Alt + Shift + M` | **كتم/تفعيل صوت الجهاز المباشر (Master Audio Mute Toggle)** |
 | `Alt + Shift + Z` | **تبديل شفافية النافذة النشطة 80% / 100% (Window Transparency Toggle)** |
-| `Alt + Enter` | تشغيل نافذة أوامر `cmd.exe` |
-| `Alt + Ctrl + Enter` | تشغيل نافذة `powershell.exe` |
+| `Alt + Enter` | **فتح نافذة `cmd.exe` في المسار الحالي المفتوح في File Explorer** (أو مجلد المستخدم) |
+| `Alt + Ctrl + Enter` | **فتح نافذة `powershell.exe` في المسار الحالي المفتوح في File Explorer** (أو مجلد المستخدم) |
+
 | `Alt + Shift + R` | إعادة تحميل إعدادات GlazeWM |
 | `Alt + Shift + E` | الخروج الآمن من GlazeWM |
 

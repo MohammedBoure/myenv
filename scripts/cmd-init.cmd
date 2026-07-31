@@ -13,6 +13,8 @@ doskey gc=git commit -m $1
 doskey gp=git push $1
 doskey gl=git log -n 10 $1
 doskey sudo="%USERPROFILE%\Documents\myenv\scripts\sudo.cmd" $1 $2 $3 $4 $5 $6 $7 $8 $9
+doskey cb="%USERPROFILE%\Documents\myenv\scripts\cb.cmd" $*
+doskey c="%USERPROFILE%\Documents\myenv\scripts\cb.cmd" $*
 
 :: Prompt Styling
 prompt $E[36m$T[0..5]$E[0m $E[32m%USERNAME%@%COMPUTERNAME%$E[0m $E[34m$P$E[0m $E[35m$+$E[0m$G 

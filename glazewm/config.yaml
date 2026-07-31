@@ -245,12 +245,14 @@ keybindings:
   - commands: ['wm-redraw']
     bindings: ['alt+shift+w']
 
-  # Terminals
-  - commands: ['shell-exec cmd']
+  # Terminals (Fast C# launcher with zero window flash)
+  - commands: ['shell-exec %USERPROFILE%\Documents\myenv\scripts\open-terminal-here.exe cmd']
     bindings: ['alt+enter']
 
-  - commands: ['shell-exec powershell']
+  - commands: ['shell-exec %USERPROFILE%\Documents\myenv\scripts\open-terminal-here.exe powershell']
     bindings: ['alt+ctrl+enter']
+
+
 
   # Workspaces Navigation
   - commands: ['focus --next-active-workspace']

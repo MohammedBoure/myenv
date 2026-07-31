@@ -96,6 +96,10 @@ A high-performance, keyboard-driven tiling desktop environment for Windows devel
 | **`set-cmd-autocompletion.ps1`** | [scripts/set-cmd-autocompletion.ps1](file:///%USERPROFILE%/Documents/myenv/scripts/set-cmd-autocompletion.ps1) | Enables CMD Tab auto-completion, triggers `install-clink.ps1`, and registers `cmd-init.cmd` AutoRun. |
 | **`install-clink.ps1`** | [scripts/install-clink.ps1](file:///%USERPROFILE%/Documents/myenv/scripts/install-clink.ps1) | Installs Clink via `winget`, enables Clink AutoRun, and applies `clink_settings` from `myenv`. |
 | **`app-launcher.ps1`** | [scripts/app-launcher.ps1](file:///%USERPROFILE%/Documents/myenv/scripts/app-launcher.ps1) | Fast WPF application launcher search dialog (`Alt + Q`). |
+| **`cb.cmd`** | [scripts/cb.cmd](file:///%USERPROFILE%/Documents/myenv/scripts/cb.cmd) | Runs a command, outputs results directly to terminal, and copies output to system clipboard. |
+| **`open-terminal-here.exe`** | [scripts/open-terminal-here.exe](file:///%USERPROFILE%/Documents/myenv/scripts/open-terminal-here.exe) | Instant native launcher (< 10ms, 0% window flash) to open CMD or PS at active File Explorer path. |
+
+
 
 
 ---
