@@ -50,12 +50,13 @@ A high-performance, keyboard-driven tiling desktop environment for Windows devel
 - **Dev Tools PATH**: `dotnet`, `flutter`, `jdk-17`, `Android SDK`, `kotlin`, `msys64`, `php`, `composer`, `nodejs`, `npm`.
 - **True Black Console Theme**: `#000000` background with **32% Transparency** (`WindowAlpha = 173` / 68% opacity).
 - **PSReadLine**: `Ctrl+Backspace` for backward word deletion (`BackwardKillWord`), history predictions (`ListView`), and Tab menu completion.
+- **Auto-LS on Navigation (`cd`)**: Automatically lists directory contents (`ls` / `Get-ChildItem`) whenever navigating to a new directory via `cd` or `chdir`.
 
 ### 5. CMD (Command Prompt) Auto-Completion & Clink History Predictions
 - **Clink History Auto-Suggestions**: Built-in real-time command prediction as you type (`autosuggest.enable = true`) matching previously executed commands in dark gray text. Press `→` (Right Arrow) to accept.
 - **Tab & Hotkeys**: `Tab` for completion, `F8` for history search matching typed prefix, `F7` for history list popup, `Ctrl+R` for interactive history search.
 - **AutoRun Initialization**: `scripts/cmd-init.cmd` registered under `HKCU:\Software\Microsoft\Command Processor\AutoRun`.
-- **Doskey Aliases**: `ls`, `ll`, `la`, `clear`, `croot`, `gs`, `ga`, `gc`, `gp`, `gl`.
+- **Doskey Aliases**: `cd` (Auto-LS), `ls`, `ll`, `la`, `clear`, `croot`, `gs`, `ga`, `gc`, `gp`, `gl`.
 - **Colored Prompt**: Displays timestamp, username, computer name, and current path.
 
 ### 6. Package Manifest & Auto Restoration (`winget-packages.json`)

@@ -2,11 +2,13 @@
 :: MyEnv - CMD Environment Initialization Script
 :: DOSKEY Aliases & Macros for CMD
 
+doskey cd=cd /d $* $T ls
+doskey chdir=cd /d $* $T ls
 doskey ls=dir /b $1
 doskey ll=dir $1
 doskey la=dir /a $1
 doskey clear=cls
-doskey croot=cd /d "%USERPROFILE%"
+doskey croot=cd /d "%USERPROFILE%" $T ls
 doskey gs=git status $1
 doskey ga=git add $1
 doskey gc=git commit -m $1

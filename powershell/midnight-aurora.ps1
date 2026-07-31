@@ -100,10 +100,34 @@ function prompt {
     return ''
 }
 
+Remove-Item -Path Alias:cd -Force -ErrorAction SilentlyContinue
+Remove-Item -Path Alias:chdir -Force -ErrorAction SilentlyContinue
+
+function cd {
+    if ($args.Count -eq 0) {
+        Set-Location $HOME
+    } else {
+        Set-Location @args
+    }
+    if ($?) {
+        Get-ChildItem
+    }
+}
+function chdir {
+    if ($args.Count -eq 0) {
+        Set-Location $HOME
+    } else {
+        Set-Location @args
+    }
+    if ($?) {
+        Get-ChildItem
+    }
+}
+
 function ll { Get-ChildItem -Force | Format-Table Mode,LastWriteTime,Length,Name -AutoSize }
 function la { Get-ChildItem -Force }
 function gs { git status }
-function croot { Set-Location $HOME }
+function croot { cd $HOME }
 
 # Copy Command Output to Clipboard while displaying in Terminal
 function cb {
