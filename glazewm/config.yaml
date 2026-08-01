@@ -98,6 +98,9 @@ workspaces:
 window_rules:
   - commands: ['ignore', 'set-floating --centered']
     match:
+      # QuickTranslate floating overlay rules
+      - window_process: { regex: '(?i)^QuickTranslate$' }
+      - window_title: { regex: '(?i).*QuickTranslate.*' }
       # Ignores the centered myenv application launcher.
       - window_title: { regex: '.*myenv-app-launcher.*' }
 
@@ -204,6 +207,14 @@ keybindings:
   # Centered application search dialog (Alt+Shift+Q)
   - commands: ['shell-exec powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File %USERPROFILE%\Documents\myenv\scripts\app-launcher.ps1']
     bindings: ['alt+shift+q']
+
+  # Quick Screen Region OCR & Translation (Win+Shift+Q or Alt+Shift+T)
+  - commands: ['shell-exec %USERPROFILE%\Documents\myenv\scripts\quick-translate\QuickTranslate.exe']
+    bindings: ['win+shift+q', 'alt+shift+t']
+
+  # Quick Clipboard Text Translation (Win+Shift+C or Alt+Shift+C)
+  - commands: ['shell-exec %USERPROFILE%\Documents\myenv\scripts\quick-translate\QuickTranslate.exe --clipboard']
+    bindings: ['win+shift+c', 'alt+shift+c']
 
   # Direct Full Screenshot (Alt+Shift+S)
   - commands: ['shell-exec powershell.exe -sta -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File %USERPROFILE%\Documents\myenv\scripts\capture-screenshot.ps1']

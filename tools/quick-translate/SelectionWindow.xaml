@@ -1,0 +1,39 @@
+<Window x:Class="QuickTranslate.SelectionWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="QuickTranslate Selection"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Topmost="True"
+        ShowInTaskbar="False"
+        Background="#25000000"
+        Cursor="Cross"
+        KeyDown="Window_KeyDown"
+        MouseDown="Window_MouseDown"
+        MouseMove="Window_MouseMove"
+        MouseUp="Window_MouseUp">
+    
+    <Canvas x:Name="CanvasOverlay">
+        <!-- Rubberband selection rectangle (Sharp White Border matching myenv theme) -->
+        <Rectangle x:Name="SelectionBox"
+                   Stroke="#FFFFFF"
+                   StrokeThickness="1.5"
+                   Fill="#20FFFFFF"
+                   Visibility="Collapsed" />
+        
+        <!-- Instruction Tooltip (Sharp Black Obsidian Style) -->
+        <Border x:Name="InstructionTip"
+                Background="#0E0E0E"
+                BorderBrush="#373737"
+                BorderThickness="1"
+                CornerRadius="0"
+                Padding="10,6"
+                Canvas.Left="20"
+                Canvas.Top="20">
+            <TextBlock Text="🎯 اسحب الماوس لتحديد النص | ESC للإلغاء"
+                       Foreground="#FFFFFF"
+                       FontSize="13"
+                       FontFamily="Segoe UI, Tahoma" />
+        </Border>
+    </Canvas>
+</Window>

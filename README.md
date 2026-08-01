@@ -67,6 +67,12 @@ A high-performance, keyboard-driven tiling desktop environment for Windows devel
 - **Alt+Shift Disabled**: Registry settings (`HKCU:\Keyboard Layout\Toggle`) disable `Alt+Shift` and `Ctrl+Shift` to prevent accidental language changes during coding.
 - **Win+Space Only**: `Win+Space` is configured as the sole input language switcher.
 
+### 8. Quick Screen Region Translator (`Win + Shift + Q` / `Alt + Shift + T`)
+- **Fast Screen Region Selection**: Crosshair cursor (`+`) overlay to drag-select any screen text region (PDFs, IDEs, websites, images, videos).
+- **Offline WinRT OCR**: Uses native Windows 10/11 `Windows.Media.Ocr` engine for instant (<20ms) English and French text extraction.
+- **Instant Arabic Translation**: Translates extracted text to Arabic using Google Translate API with Catppuccin dark mode floating window and one-click copy.
+- **GlazeWM Integration**: Bound to `Win + Shift + Q` and `Alt + Shift + T` with automatic floating window rules.
+
 ---
 
 ## 📂 Project Structure & Central Files
