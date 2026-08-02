@@ -1,76 +1,61 @@
-# 💻 توثيق بيئة Command Prompt (CMD)
+# 💻 CMD Environment Documentation / توثيق بيئة Command Prompt
 
-بيئة **CMD** متطورة ومخصصة داخل نظام `myenv` لتوفر تجربة كتابة أوامر سريعة وذكية تشبه التيرمينال في أنظمة Linux، بفضل الدمج بين اختصارات **Doskey** وأداة **Clink**.
-
----
-
-## 🚀 المميزات الرئيسية لـ CMD
-
-1. **التنقل الطبيعي وتخصيص سجل الأوامر (Natural Text Editing & History Search)**:
-   - **سهم اليمين واليسار (`→` / `←`)**: للتحرك الطبيعي حرف بحرف داخل السطر لتعديل أو تصحيح الأخطاء في الكلمات.
-   - **سهم الأعلى والأسفل (`↑` / `↓`)**: للتنقل في **سجل الأوامر السابقة الفعلية** المطابقة لما كتبته فقط (دون عرض ملفات التنفيذ النظامية).
-   - **زر `Tab`**: لإكمال الملفات والمجلدات والمسارات عند الحاجة.
-   - **حفظ دائم الخيارات**: الخيارات والسجل محفوظة دائماً دون الحاجة لضغط `F2`.
-   - **ثيم Obsidian Dark الأنيق**: قوائم الإكمال والـ Popups ملونة بالأسود والرمادي الداكن والأبيض الناصع لتتناسق مع مظهر النظام.
-2. **شريط الأوامر الملون (Colored Prompt)**:
-   - يعرض الوقت الحالي، اسم المستخدم، اسم الجهاز، والمسار الحالي بالألوان.
-3. **التشغيل التلقائي (AutoRun)**:
-   - يتم تسجيل سكريبت [cmd-init.cmd](file:///c:/Users/moham/Documents/myenv/scripts/cmd-init.cmd) تلقائياً في سجل النظام (`HKCU:\Software\Microsoft\Command Processor\AutoRun`).
+An enhanced **Command Prompt (CMD)** environment using **Doskey aliases** and **Clink** auto-suggestions.
+بيئة **CMD** متطورة ومخصصة داخل نظام `myenv` تجمع بين اختصارات **Doskey** وإكمال **Clink**.
 
 ---
 
-## ⚡ الاختصارات المتاحة (Doskey Command Aliases)
+## 🚀 Key Features / المميزات الرئيسية لـ CMD
 
-تم تعريف الأوامر المختصرة التالية لزيادة سرعة وسلاسة العمل:
+1. **Natural Text Editing & History Search / إعدادات التنقل والسجل**:
+   - **`→` / `←`**: Move cursor character by character / تحرك طبيعي داخل السطر.
+   - **`↑` / `↓`**: History search matching typed prefix / التنقل بين الأوامر المطابقة للمكتوب.
+   - **`Tab`**: Auto-complete files & directories / الإكمال التلقائي للملفات والمجلدات.
+   - **Obsidian Dark Popup**: Dark themed completion menus / قوائم إكمال داكنة وأنيقة.
+2. **Colored Prompt / شريط الأوامر الملون**:
+   - Displays timestamp, username, host, and path in colors / يعرض الوقت واسم الجهاز والمسار بالألوان.
+3. **AutoRun Integration / التشغيل التلقائي**:
+   - Registered in Registry AutoRun via [scripts/cmd-init.cmd](file:///c:/Users/moham/Documents/myenv/scripts/cmd-init.cmd).
 
-| الاختصار | الأمر المنفذ | الوصف |
+---
+
+## ⚡ Doskey Command Aliases / الاختصارات المتاحة
+
+| Alias / الاختصار | Executed Command / الأمر المنفذ | Description / الوصف (English) | الوصف (العربية) |
+|---|---|---|---|
+| `cd` / `chdir` | `cd /d <path> & ls` | Change directory and auto-list files (Auto-LS) | الانتقال للمجلد الجديد وتطبيق أمر `ls` تلقائياً |
+| `ls` | `dir /b` | Brief file listing | عرض قائمة الملفات بشكل مختصر |
+| `ll` | `dir` | Detailed file listing | عرض التفاصيل الكاملة للملفات والمجلدات |
+| `la` | `dir /a` | List all files including hidden | عرض جميع الملفات بما فيها المخفية |
+| `clear` | `cls` | Clear console screen | مسح شاشة الـ CMD |
+| `croot` | `cd /d "%USERPROFILE%" & ls` | Jump to Home directory + Auto-LS | الانتقال المباشر لمجلد المستخدم الرئيسي |
+| `docs` | `docs [wm|translate|cmd|ps]` | Terminal documentation navigator | مستكشف التوثيق السريع في التيرمينال |
+| `gs` | `git status` | Git status | عرض حالة مستودع Git |
+| `ga` | `git add` | Git add | إضافة الملفات للتجهيز في Git |
+| `gc` | `git commit -m` | Git commit with message | عمل Commit في Git مع إضافة الرسالة مباشرة |
+| `gp` | `git push` | Git push | رفع التغييرات إلى السيرفر البعيد |
+| `gl` | `git log -n 10` | Show latest 10 git commits | عرض أحدث 10 سجلات Commit في Git |
+| `sudo` | `RunAs Administrator` | Run CMD or command as Admin | تشغيل CMD كمسؤول أو تنفيذ أمر بصلحيات الأدمن |
+| `cb` / `c` | `cb.cmd <command>` | Run command & copy output to Clipboard | تنفيذ أي أمر وتوجيه النتيجة للتيرمينال والحافظة |
+
+---
+
+## ⌨️ Clink & Hotkey Navigation / نظام التحكم بالملاحة
+
+| Shortcut / الاختصار | Function / الوظيفة (English) | الوظيفة (العربية) |
 |---|---|---|
-| `cd` / `chdir` | `cd /d <path> & ls` | الانتقال للمجلد الجديد وتطبيق أمر `ls` تلقائياً لعرض محتوياته مباشرة |
-| `ls` | `dir /b` | عرض قائمة الملفات بشكل مختصر |
-| `ll` | `dir` | عرض التفاصيل الكاملة للملفات والمجلدات |
-| `la` | `dir /a` | عرض جميع الملفات بما فيها الملفات المخفية والسيستم |
-| `clear` | `cls` | مسح شاشة الـ CMD |
-| `croot` | `cd /d "%USERPROFILE%" & ls` | الانتقال المباشر لمجلد المستخدم الرئيسي وثم تطبيق `ls` مباشرة |
-| `docs` | `docs [wm|translate|cmd|ps|scripts]` | **مستكشف التوثيق السريع**؛ عرض واجهة تفاعلية أو مباشرة لكل اختصارات البيئة والأوامر |
-| `gs` | `git status` | عرض حالة مستودع Git |
-| `ga` | `git add` | إضافة الملفات للتجهيز في Git |
-| `gc` | `git commit -m` | عمل Commit في Git مع إضافة الرسالة مباشرة |
-| `gp` | `git push` | رفع التغييرات إلى السيرفر البعيد (Remote) |
-| `gl` | `git log -n 10` | عرض أحدث 10 سجلات Commit في Git |
-| `sudo` | `RunAs Administrator` | تشغيل CMD كمسؤول أو تنفيذ أمر بصلحيات الأدمن |
-| `cb` / `c` | `cb.cmd <command>` | تنفيذ أي أمر وعرض مخرجاته بالشاشة مع نسخها تلقائياً للحافظة |
-
+| `→` / `←` | Move cursor character by character | تحريك المؤشر وتعديل الكلمات |
+| `↑` / `↓` | History search matching typed text | التنقل بين الأوامر السابقة المطابقة |
+| `Tab` | Popup file/folder completion | قائمة إكمال الملفات والمجلدات |
+| `Ctrl + Space` / `F7` | Interactive history search popup | قائمة منبثقة تفاعلية بسجل الأوامر |
+| `Ctrl + L` | Clear screen buffer | مسح الشاشة فوراً دون مسح السجل |
+| `Alt + Enter` | Open new CMD window | فتح نافذة CMD جديدة عبر GlazeWM |
 
 ---
 
-## ⌨️ نظام التحكم بالملاحة المفصل (Navigation System)
+## 🛠️ Associated Files / الملفات المخصصة لـ CMD
 
-| الاختصار | نوع التحكم والوظيفة |
-|---|---|
-| **`→` / `←` (سهم اليمين واليسار)** | ✏️ **تحريك المؤشر وتعديل الأخطاء**: التحرك الطبيعي حرف بحرف داخل السطر لتصحيح الكتابة |
-| **`↑` / `↓` (سهم الأعلى والأسفل)** | 📜 **سجل الأوامر السابقة الفعلية**: التنقل الفوري بين الأوامر التي نفذتها سابقاً فقط |
-| **`Tab`** | 📁 **إكمال الملفات والمجلدات**: فتح قائمة تفاعلية بأسفل سطر الأوامر لاختيار الملفات والمسارات |
-| **`Ctrl + Space`** / **`F7`** | 📜 **قائمة منبثقة تفاعلية**: فتح قائمة تفاعلية في منتصف الشاشة بسجل الأوامر التاريخية كاملة |
-| **`Ctrl + L`** | 🧹 **مسح الشاشة** فوراً دون مسح السجل |
-| **`Alt + Enter`** | 🪟 فتح نافذة CMD جديدة عبر مدير النوافذ |
-
----
-
-## 🛠️ الملفات المخصصة لـ CMD
-
-- **ملف التهيأة والأوامر المختصرة**: [scripts/cmd-init.cmd](file:///c:/Users/moham/Documents/myenv/scripts/cmd-init.cmd)
-- **ملف إعدادات Clink**: [clink/clink_settings](file:///c:/Users/moham/Documents/myenv/clink/clink_settings)
-- **سكريبت ربط CMD بالـ Registry**: [scripts/set-cmd-autocompletion.ps1](file:///c:/Users/moham/Documents/myenv/scripts/set-cmd-autocompletion.ps1)
-- **سكريبت تثبيت وتفعيل Clink**: [scripts/install-clink.ps1](file:///c:/Users/moham/Documents/myenv/scripts/install-clink.ps1)
-
----
-
-## 💡 كيفية إضافة اختصارات أو تعديل الإعدادات
-
-1. **إضافة أمر مختصر جديد (Doskey)**:
-   افتح ملف [scripts/cmd-init.cmd](file:///c:/Users/moham/Documents/myenv/scripts/cmd-init.cmd) وأضف السطر التالي:
-   ```cmd
-   doskey myalias=command_to_run $1
-   ```
-2. **تعديل إعدادات Clink**:
-   قم بتعديل ملف [clink/clink_settings](file:///c:/Users/moham/Documents/myenv/clink/clink_settings) لحفظ أي خيارات تخص الاقتراحات التلقائية أو الألوان.
+- **CMD Init Script / ملف التهيأة**: [scripts/cmd-init.cmd](file:///c:/Users/moham/Documents/myenv/scripts/cmd-init.cmd)
+- **Clink Settings / إعدادات Clink**: [clink/clink_settings](file:///c:/Users/moham/Documents/myenv/clink/clink_settings)
+- **Registry Script / سكريبت سجل النظام**: [scripts/set-cmd-autocompletion.ps1](file:///c:/Users/moham/Documents/myenv/scripts/set-cmd-autocompletion.ps1)
+- **Clink Installer / سكريبت تثبيت Clink**: [scripts/install-clink.ps1](file:///c:/Users/moham/Documents/myenv/scripts/install-clink.ps1)

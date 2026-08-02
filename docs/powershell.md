@@ -1,47 +1,47 @@
-# ⚡ توثيق بيئة PowerShell
+# ⚡ PowerShell Environment Documentation / توثيق بيئة PowerShell
 
-بيئة **PowerShell** مبنية ومخصصة في مشروع `myenv` لتوفر أداءً عالياً وشفافية أنيقة وتجربة كتابة متطورة عبر **PSReadLine**.
-
----
-
-## 🚀 المميزات الرئيسية لـ PowerShell
-
-1. **البروفايل الموحد (`$PROFILE`)**:
-   - يتم تحميل البروفايل تلقائياً عبر الملف الموحد [powershell/profile.ps1](file:///c:/Users/moham/Documents/myenv/powershell/profile.ps1).
-2. **تحسينات PSReadLine**:
-   - اقتراحات التنبؤ التاريخي بناءً على الأوامر السابقة (ListView).
-   - اختصار `Ctrl+Backspace` لحذف كلمة كاملة للخلف (`BackwardKillWord`).
-3. **مظهر Midnight Aurora والشفافية**:
-   - خلفية سوداء ناصعة بنسبة شفافية 32% (68% Opacity) مريحة للعين.
-4. **أمر `sudo` لرفع الصلاحيات (RunAs Administrator)**:
-   - كتابة `sudo` تفتح نافذة PowerShell جديدة بصلاحيات المسؤول في نفس المسار الحالي مباشرة.
-   - كتابة `sudo command` تنفذ الأمر المحدد بصلاحيات المسؤول في نفس المسار الحالي.
-5. **مسارات أدوات التطوير (PATH Auto-Loader)**:
-   - تحميل تلقائي لمسارات الأدوات البرمجية: `dotnet`, `flutter`, `jdk-17`, `Android SDK`, `kotlin`, `msys64`, `php`, `composer`, `nodejs`, `npm`.
-
-6. **ميزة العرض التلقائي عند التنقل (`cd` / `chdir` Auto-LS)**:
-   - بمجرد الدخول إلى أي مجلد جديد باستخدام `cd path` أو `chdir path` (أو العودة `cd ..`), يتم تنفيذ `Get-ChildItem` (أمر `ls`) تلقائياً لعرض محتويات المجلد الجديد دون الحاجة لكتابته يدوياً.
+High-performance, customized **PowerShell** environment featuring **PSReadLine**, Midnight Aurora theme, and **32% Console Transparency**.
+بيئة **PowerShell** مبنية ومخصصة لتوفر أداءً عالياً وشفافية أنيقة وتجربة كتابة متطورة عبر **PSReadLine**.
 
 ---
 
-## 📁 ملفات التهيأة المخصصة
+## 🚀 Key Features / المميزات الرئيسية لـ PowerShell
 
-- **ملف البروفايل الرئيسي**: [powershell/profile.ps1](file:///c:/Users/moham/Documents/myenv/powershell/profile.ps1)
-- **ملف الثيم والـ Prompt**: [powershell/midnight-aurora.ps1](file:///c:/Users/moham/Documents/myenv/powershell/midnight-aurora.ps1)
-- **ملف الشفافية وألوان الكونسول**: [powershell/console-theme.ps1](file:///c:/Users/moham/Documents/myenv/powershell/console-theme.ps1)
+1. **Unified Profile (`$PROFILE`) / البروفايل الموحد**:
+   - Automatically loaded via single source of truth [powershell/profile.ps1](file:///c:/Users/moham/Documents/myenv/powershell/profile.ps1).
+2. **PSReadLine Enhancements / تحسينات PSReadLine**:
+   - `ListView` history auto-suggestions & predictions.
+   - `Ctrl+Backspace` for backward word deletion (`BackwardKillWord`).
+3. **Midnight Aurora Theme & Transparency / الشفافية والثيم**:
+   - True black background with **32% Transparency** (68% Opacity).
+4. **Elevated `sudo` Command / أمر رفع الصلاحيات**:
+   - `sudo`: Opens new elevated PowerShell window at current directory.
+   - `sudo command`: Executes command with Administrator privileges in current directory.
+5. **Dev Tools PATH Auto-Loader / تحميل مسارات الأدوات البرمجية**:
+   - Auto-loads `dotnet`, `flutter`, `jdk-17`, `Android SDK`, `kotlin`, `msys64`, `php`, `composer`, `nodejs`, `npm`.
+6. **Auto-LS Navigation (`cd` / `chdir`) / العرض التلقائي لـ `cd`**:
+   - Executing `cd path` automatically runs `Get-ChildItem` to show directory contents.
 
 ---
 
-## ⌨️ الاختصارات والمفاتيح المفعلة في PowerShell
+## 📁 Configuration Files / ملفات التهيأة المخصصة
 
-| الاختصار | الوظيفة |
-|---|---|
-| `cd` / `chdir` | تغيير المسار مع إظهار قائمة الملفات والمجلدات `ls` تلقائياً في المسار الجديد |
-| `docs` | **مستكشف التوثيق السريع في التيرمينال**: كتابة `docs` تفتح قائمة تفاعلية بجميع اختصارات البيئة (`docs wm`, `docs translate`, `docs cmd`, `docs ps`) |
-| `cb` / `c` | تنفيذ الأمر وعرض النتائج بالشاشة مع نسخ المخرجات تلقائياً للحافظة |
-| `| cb` | توجيه مخرجات أي أمر للشاشة وللحافظة في آن واحد |
-| `Ctrl + Backspace` | حذف الكلمة السابقة بالكامل |
-| `Tab` | فتح قائمة الإكمال التلقائي التفاعلية |
-| `Ctrl + R` | البحث في سجل الأوامر السابقة |
-| `Alt + Ctrl + Enter` | فتح نافذة PowerShell جديدة (عبر GlazeWM) |
+- **Main Profile File / البروفايل الرئيسي**: [powershell/profile.ps1](file:///c:/Users/moham/Documents/myenv/powershell/profile.ps1)
+- **Theme & Prompt File / الثيم والـ Prompt**: [powershell/midnight-aurora.ps1](file:///c:/Users/moham/Documents/myenv/powershell/midnight-aurora.ps1)
+- **Console Transparency File / ملف الشفافية**: [powershell/console-theme.ps1](file:///c:/Users/moham/Documents/myenv/powershell/console-theme.ps1)
 
+---
+
+## ⌨️ Shortcuts & Hotkeys / الاختصارات والمفاتيح المفعلة
+
+| Shortcut / الاختصار | Description / الوصف (English) | الوصف (العربية) |
+|---|---|---|
+| `cd` / `chdir` | Navigate to path & auto-list files (`ls`) | تغيير المسار مع إظهار قائمة الملفات تلقائياً |
+| `docs` | Terminal Documentation Navigator CLI | مستكشف التوثيق السريع في التيرمينال |
+| `cb` / `c` | Run command & copy output to Clipboard | تنفيذ الأمر وعرض النتائج مع نسسخها للحافظة |
+| `| cb` | Pipe output to screen and Clipboard | توجيه مخرجات أي أمر للشاشة وللحافظة معاً |
+| `sudo <cmd>` | Run command as Administrator in current path | تنفيذ الأمر بصلاحيات المسؤول بنفس المسار |
+| `Ctrl + Backspace` | Delete word backward | حذف الكلمة السابقة بالكامل |
+| `Tab` | Interactive menu completion | فتح قائمة الإكمال التلقائي التفاعلية |
+| `Ctrl + R` | Interactive history search (fzf / PSReadLine) | البحث التفاعلي في سجل الأوامر السابقة |
+| `Alt + Ctrl + Enter` | Open new PowerShell window via GlazeWM | فتح نافذة PowerShell جديدة عبر GlazeWM |

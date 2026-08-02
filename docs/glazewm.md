@@ -1,84 +1,76 @@
-# 🪟 توثيق مدير النوافذ GlazeWM
+# 🪟 GlazeWM Documentation / توثيق مدير النوافذ GlazeWM
 
-**GlazeWM** هو مدير نوافذ مقسمة (Tiling Window Manager) لنظام Windows، يتيح التحكم بالكامل في النوافذ ومواضعها عبر لوحة المفاتيح دون الحاجة لاستخدام الفأرة.
-
----
-
-## 📂 ملف التهيأة
-
-- **ملف الإعدادات الرئيسي**: [glazewm/config.yaml](file:///c:/Users/moham/Documents/myenv/glazewm/config.yaml)
+**GlazeWM** is a keyboard-driven tiling window manager for Windows.
+**GlazeWM** هو مدير نوافذ مقسمة لنظام Windows يتيح التحكم بالكامل بالنوافذ عبر لوحة المفاتيح.
 
 ---
 
-## ⌨️ جدول اختصارات لوحة المفاتيح الكامل (GlazeWM Keybindings)
+## 📂 Configuration File / ملف التهيأة
 
-### 🎯 التنقل وتحديد التركيز (Focus Controls)
-| الاختصار | الوظيفة |
-|---|---|
-| `Alt + H` / `Alt + ←` | نقل التركيز للنافذة اليسرى |
-| `Alt + L` / `Alt + →` | نقل التركيز للنافذة اليمنى |
-| `Alt + K` / `Alt + ↑` | نقل التركيز للنافذة العلوية |
-| `Alt + J` / `Alt + ↓` | نقل التركيز للنافذة السفلية |
-| `Alt + Shift + H/L/K/J` | تحريك النافذة الحالية في الاتجاه المحدد |
-| `Alt + Space` / ``Alt + ` `` / `Alt + W` | التبديل بين حالات النافذة / التنقل المباشر بين واجهات البرامج فوق بعضها |
-| `Alt + Shift + P` | **التوقف المؤقت لـ GlazeWM** (التحول التلقائي لسلوك الويندوز القديم للـ Dialogs والبرامج) |
-| `Alt + Shift + Space` | تحويل النافذة الحالية أو الـ Dialog إلى نافذة عائمة وموسّطة (Floating) |
-| `Alt + T` | إعادة النافذة لحالة التقسيم (Tiling) |
-| `Alt + F` | تبديل وضع ملء الشاشة (Fullscreen) |
-| `Alt + M` | تصغير النافذة (Minimize) |
-| `Alt + Q` | **إغلاق النافذة الحالية (Remove Window)** |
+- **Main Config File / ملف الإعدادات الرئيسي**: [glazewm/config.yaml](file:///c:/Users/moham/Documents/myenv/glazewm/config.yaml)
 
 ---
 
-### 📐 اتجاهات التقسيم وتغيير الأحجام (Splitting & Resizing)
-| الاختصار | الوظيفة |
-|---|---|
-| **التقسيم الذكي التلقائي** | يتم تحليل أبعاد النافذة المحددة تلقائياً: إذا كان العرض أكبر تُفتح النافذة الجديدة على **اليمين**، وإذا كان الارتفاع أكبر تُفتح في **الأسفل**. |
-| `Alt + V` | تبديل اتجاه التقسيم (أفقي <-> عمودي) |
-| `Alt + Shift + V` | **تقسيم عمودي إجباري** (وضع النافذة الجديدة أسفل النافذة الحالية) |
-| `Alt + Ctrl + V` | **تقسيم أفقي إجباري** (وضع النافذة الجديدة بجانب النافذة الحالية) |
-| `Alt + U` / `Alt + P` | تصغير / زيادة عرض النافذة بمقدار 2% |
-| `Alt + I` / `Alt + O` | تصغير / زيادة ارتفاع النافذة بمقدار 2% |
-| `Alt + R` | الدخول في وضع التكبير والتصغير التفاعلي (`Esc` للخروج) |
+## ⌨️ Complete Keybindings Cheat Sheet / جدول اختصارات لوحة المفاتيح
+
+### 🎯 Focus & Navigation Controls / التنقل وتحديد التركيز
+| Keybinding / الاختصار | Description / الوصف (English) | الوصف (العربية) |
+|---|---|---|
+| `Alt + H` / `Alt + ←` | Focus left window | نقل التركيز للنافذة اليسرى |
+| `Alt + L` / `Alt + →` | Focus right window | نقل التركيز للنافذة اليمنى |
+| `Alt + K` / `Alt + ↑` | Focus top window | نقل التركيز للنافذة العلوية |
+| `Alt + J` / `Alt + ↓` | Focus bottom window | نقل التركيز للنافذة السفلية |
+| `Alt + Shift + H/L/K/J` | Move window in direction | تحريك النافذة الحالية في الاتجاه المحدد |
+| `Alt + Space` / `Alt + W` | Cycle window state | التبديل بين حالات النافذة والتركيز |
+| `Alt + Shift + P` | Pause GlazeWM tiling | التوقف المؤقت لـ GlazeWM والعودة لسلوك الويندوز |
+| `Alt + Shift + Space` | Toggle window floating | تحويل النافذة إلى عائمة وموسّطة (Floating) |
+| `Alt + T` | Return window to tiling state | إعادة النافذة لحالة التقسيم (Tiling) |
+| `Alt + F` | Toggle fullscreen mode | تبديل وضع ملء الشاشة (Fullscreen) |
+| `Alt + M` | Minimize window | تصغير النافذة (Minimize) |
+| `Alt + Q` | Close focused window | إغلاق النافذة الحالية (Close Window) |
 
 ---
 
-### 🖥️ مساحات العمل والتنقل بين الشاشات (Workspaces & Displays)
-* **الشاشة اليسرى `DISPLAY1`**: مساحات العمل من `1` إلى `8`.
-* **الشاشة اليمنى `DISPLAY8`**: مساحات العمل من `9` إلى `10`.
-
-| الاختصار | الوظيفة |
-|---|---|
-| `Alt + 1..8` | الانتقال لمساحات العمل 1-8 (الشاشة اليسرى) |
-| `Alt + 9..0` | الانتقال لمساحات العمل 9-10 (الشاشة اليمنى) |
-| `Alt + Shift + 1..0` | نقل النافذة الحالية لمساحة العمل المحددة والذهاب إليها |
-| `Alt + PageUp` / `Alt + A` | الانتقال لمساحة العمل النشطة السابقة |
-| `Alt + PageDown` / `Alt + S` | الانتقال لمساحة العمل النشطة التالية |
-| `Alt + D` | الانتقال لآخر مساحة عمل تم استخدامها مؤخراً |
-| `Alt + Shift + A/F/D/S` | نقل مساحة العمل الحالية للشاشة (اليسار/اليمين/الأعلى/الأسفل) |
+### 📐 Splitting & Resizing / اتجاهات التقسيم وتغيير الأحجام
+| Keybinding / الاختصار | Description / الوصف (English) | الوصف (العربية) |
+|---|---|---|
+| **Smart Split** | Auto split by aspect ratio | تقسيم تلقائي (أفقي للعرَض، عمودي للارتفاع) |
+| `Alt + V` | Toggle split direction | تبديل اتجاه التقسيم (أفقي <-> عمودي) |
+| `Alt + Shift + V` | Force vertical split | تقسيم عمودي إجباري (أسفل النافذة الحالية) |
+| `Alt + Ctrl + V` | Force horizontal split | تقسيم أفقي إجباري (بجانب النافذة الحالية) |
+| `Alt + U` / `Alt + P` | Decrease / Increase width (2%) | تصغير / زيادة عرض النافذة بمقدار 2% |
+| `Alt + I` / `Alt + O` | Decrease / Increase height (2%) | تصغير / زيادة ارتفاع النافذة بمقدار 2% |
+| `Alt + R` | Interactive resize mode | وضع التكبير والتصغير التفاعلي (`Esc` للخروج) |
 
 ---
 
-### 🚀 تشغيل البرامج والتحكم
-| الاختصار | الوظيفة |
-|---|---|
-| `Alt + Shift + Q` | تشغيل مشغل التطبيقات السريع (`app-launcher.ps1`) |
-| `Win + Shift + C` / `Alt + Shift + C` | **ترجمة النص المحدد فوراً** (نسخ تلقائي `Ctrl+C` لملفات النص أو المواقع وإظهار الترجمة) |
-| `Win + Shift + Q` / `Alt + Shift + T` | **ترجمة منطقة الشاشة عبر OCR** (تظليل صورة أو جزء من الشاشة لترجمته) |
-| `Alt + Shift + S` | **التقاط كامل الشاشة المباشر والتلقائي** (حفظ الحافظة + مجلد Pictures/Screenshots) |
-| `Alt + Shift + X` | **فتح مدير المهام الفوري (Task Manager)** |
-| `Alt + Shift + M` | **كتم/تفعيل صوت الجهاز المباشر (Master Audio Mute Toggle)** |
-| `Alt + Shift + Z` | **تبديل شفافية النافذة النشطة 80% / 100% (Window Transparency Toggle)** |
-| `Alt + Enter` | **فتح نافذة `cmd.exe` في المسار الحالي المفتوح في File Explorer** (أو مجلد المستخدم) |
-| `Alt + Ctrl + Enter` | **فتح نافذة `powershell.exe` في المسار الحالي المفتوح في File Explorer** (أو مجلد المستخدم) |
+### 🖥️ Workspaces & Displays / مساحات العمل والتنقل بين الشاشات
+* **Left Display `DISPLAY1`**: Workspaces `1` to `8`.
+* **Right Display `DISPLAY8`**: Workspaces `9` to `10`.
 
-| `Alt + Shift + R` | إعادة تحميل إعدادات GlazeWM |
-| `Alt + Shift + E` | الخروج الآمن من GlazeWM |
+| Keybinding / الاختصار | Description / الوصف (English) | الوصف (العربية) |
+|---|---|---|
+| `Alt + 1..8` | Focus Workspaces 1-8 (Left) | الانتقال لمساحات العمل 1-8 (الشاشة اليسرى) |
+| `Alt + 9..0` | Focus Workspaces 9-10 (Right) | الانتقال لمساحات العمل 9-10 (الشاشة اليمنى) |
+| `Alt + Shift + 1..0` | Move window to workspace & focus | نقل النافذة الحالية لمساحة العمل والذهاب إليها |
+| `Alt + PageUp` / `Alt + A` | Focus previous active workspace | الانتقال لمساحة العمل النشطة السابقة |
+| `Alt + PageDown` / `Alt + S` | Focus next active workspace | الانتقال لمساحة العمل النشطة التالية |
+| `Alt + D` | Focus recent workspace | الانتقال لآخر مساحة عمل تم استخدامها |
+| `Alt + Shift + A/F/D/S` | Move workspace to display | نقل مساحة العمل للشاشة (يسار/يمين/أعلى/أسفل) |
 
 ---
 
-### 🎨 تمييز النافذة المحددة (Focused Window Border)
-
-- **إطار النافذة المحددة (Focused Window)**: إطار أبيض ناصع/خفيف (`#ffffff`) يحيط بالنافذة النشطة لتحديدها بوضوح تام.
-- **النوافذ الأخرى (Unfocused Windows)**: إطار داكن متناسق (`#202020`) لتخفيف الانشتات البصري.
-- **الفواصل (Gaps)**: فواصل بمقدار `4px` بين النوافذ والحواف لضمان إبراز الإطار الأبيض بشكل محدد وأنيق.
+### 🚀 Applications & Management / تشغيل البرامج والتحكم
+| Keybinding / الاختصار | Description / الوصف (English) | الوصف (العربية) |
+|---|---|---|
+| `Alt + Shift + Q` | App Launcher WPF Search Dialog | تشغيل مشغل التطبيقات السريع (`app-launcher.ps1`) |
+| `Win + Shift + C` / `Alt + Shift + C` | Instant Selection Translate | ترجمة النص المحدد فوراً (نسخ تلقائي `Ctrl+C`) |
+| `Win + Shift + Q` / `Alt + Shift + T` | Screen Region OCR Translate | ترجمة منطقة الشاشة عبر OCR (تظليل صورة) |
+| `Alt + Shift + S` | Instant Full Screenshot | التقاط كامل الشاشة والحفظ المباشر للحافظة وللملفات |
+| `Alt + Shift + X` | Launch Task Manager | فتح مدير المهام الفوري (Task Manager) |
+| `Alt + Shift + M` | Toggle Master Mute Audio | كتم/تفعيل صوت الجهاز المباشر |
+| `Alt + Shift + Z` | Window Transparency 80%/100% | تبديل شفافية النافذة النشطة 80% / 100% |
+| `Alt + Enter` | Open CMD at Explorer Path | فتح نافذة `cmd.exe` في مسار متصفح الملفات الحالي |
+| `Alt + Ctrl + Enter` | Open PowerShell at Explorer Path | فتح نافذة `powershell.exe` في مسار Explorer |
+| `Alt + Shift + R` | Reload GlazeWM Configuration | إعادة تحميل إعدادات GlazeWM |
+| `Alt + Shift + E` | Exit GlazeWM safely | الخروج الآمن من GlazeWM |

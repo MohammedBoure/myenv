@@ -6,7 +6,7 @@ $docsDir = Join-Path $env:USERPROFILE "Documents\myenv\docs"
 
 function Show-Header {
     Write-Host "==========================================================" -ForegroundColor DarkGray
-    Write-Host "      MyEnv Documentation & Shortcut Guide Navigator      " -ForegroundColor Cyan
+    Write-Host " MyEnv Documentation & Shortcut Guide (Bilingual / مزدوج) " -ForegroundColor Cyan
     Write-Host "==========================================================" -ForegroundColor DarkGray
 }
 
@@ -15,40 +15,37 @@ function Show-GlazeWM {
     Write-Host ""
     Write-Host "GlazeWM Tiling Window Manager Keybindings:" -ForegroundColor Yellow
     Write-Host "----------------------------------------------------------" -ForegroundColor DarkGray
-    Write-Host "  Focus Window      : Alt + H / J / K / L  or  Alt + Arrows" -ForegroundColor Green
-    Write-Host "  Move Window       : Alt + Shift + H / J / K / L" -ForegroundColor Green
-    Write-Host "  Focus Workspace   : Alt + 1..8 (Left Display), Alt + 9..0 (Right Display)" -ForegroundColor Green
-    Write-Host "  Move to Workspace : Alt + Shift + 1..0" -ForegroundColor Green
-    Write-Host "  Split Direction   : Alt + V (Toggle) | Alt+Shift+V (Vert) | Alt+Ctrl+V (Horiz)" -ForegroundColor Green
-    Write-Host "  Window Modes      : Alt + Space (Cycle) | Alt+Shift+Space (Float) | Alt+F (Full)" -ForegroundColor Green
-    Write-Host "  Window Actions    : Alt + Q (Close) | Alt + M (Minimize) | Alt + T (Tile)" -ForegroundColor Green
-    Write-Host "  Resize Window     : Alt + R (Interactive) | Alt + U/P (Width) | Alt + I/O (Height)" -ForegroundColor Green
-    Write-Host "  App Launcher      : Alt + Shift + Q  (WPF Search Dialog)" -ForegroundColor Yellow
-    Write-Host "  Quick Translate   : Win + Shift + C  (Instant Selected Text)" -ForegroundColor Yellow
-    Write-Host "                    : Win + Shift + Q  (Screen Region OCR)" -ForegroundColor Yellow
-    Write-Host "  System Shortcuts  : Alt + Shift + S  (Screenshot to File and Clipboard)" -ForegroundColor Magenta
-    Write-Host "                    : Alt + Shift + X  (Task Manager)" -ForegroundColor Magenta
-    Write-Host "                    : Alt + Shift + M  (Mute Audio) | Alt + Shift + Z (Transparency)" -ForegroundColor Magenta
-    Write-Host "  WM Management     : Alt + Shift + R  (Reload Config) | Alt + Shift + E (Exit)" -ForegroundColor DarkGray
+    Write-Host "  Focus Window      | Focus : Alt + H / J / K / L  or  Alt + Arrows" -ForegroundColor Green
+    Write-Host "  Move Window       | Move  : Alt + Shift + H / J / K / L" -ForegroundColor Green
+    Write-Host "  Focus Workspace   | Worksp: Alt + 1..8 (Left), Alt + 9..0 (Right)" -ForegroundColor Green
+    Write-Host "  Move Workspace    | MoveWS: Alt + Shift + 1..0" -ForegroundColor Green
+    Write-Host "  Split Direction   | Split : Alt + V (Toggle) | Alt+Shift+V (Vert) | Alt+Ctrl+V (Horiz)" -ForegroundColor Green
+    Write-Host "  Window Modes      | Mode  : Alt + Space (Cycle) | Alt+Shift+Space (Float) | Alt+F (Full)" -ForegroundColor Green
+    Write-Host "  Window Actions    | Action: Alt + Q (Close) | Alt + M (Minimize) | Alt + T (Tile)" -ForegroundColor Green
+    Write-Host "  Resize Window     | Resize: Alt + R (Interactive) | Alt + U/P (Width) | Alt + I/O (Height)" -ForegroundColor Green
+    Write-Host "  App Launcher      | Search: Alt + Shift + Q  (WPF Search Dialog)" -ForegroundColor Yellow
+    Write-Host "  Quick Translate   | Trans : Win + Shift + C  (Instant Selected Text)" -ForegroundColor Yellow
+    Write-Host "                    | OCR   : Win + Shift + Q  (Screen Region OCR)" -ForegroundColor Yellow
+    Write-Host "  System Tools      | Tools : Alt + Shift + S  (Screenshot) | Alt + Shift + X (Task Manager)" -ForegroundColor Magenta
+    Write-Host "                    |       : Alt + Shift + M  (Mute Audio) | Alt + Shift + Z (Transparency)" -ForegroundColor Magenta
+    Write-Host "  WM Control        | Ctrl  : Alt + Shift + R  (Reload Config) | Alt + Shift + E (Exit)" -ForegroundColor DarkGray
 }
 
 function Show-Translate {
     Show-Header
     Write-Host ""
-    Write-Host "QuickTranslate Shortcuts and Usage:" -ForegroundColor Yellow
+    Write-Host "QuickTranslate Shortcuts & Usage:" -ForegroundColor Yellow
     Write-Host "----------------------------------------------------------" -ForegroundColor DarkGray
-    Write-Host "  Win + Shift + C  : Translate highlighted text instantly (Auto Ctrl+C)" -ForegroundColor Green
-    Write-Host "  Win + Shift + Q  : Translate screen region (Drag-select OCR box)" -ForegroundColor Green
-    Write-Host "  Alt + Shift + C  : Secondary shortcut for selected text translation" -ForegroundColor DarkGray
-    Write-Host "  Alt + Shift + T  : Secondary shortcut for OCR region translation" -ForegroundColor DarkGray
+    Write-Host "  Win + Shift + C  | Alt+Shift+C : Instant Selected Text Translation" -ForegroundColor Green
+    Write-Host "  Win + Shift + Q  | Alt+Shift+T : Drag-Select Screen Region OCR Translation" -ForegroundColor Green
     Write-Host ""
-    Write-Host "  Rebuild Command  : cd tools\quick-translate ; dotnet build -c Release" -ForegroundColor Cyan
+    Write-Host "  Rebuild Command                : cd tools\quick-translate ; dotnet build -c Release" -ForegroundColor Cyan
 }
 
 function Show-CMD {
     Show-Header
     Write-Host ""
-    Write-Host "CMD Aliases and Clink Features:" -ForegroundColor Yellow
+    Write-Host "CMD Aliases & Clink Features:" -ForegroundColor Yellow
     Write-Host "----------------------------------------------------------" -ForegroundColor DarkGray
     Write-Host "  cd [path]        : Navigate to directory + auto-list files (Auto-LS)" -ForegroundColor Green
     Write-Host "  croot            : Jump to %USERPROFILE% + Auto-LS" -ForegroundColor Green
@@ -63,7 +60,7 @@ function Show-CMD {
 function Show-PowerShell {
     Show-Header
     Write-Host ""
-    Write-Host "PowerShell Profile and Features:" -ForegroundColor Yellow
+    Write-Host "PowerShell Profile & Features:" -ForegroundColor Yellow
     Write-Host "----------------------------------------------------------" -ForegroundColor DarkGray
     Write-Host "  cd [path]        : Navigate + Auto-LS (Get-ChildItem)" -ForegroundColor Green
     Write-Host "  cb [cmd] | cb    : Copy command output directly to Clipboard" -ForegroundColor Green
@@ -90,9 +87,9 @@ function Show-Menu {
     Write-Host ""
     Write-Host "Select an option:" -ForegroundColor White
     Write-Host " [1] GlazeWM Keybindings" -ForegroundColor Green
-    Write-Host " [2] QuickTranslate OCR and Selection" -ForegroundColor Green
-    Write-Host " [3] CMD Aliases and Clink" -ForegroundColor Green
-    Write-Host " [4] PowerShell Profile and Shortcuts" -ForegroundColor Green
+    Write-Host " [2] QuickTranslate OCR & Selection" -ForegroundColor Green
+    Write-Host " [3] CMD Aliases & Clink" -ForegroundColor Green
+    Write-Host " [4] PowerShell Profile & Shortcuts" -ForegroundColor Green
     Write-Host " [5] Automation Scripts List" -ForegroundColor Green
     Write-Host " [6] Open Full Docs Folder in Explorer" -ForegroundColor Yellow
     Write-Host " [Q] Exit" -ForegroundColor DarkGray
