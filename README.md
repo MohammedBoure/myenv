@@ -17,6 +17,7 @@ A high-performance, keyboard-driven tiling desktop environment for Windows devel
 | ⚡ **PowerShell Documentation** | PowerShell Profile | إعدادات PSReadLine وثيم Midnight Aurora الشفاف | [docs/powershell.md](file:///%USERPROFILE%/Documents/myenv/docs/powershell.md) |
 | 🪟 **GlazeWM Documentation** | Tiling WM | دليل كافة اختصارات لوحة المفاتيح والتقسيم ومساحات العمل | [docs/glazewm.md](file:///%USERPROFILE%/Documents/myenv/docs/glazewm.md) |
 | 📊 **YASB Documentation** | Status Bar | تفاصيل الثيم الداكن الشفاف والأزرار والـ Widgets | [docs/yasb.md](file:///%USERPROFILE%/Documents/myenv/docs/yasb.md) |
+| 🔠 **QuickTranslate Documentation** | OCR & Translate | دليل أداة تظليل وترجمة الشاشة وهيكليتها وتجميعها | [docs/quick-translate.md](file:///%USERPROFILE%/Documents/myenv/docs/quick-translate.md) |
 | ⚙️ **Automation Scripts** | PowerShell Scripts | دليل جميع سكريبتات الأتمتة وإعادة التهيئة المباشرة | [docs/automation-scripts.md](file:///%USERPROFILE%/Documents/myenv/docs/automation-scripts.md) |
 
 ---
@@ -188,3 +189,29 @@ To run master setup at any time:
 ```powershell
 powershell -ExecutionPolicy Bypass -File "C:\Users\moham\Documents\myenv\scripts\setup-all.ps1"
 ```
+
+---
+
+## 🛠️ Development & Build Guide / دليل التطوير وإعادة البناء
+
+خارطة طريق سريعة لإعادة تجميع الأدوات وتعديل إعدادات البيئة:
+
+### 1. تجميع وتطوير أدوات C# (Compilation)
+- **QuickTranslate (`tools/quick-translate/`)**:
+  ```powershell
+  cd "$env:USERPROFILE\Documents\myenv\tools\quick-translate"
+  dotnet build -c Release
+  ```
+- **OpenTerminalHere (`scripts/OpenTerminalHere.cs`)**:
+  ```powershell
+  C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe /target:exe /out:"$env:USERPROFILE\Documents\myenv\scripts\open-terminal-here.exe" "$env:USERPROFILE\Documents\myenv\scripts\OpenTerminalHere.cs"
+  ```
+
+### 2. تعديل إعدادات سجل النظام (Registry Modifications)
+- **CMD AutoRun**: مسجلة في `HKCU:\Software\Microsoft\Command Processor\AutoRun` وتوجه لـ [scripts/cmd-init.cmd](file:///%USERPROFILE%/Documents/myenv/scripts/cmd-init.cmd).
+- **Taskbar AutoHide**: مفعلة عبر `HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\StuckRects3` و `MMStuckRects3` (قيمة `3`).
+- **Alt+Shift Toggle**: مسجلة في `HKCU:\Keyboard Layout\Toggle` (قيمة `3` لتعطيل التغيير العشوائي للغة).
+
+### 3. مجلد النسخ الاحتياطية (`_legacy_originals/`)
+- يضم النسخ الأصلية والإعدادات السابقة قبل مركزتها داخل `myenv`.
+- يُحفظ كأرشيف آمن للرجوع للوراث (Rollback) عند الحاجة فقط دون التعديل عليه مباشر.
