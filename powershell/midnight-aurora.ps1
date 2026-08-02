@@ -129,6 +129,17 @@ function la { Get-ChildItem -Force }
 function gs { git status }
 function croot { cd $HOME }
 
+# Interactive Documentation & Cheat Sheet Navigator
+function docs {
+    param([string]$Topic = "")
+    $docsScript = "$env:USERPROFILE\Documents\myenv\scripts\docs.ps1"
+    if (Test-Path $docsScript) {
+        & $docsScript $Topic
+    } else {
+        Write-Host "Docs script not found at $docsScript" -ForegroundColor Red
+    }
+}
+
 # Copy Command Output to Clipboard while displaying in Terminal
 function cb {
     begin {

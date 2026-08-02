@@ -9,6 +9,7 @@
 | السكريبت | المسار | الوظيفة والدور |
 |---|---|---|
 | **`setup-all.ps1`** | [scripts/setup-all.ps1](file:///c:/Users/moham/Documents/myenv/scripts/setup-all.ps1) | **السكريبت الشامل**؛ يقوم بإنشاء الـ Junctions، تفعيل إخفاء شريط المهام تلقائياً، إعداد PSReadLine، تثبيت وتفعيل Clink، استعادة حزم Winget، ربط CMD AutoRun، وتعطيل اختصار `Alt+Shift` اللغوي. |
+| **`docs.ps1`** | [scripts/docs.ps1](file:///c:/Users/moham/Documents/myenv/scripts/docs.ps1) | **مستكشف التوثيق التفاعلي السريع** في التيرمينال؛ يتيح استعراض جميع اختصارات النظام والأوامر والأدوات عبر أمر `docs`. |
 | **`install-packages.ps1`** | [scripts/install-packages.ps1](file:///c:/Users/moham/Documents/myenv/scripts/install-packages.ps1) | استعادة وتثبيت جميع حزم وأدوات التطوير المسجلة في `winget-packages.json` تلقائياً عبر Winget. |
 | **`app-launcher.ps1`** | [scripts/app-launcher.ps1](file:///c:/Users/moham/Documents/myenv/scripts/app-launcher.ps1) | مشغل التطبيقات السريع (`Alt + Q`) المكتوب بـ WPF مع واجهة بحث سريعة. |
 | **`install-clink.ps1`** | [scripts/install-clink.ps1](file:///c:/Users/moham/Documents/myenv/scripts/install-clink.ps1) | فحص وتثبيت أداة Clink عبر WinGet وتنشيط الخيارات وتفعيل AutoRun. |
