@@ -19,12 +19,15 @@ namespace QuickTranslate {
                 );
 
                 if (isClipboardMode) {
-                    // Show ResultWindow INSTANTLY (< 15ms)
+                    // 1. Send Ctrl+C IMMEDIATELY to target window BEFORE creating/showing UI!
+                    ResultWindow.SendCopyKeys();
+
+                    // 2. Show ResultWindow INSTANTLY (< 15ms)
                     var resultWindow = new ResultWindow();
                     resultWindow.Show();
                     
-                    // Run copy & translation asynchronously in background while window is visible
-                    _ = resultWindow.StartClipboardAutoTranslateAsync();
+                    // 3. Read clipboard & translate asynchronously in background
+                    _ = resultWindow.FetchClipboardAndTranslateAsync();
 
                     resultWindow.Closed += (s, args) => Shutdown();
                 } else {

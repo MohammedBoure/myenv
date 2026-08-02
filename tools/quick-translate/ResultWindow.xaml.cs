@@ -31,16 +31,24 @@ namespace QuickTranslate {
             PopulateData(preloadedResult);
         }
 
-        public async Task StartClipboardAutoTranslateAsync() {
+        public static void SendCopyKeys() {
+            try {
+                keybd_event(VK_CONTROL, 0, 0, UIntPtr.Zero);
+                keybd_event(VK_C, 0, 0, UIntPtr.Zero);
+                keybd_event(VK_C, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
+                keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
+            } catch {}
+        }
+
+        public async Task FetchClipboardAndTranslateAsync() {
             isInitializing = true;
             TxtOriginal.Text = "جاري جلب النص المظلل...";
             TxtTranslation.Text = "جاري الترجمة...";
             TxtLangBadge.Text = "جاري الجلب...";
 
-            // 1. Send Ctrl+C to copy active selection with minimal delay
-            await TriggerCopyAsync();
+            // Give active window 40ms to write Ctrl+C into Clipboard
+            await Task.Delay(40);
 
-            // 2. Fetch clipboard text
             string text = GetClipboardTextWithRetry();
 
             if (string.IsNullOrWhiteSpace(text)) {
@@ -94,22 +102,7 @@ namespace QuickTranslate {
             }
         }
 
-        private static async Task TriggerCopyAsync() {
-            // Minimal release delay (20ms)
-            await Task.Delay(20);
-
-            // Simulate Ctrl+C
-            keybd_event(VK_CONTROL, 0, 0, UIntPtr.Zero);
-            keybd_event(VK_C, 0, 0, UIntPtr.Zero);
-            await Task.Delay(15);
-            keybd_event(VK_C, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
-            keybd_event(VK_CONTROL, 0, KEYEVENTF_KEYUP, UIntPtr.Zero);
-
-            // Wait 35ms for foreground application to process Ctrl+C
-            await Task.Delay(35);
-        }
-
-        private static string GetClipboardTextWithRetry(int maxRetries = 6, int delayMs = 30) {
+        private static string GetClipboardTextWithRetry(int maxRetries = 8, int delayMs = 25) {
             for (int i = 0; i < maxRetries; i++) {
                 try {
                     if (Clipboard.ContainsText()) {
