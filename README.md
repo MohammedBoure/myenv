@@ -11,14 +11,14 @@ A high-performance, keyboard-driven tiling desktop environment for Windows devel
 
 يمكنك الوصول لكافة أدلة التوثيق الخاصة بمكونات البيئة من الجدول التالي:
 
-| Documentation / التوثيق | Component / المكون | Description / الوصف (Bilingual English & Arabic) | File Link / رابط الملف |
-|---|---|---|---|
-| 💻 **CMD Documentation** | Command Prompt | Doskey command aliases, Clink history & auto-suggestions / دليل اختصارات Doskey وإكمال Clink | [docs/cmd.md](file:///%USERPROFILE%/Documents/myenv/docs/cmd.md) |
-| ⚡ **PowerShell Documentation** | PowerShell Profile | PSReadLine settings, Midnight Aurora theme & transparency / إعدادات PSReadLine وثيم الشفافية | [docs/powershell.md](file:///%USERPROFILE%/Documents/myenv/docs/powershell.md) |
-| 🪟 **GlazeWM Documentation** | Tiling WM | Complete keybindings, workspace rules & monitor bindings / دليل كافة اختصارات لوحة المفاتيح والتقسيم | [docs/glazewm.md](file:///%USERPROFILE%/Documents/myenv/docs/glazewm.md) |
-| 📊 **YASB Documentation** | Status Bar | Transparent sharp dark status bar theme & system widgets / تفاصيل الثيم الداكن الشفاف والـ Widgets | [docs/yasb.md](file:///%USERPROFILE%/Documents/myenv/docs/yasb.md) |
-| 🔠 **QuickTranslate Documentation** | OCR & Selection | Selection & OCR screen region translator architecture / أداة ترجمة النص المحدد وتظليل الشاشة | [docs/quick-translate.md](file:///%USERPROFILE%/Documents/myenv/docs/quick-translate.md) |
-| ⚙️ **Automation Scripts** | PowerShell Scripts | Automation scripts & environment re-linking guide / دليل سكريبتات الأتمتة وإعادة التهيئة المباشرة | [docs/automation-scripts.md](file:///%USERPROFILE%/Documents/myenv/docs/automation-scripts.md) |
+| Component / المكون | English Documentation (EN) | Arabic Documentation (AR / التوثيق العربي) |
+|---|---|---|
+| 💻 **Command Prompt (CMD)** | 🇺🇸 [docs/en/cmd.md](file:///%USERPROFILE%/Documents/myenv/docs/en/cmd.md) | 🇸🇦 [docs/ar/cmd.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/cmd.md) |
+| ⚡ **PowerShell Environment** | 🇺🇸 [docs/en/powershell.md](file:///%USERPROFILE%/Documents/myenv/docs/en/powershell.md) | 🇸🇦 [docs/ar/powershell.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/powershell.md) |
+| 🪟 **GlazeWM (Tiling Window Manager)** | 🇺🇸 [docs/en/glazewm.md](file:///%USERPROFILE%/Documents/myenv/docs/en/glazewm.md) | 🇸🇦 [docs/ar/glazewm.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/glazewm.md) |
+| 📊 **YASB Status Bar** | 🇺🇸 [docs/en/yasb.md](file:///%USERPROFILE%/Documents/myenv/docs/en/yasb.md) | 🇸🇦 [docs/ar/yasb.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/yasb.md) |
+| 🔠 **QuickTranslate Tool** | 🇺🇸 [docs/en/quick-translate.md](file:///%USERPROFILE%/Documents/myenv/docs/en/quick-translate.md) | 🇸🇦 [docs/ar/quick-translate.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/quick-translate.md) |
+| ⚙️ **Automation Scripts** | 🇺🇸 [docs/en/automation-scripts.md](file:///%USERPROFILE%/Documents/myenv/docs/en/automation-scripts.md) | 🇸🇦 [docs/ar/automation-scripts.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/automation-scripts.md) |
 
 ---
 
