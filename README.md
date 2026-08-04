@@ -18,6 +18,7 @@ A high-performance, keyboard-driven tiling desktop environment for Windows devel
 | 🪟 **GlazeWM (Tiling Window Manager)** | 🇺🇸 [docs/en/glazewm.md](file:///%USERPROFILE%/Documents/myenv/docs/en/glazewm.md) | 🇸🇦 [docs/ar/glazewm.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/glazewm.md) |
 | 📊 **YASB Status Bar** | 🇺🇸 [docs/en/yasb.md](file:///%USERPROFILE%/Documents/myenv/docs/en/yasb.md) | 🇸🇦 [docs/ar/yasb.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/yasb.md) |
 | 🔠 **QuickTranslate Tool** | 🇺🇸 [docs/en/quick-translate.md](file:///%USERPROFILE%/Documents/myenv/docs/en/quick-translate.md) | 🇸🇦 [docs/ar/quick-translate.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/quick-translate.md) |
+| 🌐 **NetLimiter (Bandwidth Control)** | 🇺🇸 [docs/en/netlimiter.md](file:///%USERPROFILE%/Documents/myenv/docs/en/netlimiter.md) | 🇸🇦 [docs/ar/netlimiter.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/netlimiter.md) |
 | ⚙️ **Automation Scripts** | 🇺🇸 [docs/en/automation-scripts.md](file:///%USERPROFILE%/Documents/myenv/docs/en/automation-scripts.md) | 🇸🇦 [docs/ar/automation-scripts.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/automation-scripts.md) |
 
 ---

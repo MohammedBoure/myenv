@@ -111,6 +111,8 @@ window_rules:
 
   - commands: ['set-floating --centered']
     match:
+      # NetLimiter GUI Floating rule
+      - window_process: { regex: '(?i)^(NetLimiter|nlclient)$' }
       # Native Windows dialogs (#32770) and file/folder pickers
       - window_class: { equals: '#32770' }
       - window_title: { regex: '(?i)^(Open|Save As|Select File|Select Folder|Browse|Properties|Settings|Preferences|Export|Import)$' }
