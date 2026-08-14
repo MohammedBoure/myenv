@@ -11,6 +11,10 @@
 					"Version" : "2.54.0"
 				},
 				{
+					"PackageIdentifier" : "Microsoft.PowerShell",
+					"Version" : "7.6.4.0"
+				},
+				{
 					"PackageIdentifier" : "RARLab.WinRAR",
 					"Version" : "7.22.0"
 				},

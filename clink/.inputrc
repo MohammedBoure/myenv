@@ -15,3 +15,8 @@
 "Tab": clink-popup-complete
 
 # 4. Standard Text Editing & Cursor Movement (Left and Right arrows move character-by-character natively)
+
+# 5. Multi-Byte & UTF-8 Arabic Character Input Support
+set input-meta on
+set output-meta on
+set convert-meta off

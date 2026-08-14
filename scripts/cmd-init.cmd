@@ -1,4 +1,12 @@
 @echo off
+:: Enable UTF-8 Code Page for Full Arabic & Unicode Support
+chcp 65001 >nul
+set "PYTHONIOENCODING=utf-8"
+set "PYTHONUTF8=1"
+set "LESSCHARSET=utf-8"
+set "LANG=en_US.UTF-8"
+set "LC_ALL=en_US.UTF-8"
+
 :: MyEnv - CMD Environment Initialization Script
 :: DOSKEY Aliases & Macros for CMD
 

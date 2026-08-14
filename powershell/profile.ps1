@@ -4,14 +4,18 @@ $global:MyEnvPowerShellProfileLoaded = $true
 
 $utf8 = New-Object System.Text.UTF8Encoding($false)
 try {
-    chcp.com 65001 > $null
-    [Console]::InputEncoding = $utf8
     [Console]::OutputEncoding = $utf8
     $OutputEncoding = $utf8
 } catch {}
 
+$PSDefaultParameterValues['*:Encoding'] = 'utf8'
+$PSDefaultParameterValues['Out-File:Encoding'] = 'utf8'
+
 $env:LANG = 'en_US.UTF-8'
 $env:LC_ALL = 'en_US.UTF-8'
+$env:PYTHONIOENCODING = 'utf-8'
+$env:PYTHONUTF8 = '1'
+$env:LESSCHARSET = 'utf-8'
 $env:VISUAL = 'code --wait'
 $env:EDITOR = 'code --wait'
 
@@ -21,6 +25,7 @@ $myenvDir = Join-Path $userProfile "Documents\myenv"
 
 # Central development environment paths.
 $pathsToAdd = @(
+    "$userProfile\AppData\Local\agy\bin",
     "$userProfile\AppData\Local\Microsoft\WindowsApps",
     'C:\Program Files\dotnet',
     "$userProfile\development\flutter\bin",
@@ -81,8 +86,9 @@ if (-not [Console]::IsInputRedirected -and -not [Console]::IsOutputRedirected) {
 # Sudo Utility Function for PowerShell (Elevates command or opens elevated PowerShell in current working directory)
 function sudo {
     $currentDir = (Get-Location).ProviderPath
+    $shellExe = if (Get-Command pwsh.exe -ErrorAction SilentlyContinue) { "pwsh" } else { "powershell" }
     if ($args.Count -eq 0) {
-        Start-Process powershell -WorkingDirectory $currentDir -ArgumentList "-NoExit -Command Set-Location -LiteralPath '$currentDir'" -Verb RunAs
+        Start-Process $shellExe -WorkingDirectory $currentDir -ArgumentList "-NoExit -Command Set-Location -LiteralPath '$currentDir'" -Verb RunAs
     } else {
         $exe = $args[0]
         if ($args.Count -gt 1) {

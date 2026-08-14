@@ -1,9 +1,9 @@
 <#
 .SYNOPSIS
-    Configures Ctrl+Backspace word deletion in PowerShell console & $PROFILE.
+    Configures Ctrl+Backspace word deletion in PowerShell & PowerShell 7 $PROFILE.
 .DESCRIPTION
     Adds Set-PSReadLineKeyHandler for Ctrl+Backspace to delete the previous word (BackwardKillWord)
-    in the active session and ensures it is present in the PowerShell $PROFILE script.
+    in the active session and ensures it is present in both Windows PowerShell and PowerShell 7 profiles.
 #>
 
 Write-Host "Configuring Ctrl+Backspace word deletion in PowerShell..." -ForegroundColor Cyan
@@ -20,13 +20,11 @@ try {
     Write-Warning "Could not bind in current session: $_"
 }
 
-# Ensure $PROFILE directory and file exist
-$profileDir = Split-Path -Path $PROFILE
-if (-not (Test-Path $profileDir)) {
-    New-Item -ItemType Directory -Path $profileDir -Force | Out-Null
-}
-
 $profileSnippet = @"
+
+# Redirect: all PowerShell settings live in myenv.
+`$centralProfile = '$env:USERPROFILE\Documents\myenv\powershell\profile.ps1'
+if (Test-Path `$centralProfile) { . `$centralProfile }
 
 # Enable Ctrl+Backspace, Ctrl+C, and Ctrl+V key handlers
 if (-not [Console]::IsInputRedirected -and -not [Console]::IsOutputRedirected) {
@@ -38,15 +36,24 @@ if (-not [Console]::IsInputRedirected -and -not [Console]::IsOutputRedirected) {
 }
 "@
 
-if (-not (Test-Path $PROFILE)) {
-    Set-Content -Path $PROFILE -Value $profileSnippet -Encoding UTF8
-    Write-Host "Created `$PROFILE with Ctrl+Backspace binding." -ForegroundColor Green
-} else {
-    $content = Get-Content -Path $PROFILE -Raw
-    if ($content -notmatch "BackwardKillWord") {
-        Add-Content -Path $PROFILE -Value $profileSnippet -Encoding UTF8
-        Write-Host "Appended Ctrl+Backspace binding to `$PROFILE." -ForegroundColor Green
+$targetProfiles = @(
+    "$env:USERPROFILE\Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1",
+    "$env:USERPROFILE\Documents\PowerShell\Microsoft.PowerShell_profile.ps1"
+)
+
+foreach ($prof in $targetProfiles) {
+    $parent = Split-Path $prof
+    if (-not (Test-Path $parent)) { New-Item -ItemType Directory -Path $parent -Force | Out-Null }
+    if (-not (Test-Path $prof)) {
+        Set-Content -Path $prof -Value $profileSnippet -Encoding UTF8
+        Write-Host "Created $prof with redirect and Ctrl+Backspace binding." -ForegroundColor Green
     } else {
-        Write-Host "Ctrl+Backspace binding is already present in `$PROFILE." -ForegroundColor Yellow
+        $content = Get-Content -Path $prof -Raw
+        if ($content -notmatch "BackwardKillWord") {
+            Add-Content -Path $prof -Value $profileSnippet -Encoding UTF8
+            Write-Host "Appended Ctrl+Backspace binding to $prof." -ForegroundColor Green
+        } else {
+            Write-Host "Binding already present in $prof." -ForegroundColor Yellow
+        }
     }
 }

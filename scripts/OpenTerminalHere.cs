@@ -21,7 +21,7 @@ namespace MyEnv {
         public const uint GW_HWNDNEXT = 2;
 
         static void Main(string[] args) {
-            string terminal = (args.Length > 0 && args[0].ToLower() == "cmd") ? "cmd.exe" : "powershell.exe";
+            bool isCmd = args.Length > 0 && args[0].Equals("cmd", StringComparison.OrdinalIgnoreCase);
             string userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
             string targetPath = userProfile;
 
@@ -58,12 +58,55 @@ namespace MyEnv {
                 }
             } catch {}
 
+            string terminalExe = "powershell.exe";
+            if (isCmd) {
+                terminalExe = "cmd.exe";
+            } else {
+                string pwshPath = FindPwshPath();
+                if (!string.IsNullOrEmpty(pwshPath)) {
+                    terminalExe = pwshPath;
+                }
+            }
+
             ProcessStartInfo psi = new ProcessStartInfo {
-                FileName = terminal,
+                FileName = terminalExe,
                 WorkingDirectory = targetPath,
                 UseShellExecute = true
             };
-            Process.Start(psi);
+
+            if (!isCmd) {
+                psi.Arguments = "-NoLogo";
+            }
+
+            try {
+                Process.Start(psi);
+            } catch {
+                ProcessStartInfo fallback = new ProcessStartInfo(isCmd ? "cmd.exe" : "powershell.exe") {
+                    WorkingDirectory = targetPath,
+                    UseShellExecute = true
+                };
+                Process.Start(fallback);
+            }
+        }
+
+        static string FindPwshPath() {
+            string programFiles = Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles);
+            string pwshPf = Path.Combine(programFiles, @"PowerShell\7\pwsh.exe");
+            if (File.Exists(pwshPf)) return pwshPf;
+
+            string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            string pwshApp = Path.Combine(localAppData, @"Microsoft\WindowsApps\pwsh.exe");
+            if (File.Exists(pwshApp)) return pwshApp;
+
+            string pathEnv = Environment.GetEnvironmentVariable("PATH") ?? "";
+            string[] dirs = pathEnv.Split(';');
+            foreach (string dir in dirs) {
+                if (string.IsNullOrWhiteSpace(dir)) continue;
+                string candidate = Path.Combine(dir.Trim(), "pwsh.exe");
+                if (File.Exists(candidate)) return candidate;
+            }
+
+            return null;
         }
 
         static IntPtr FindActiveExplorerHwnd() {

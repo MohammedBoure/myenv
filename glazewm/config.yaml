@@ -96,7 +96,7 @@ workspaces:
     bind_to_monitor: 1
 
 window_rules:
-  - commands: ['ignore', 'set-floating --centered']
+  - commands: ['ignore']
     match:
       # QuickTranslate floating overlay rules
       - window_process: { regex: '(?i)^QuickTranslate$' }
@@ -217,6 +217,10 @@ keybindings:
   # Quick Clipboard Text Translation (Win+Shift+C or Alt+Shift+C)
   - commands: ['shell-exec %USERPROFILE%\Documents\myenv\scripts\quick-translate\QuickTranslate.exe --clipboard']
     bindings: ['win+shift+c', 'alt+shift+c']
+
+  # Quick Type & Paste Translation (Win+Shift+X or Alt+Shift+E)
+  - commands: ['shell-exec %USERPROFILE%\Documents\myenv\scripts\quick-translate\QuickTranslate.exe --type']
+    bindings: ['win+shift+x', 'alt+shift+e']
 
   # Direct Full Screenshot (Alt+Shift+S)
   - commands: ['shell-exec powershell.exe -sta -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File %USERPROFILE%\Documents\myenv\scripts\capture-screenshot.ps1']

@@ -15,30 +15,30 @@ Write-Host "   MyEnv Master Environment Setup Script   " -ForegroundColor Magent
 Write-Host "==========================================" -ForegroundColor Magenta
 
 # 1. Enable Taskbar Auto-Hide
-Write-Host "`n[1/7] Applying Taskbar Auto-Hide..." -ForegroundColor Cyan
+Write-Host "`n[1/9] Applying Taskbar Auto-Hide..." -ForegroundColor Cyan
 & "$myenvPath\scripts\set-taskbar-autohide.ps1"
 
 # 2. Apply PowerShell Ctrl+Backspace
-Write-Host "`n[2/7] Configuring Ctrl+Backspace word deletion..." -ForegroundColor Cyan
+Write-Host "`n[2/9] Configuring Ctrl+Backspace word deletion..." -ForegroundColor Cyan
 & "$myenvPath\scripts\set-ctrl-backspace.ps1"
 
 # 3. Disable Alt+Shift Language Switching
-Write-Host "`n[3/7] Disabling Alt+Shift language switching (Win+Space only)..." -ForegroundColor Cyan
+Write-Host "`n[3/9] Disabling Alt+Shift language switching (Win+Space only)..." -ForegroundColor Cyan
 & "$myenvPath\scripts\disable-alt-shift-lang.ps1"
 
 # 4. Configure CMD Auto-Completion & Doskey Macros
-Write-Host "`n[4/7] Configuring CMD Auto-Completion & Macros..." -ForegroundColor Cyan
+Write-Host "`n[4/9] Configuring CMD Auto-Completion & Macros..." -ForegroundColor Cyan
 & "$myenvPath\scripts\set-cmd-autocompletion.ps1"
 
 # 5. Restore Winget Packages from Manifest
-Write-Host "`n[5/7] Restoring Winget Packages..." -ForegroundColor Cyan
+Write-Host "`n[5/9] Restoring Winget Packages..." -ForegroundColor Cyan
 $installPackagesScript = "$myenvPath\scripts\install-packages.ps1"
 if (Test-Path $installPackagesScript) {
     & $installPackagesScript
 }
 
 # 6. Create Junctions
-Write-Host "`n[6/7] Verifying Directory Junctions..." -ForegroundColor Cyan
+Write-Host "`n[6/9] Verifying Directory Junctions..." -ForegroundColor Cyan
 $junctions = @(
     @{ Source = "$userProfile\.config\yasb"; Target = "$myenvPath\yasb" },
     @{ Source = "$userProfile\.config\tacky-borders"; Target = "$myenvPath\tacky-borders" },
@@ -60,7 +60,7 @@ foreach ($j in $junctions) {
 }
 
 # 7. Manage Services (Stop Zebar & Reload YASB)
-Write-Host "`n[7/7] Managing Bar Services..." -ForegroundColor Cyan
+Write-Host "`n[7/9] Managing Bar Services..." -ForegroundColor Cyan
 Get-Process -Name zebar -ErrorAction SilentlyContinue | Stop-Process -Force
 $zebarLink = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\Startup\Zebar.lnk"
 if (Test-Path $zebarLink) { Remove-Item $zebarLink -Force }
@@ -71,7 +71,11 @@ if (Get-Command "yasbc.exe" -ErrorAction SilentlyContinue) {
 }
 
 # 8. Configure Windows 10 Native Active Window Border
-Write-Host "`n[8/8] Configuring Windows 10 Native Active Window Border..." -ForegroundColor Cyan
+Write-Host "`n[8/9] Configuring Windows 10 Native Active Window Border..." -ForegroundColor Cyan
 & "$myenvPath\scripts\set-windows10-border.ps1"
+
+# 9. Configure Arabic Terminal & Windows Terminal Support
+Write-Host "`n[9/9] Configuring Arabic & Windows Terminal Support..." -ForegroundColor Cyan
+& "$myenvPath\scripts\setup-arabic-terminal.ps1"
 
 Write-Host "`nSetup completed successfully!" -ForegroundColor Green

@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Concurrent;
 using System.Net.Http;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace QuickTranslate {
@@ -8,6 +10,7 @@ namespace QuickTranslate {
         public string OriginalText { get; set; } = string.Empty;
         public string TranslatedText { get; set; } = string.Empty;
         public string SourceLanguage { get; set; } = "AUTO";
+        public string TargetLanguage { get; set; } = "EN";
         public bool IsSuccess { get; set; } = false;
         public string ErrorMessage { get; set; } = string.Empty;
     }
@@ -17,9 +20,23 @@ namespace QuickTranslate {
             Timeout = TimeSpan.FromSeconds(5)
         };
 
+        // Fast in-memory cache to make typing/backspacing instant and avoid redundant network calls
+        private static readonly ConcurrentDictionary<string, TranslationResult> cache = new(StringComparer.OrdinalIgnoreCase);
+        private const int MaxCacheSize = 250;
+
+        public static bool ContainsArabic(string text) {
+            if (string.IsNullOrEmpty(text)) return false;
+            return Regex.IsMatch(text, @"[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFE]");
+        }
+
         public static async Task<TranslationResult> TranslateToArabicAsync(string text) {
+            return await TranslateAsync(text, targetLang: "ar", sourceLang: "auto");
+        }
+
+        public static async Task<TranslationResult> TranslateAsync(string text, string targetLang = "en", string sourceLang = "auto") {
             var result = new TranslationResult {
-                OriginalText = text
+                OriginalText = text,
+                TargetLanguage = targetLang.ToUpperInvariant()
             };
 
             if (string.IsNullOrWhiteSpace(text)) {
@@ -27,11 +44,25 @@ namespace QuickTranslate {
                 return result;
             }
 
+            string cacheKey = $"{sourceLang}_{targetLang}_{text.Trim()}";
+            if (cache.TryGetValue(cacheKey, out var cachedResult)) {
+                return new TranslationResult {
+                    OriginalText = text,
+                    TranslatedText = cachedResult.TranslatedText,
+                    SourceLanguage = cachedResult.SourceLanguage,
+                    TargetLanguage = cachedResult.TargetLanguage,
+                    IsSuccess = cachedResult.IsSuccess,
+                    ErrorMessage = cachedResult.ErrorMessage
+                };
+            }
+
             try {
-                // Endpoint for Google Translate free API
-                string url = $"https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=ar&dt=t&q={Uri.EscapeDataString(text)}";
+                // Free Google Translate single endpoint
+                string url = $"https://translate.googleapis.com/translate_a/single?client=gtx&sl={Uri.EscapeDataString(sourceLang)}&tl={Uri.EscapeDataString(targetLang)}&dt=t&q={Uri.EscapeDataString(text)}";
                 
+                client.DefaultRequestHeaders.UserAgent.Clear();
                 client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
+                
                 HttpResponseMessage response = await client.GetAsync(url);
                 response.EnsureSuccessStatusCode();
 
@@ -39,7 +70,7 @@ namespace QuickTranslate {
                 using (JsonDocument doc = JsonDocument.Parse(jsonString)) {
                     var root = doc.RootElement;
                     
-                    // Parse translation chunks from json array root[0]
+                    // Parse translation sentences from json array root[0]
                     if (root.ValueKind == JsonValueKind.Array && root.GetArrayLength() > 0) {
                         var sentences = root[0];
                         string fullTranslation = "";
@@ -52,16 +83,23 @@ namespace QuickTranslate {
                             }
                         }
 
-                        // Try to read detected source language from root[2]
+                        // Read detected source language from root[2]
                         if (root.GetArrayLength() > 2) {
                             string? detectedLang = root[2].GetString();
                             if (!string.IsNullOrEmpty(detectedLang)) {
-                                result.SourceLanguage = detectedLang.ToUpper();
+                                result.SourceLanguage = detectedLang.ToUpperInvariant();
                             }
                         }
 
                         result.TranslatedText = fullTranslation.Trim();
                         result.IsSuccess = true;
+
+                        // Cache result
+                        if (cache.Count >= MaxCacheSize) {
+                            cache.Clear();
+                        }
+                        cache[cacheKey] = result;
+
                         return result;
                     }
                 }
