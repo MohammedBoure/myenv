@@ -166,23 +166,59 @@ function cb {
 }
 Set-Alias -Name c -Value cb -Option ReadOnly, AllScope -ErrorAction SilentlyContinue
 
-# Copy Path via fzf - Interactively select a file and copy its normalized relative path
+# Copy Path via fzf - Interactively select a file or folder and copy its normalized relative path
 function cpf {
     <#
     .SYNOPSIS
-        Interactively search and select a file with fzf, then copy its normalized relative path to the clipboard.
+        Interactively search and select a file/folder with fzf, then copy its normalized relative path to the clipboard.
     .DESCRIPTION
-        Launches fzf to interactively search and select a file starting from the current working directory.
+        Launches fzf to interactively search and select a file or folder starting from the current working directory.
         The selected path is converted to a relative path, normalized with forward slashes ('/'), stripped of
         leading './' or '.\', and copied to the Windows clipboard via Set-Clipboard.
     .PARAMETER Path
-        Optional root path to search from. Defaults to the current directory ('.').
+        Optional root folder to search from. Supports Tab completion. Defaults to the current directory ('.').
+    .PARAMETER Directory
+        Search and select folders/directories only.
+    .PARAMETER Help
+        Display the shortcuts and usage guide.
     #>
     [CmdletBinding()]
     param(
         [Parameter(Position = 0, Mandatory = $false)]
-        [string]$Path = "."
+        [string]$Path = '.',
+
+        [Alias('d', 'FoldersOnly')]
+        [switch]$Directory,
+
+        [Alias('h', '?')]
+        [switch]$Help
     )
+
+    # Display Help & Shortcuts Guide if requested
+    if ($Help -or ($Path -in @('-h', '--help', '-?', 'help', '/?', '/h'))) {
+        Write-Host ''
+        Write-Host '==========================================================' -ForegroundColor DarkGray
+        Write-Host ' [*] cpf (Copy Path via fzf) - Interactive Path Selector  ' -ForegroundColor Cyan
+        Write-Host '==========================================================' -ForegroundColor DarkGray
+        Write-Host ''
+        Write-Host 'Keyboard Shortcuts inside fzf:' -ForegroundColor Yellow
+        Write-Host '----------------------------------------------------------' -ForegroundColor DarkGray
+        Write-Host '  [Enter]       : Copy selected relative path to Clipboard and exit' -ForegroundColor Green
+        Write-Host '  [Esc]         : Cancel without modifying clipboard' -ForegroundColor Green
+        Write-Host '  [Ctrl + C]    : Abort selection immediately' -ForegroundColor Green
+        Write-Host '  [Up / Down]   : Move selection cursor up / down' -ForegroundColor Green
+        Write-Host '  [Tab]         : In terminal, auto-complete folder names for cpf' -ForegroundColor Green
+        Write-Host ''
+        Write-Host 'Usage & Examples:' -ForegroundColor Yellow
+        Write-Host '----------------------------------------------------------' -ForegroundColor DarkGray
+        Write-Host '  cpf                 : Interactively search & copy all files/folders from current directory' -ForegroundColor White
+        Write-Host '  cpf <folder>        : Scope fuzzy finder to a specific folder (e.g. cpf docs)' -ForegroundColor White
+        Write-Host '  cpf <folder><Tab>   : Tab-complete any existing folder name in terminal' -ForegroundColor White
+        Write-Host '  cpf -d              : List and select directories/folders only' -ForegroundColor White
+        Write-Host '  cpf -h / cpf --help : Display this shortcut and usage guide' -ForegroundColor White
+        Write-Host ''
+        return
+    }
 
     # Resolve fzf executable
     $fzfCmd = Get-Command fzf.exe, fzf -ErrorAction SilentlyContinue | Select-Object -First 1
@@ -200,17 +236,31 @@ function cpf {
 
     # Resolve root search location
     $currentLocation = (Get-Location).ProviderPath
-    $searchTarget = if ([string]::IsNullOrWhiteSpace($Path) -or $Path -eq ".") {
+    $searchTarget = if ([string]::IsNullOrWhiteSpace($Path) -or $Path -eq '.') {
         $currentLocation
     } else {
         $resolved = Resolve-Path -LiteralPath $Path -ErrorAction SilentlyContinue
         if ($resolved) { $resolved.ProviderPath } else { $currentLocation }
     }
 
-    # Stream relative files into fzf
+    if (-not (Test-Path -LiteralPath $searchTarget)) {
+        Write-Host "Error: Target path '$searchTarget' does not exist." -ForegroundColor Red
+        return
+    }
+
+    # Stream relative files and folders into fzf
     try {
         $baseLen = $currentLocation.TrimEnd('\').Length
-        $fileStream = Get-ChildItem -LiteralPath $searchTarget -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object {
+        $gciParams = @{
+            LiteralPath = $searchTarget
+            Recurse     = $true
+            ErrorAction = 'SilentlyContinue'
+        }
+        if ($Directory) {
+            $gciParams['Directory'] = $true
+        }
+
+        $itemsStream = Get-ChildItem @gciParams | ForEach-Object {
             $fullName = $_.FullName
             if ($fullName.StartsWith($currentLocation, [System.StringComparison]::OrdinalIgnoreCase)) {
                 $rel = $fullName.Substring($baseLen).TrimStart('\', '/')
@@ -222,12 +272,15 @@ function cpf {
             $rel -replace '\\', '/' -replace '^\./', ''
         }
 
-        if (-not $fileStream) {
-            Write-Host "No files found to select in: $searchTarget" -ForegroundColor Yellow
+        if (-not $itemsStream) {
+            Write-Host "No files or folders found to select in: $searchTarget" -ForegroundColor Yellow
             return
         }
 
-        $selected = $fileStream | & $fzfExe --height 40% --layout=reverse --prompt="Copy Relative Path > " --preview-window=hidden
+        $fzfHeader = '[ENTER] Copy Path to Clipboard | [ESC] Cancel | Type to filter'
+        $promptText = if ($Directory) { 'Copy Folder > ' } else { 'Copy Path > ' }
+
+        $selected = $itemsStream | & $fzfExe --height=50% --layout=reverse --prompt="$promptText" --header="$fzfHeader" --preview-window=hidden
     } catch {
         Write-Host "Error running fzf: $_" -ForegroundColor Red
         return
@@ -251,5 +304,15 @@ function cpf {
         } catch {
             Write-Host "Failed to copy to clipboard: $_" -ForegroundColor Red
         }
+    }
+}
+
+# Auto-complete folder names when typing 'cpf <Tab>'
+Register-ArgumentCompleter -CommandName 'cpf' -ParameterName 'Path' -ScriptBlock {
+    param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
+    $pattern = if ([string]::IsNullOrWhiteSpace($wordToComplete)) { '*' } else { "$wordToComplete*" }
+    Get-ChildItem -Path $pattern -Directory -ErrorAction SilentlyContinue | ForEach-Object {
+        $rel = (Resolve-Path -Relative -LiteralPath $_.FullName) -replace '^\.\\', '' -replace '\\', '/'
+        [System.Management.Automation.CompletionResult]::new($rel, $rel, 'ProviderContainer', $_.Name)
     }
 }
