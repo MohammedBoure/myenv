@@ -63,6 +63,7 @@ function Show-PowerShell {
     Write-Host "PowerShell Profile & Features:" -ForegroundColor Yellow
     Write-Host "----------------------------------------------------------" -ForegroundColor DarkGray
     Write-Host "  cd [path]        : Navigate + Auto-LS (Get-ChildItem)" -ForegroundColor Green
+    Write-Host "  cpf [path]       : Fuzzy find file via fzf & copy relative path to Clipboard" -ForegroundColor Green
     Write-Host "  cb [cmd] | cb    : Copy command output directly to Clipboard" -ForegroundColor Green
     Write-Host "  sudo [command]   : Run elevated command in current working directory" -ForegroundColor Green
     Write-Host "  PSReadLine       : Ctrl+Backspace (Delete word), Tab (Menu completion)" -ForegroundColor Yellow

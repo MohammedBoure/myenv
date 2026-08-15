@@ -165,3 +165,91 @@ function cb {
     }
 }
 Set-Alias -Name c -Value cb -Option ReadOnly, AllScope -ErrorAction SilentlyContinue
+
+# Copy Path via fzf - Interactively select a file and copy its normalized relative path
+function cpf {
+    <#
+    .SYNOPSIS
+        Interactively search and select a file with fzf, then copy its normalized relative path to the clipboard.
+    .DESCRIPTION
+        Launches fzf to interactively search and select a file starting from the current working directory.
+        The selected path is converted to a relative path, normalized with forward slashes ('/'), stripped of
+        leading './' or '.\', and copied to the Windows clipboard via Set-Clipboard.
+    .PARAMETER Path
+        Optional root path to search from. Defaults to the current directory ('.').
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Position = 0, Mandatory = $false)]
+        [string]$Path = "."
+    )
+
+    # Resolve fzf executable
+    $fzfCmd = Get-Command fzf.exe, fzf -ErrorAction SilentlyContinue | Select-Object -First 1
+    $fzfExe = if ($fzfCmd) {
+        $fzfCmd.Source
+    } else {
+        $fzfFallback = "$env:USERPROFILE\Documents\myenv\tools\fzf\fzf.exe"
+        if (Test-Path $fzfFallback) { $fzfFallback } else { $null }
+    }
+
+    if (-not $fzfExe) {
+        Write-Host "Error: 'fzf' executable was not found in PATH or in 'myenv\tools\fzf'." -ForegroundColor Red
+        return
+    }
+
+    # Resolve root search location
+    $currentLocation = (Get-Location).ProviderPath
+    $searchTarget = if ([string]::IsNullOrWhiteSpace($Path) -or $Path -eq ".") {
+        $currentLocation
+    } else {
+        $resolved = Resolve-Path -LiteralPath $Path -ErrorAction SilentlyContinue
+        if ($resolved) { $resolved.ProviderPath } else { $currentLocation }
+    }
+
+    # Stream relative files into fzf
+    try {
+        $baseLen = $currentLocation.TrimEnd('\').Length
+        $fileStream = Get-ChildItem -LiteralPath $searchTarget -Recurse -File -ErrorAction SilentlyContinue | ForEach-Object {
+            $fullName = $_.FullName
+            if ($fullName.StartsWith($currentLocation, [System.StringComparison]::OrdinalIgnoreCase)) {
+                $rel = $fullName.Substring($baseLen).TrimStart('\', '/')
+            } else {
+                $baseUri = [System.Uri]($currentLocation.TrimEnd('\') + '\')
+                $targetUri = [System.Uri]$fullName
+                $rel = [System.Uri]::UnescapeDataString($baseUri.MakeRelativeUri($targetUri).ToString())
+            }
+            $rel -replace '\\', '/' -replace '^\./', ''
+        }
+
+        if (-not $fileStream) {
+            Write-Host "No files found to select in: $searchTarget" -ForegroundColor Yellow
+            return
+        }
+
+        $selected = $fileStream | & $fzfExe --height 40% --layout=reverse --prompt="Copy Relative Path > " --preview-window=hidden
+    } catch {
+        Write-Host "Error running fzf: $_" -ForegroundColor Red
+        return
+    }
+
+    # Clean exit if user pressed ESC or cancelled
+    if ([string]::IsNullOrWhiteSpace($selected)) {
+        return
+    }
+
+    $formattedPath = $selected.Trim() -replace '\\', '/' -replace '^\./', ''
+
+    # Copy to clipboard and confirm
+    try {
+        $formattedPath | Set-Clipboard
+        Write-Host "Copied to clipboard: $formattedPath" -ForegroundColor Green
+    } catch {
+        try {
+            $formattedPath | clip.exe
+            Write-Host "Copied to clipboard: $formattedPath" -ForegroundColor Green
+        } catch {
+            Write-Host "Failed to copy to clipboard: $_" -ForegroundColor Red
+        }
+    }
+}
