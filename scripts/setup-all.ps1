@@ -75,7 +75,27 @@ Write-Host "`n[8/9] Configuring Windows 10 Native Active Window Border..." -Fore
 & "$myenvPath\scripts\set-windows10-border.ps1"
 
 # 9. Configure Arabic Terminal & Windows Terminal Support
-Write-Host "`n[9/9] Configuring Arabic & Windows Terminal Support..." -ForegroundColor Cyan
+Write-Host "`n[9/10] Configuring Arabic & Windows Terminal Support..." -ForegroundColor Cyan
 & "$myenvPath\scripts\setup-arabic-terminal.ps1"
+
+# 10. Build & Register NightPad (Professional Night Mode Text Editor)
+Write-Host "`n[10/10] Building & Registering NightPad Text Editor..." -ForegroundColor Cyan
+$nightpadExe = "$myenvPath\scripts\nightpad\NightPad.exe"
+if (-not (Test-Path $nightpadExe)) {
+    if (Get-Command dotnet -ErrorAction SilentlyContinue) {
+        Write-Host "Publishing NightPad..." -ForegroundColor Yellow
+        dotnet publish "$myenvPath\tools\nightpad\NightPad.csproj" -c Release -o "$myenvPath\scripts\nightpad" --nologo -v q
+    }
+}
+$wsh = New-Object -ComObject WScript.Shell
+$scPath = "$env:APPDATA\Microsoft\Windows\Start Menu\Programs\NightPad.lnk"
+if (-not (Test-Path $scPath) -and (Test-Path $nightpadExe)) {
+    $sc = $wsh.CreateShortcut($scPath)
+    $sc.TargetPath = $nightpadExe
+    $sc.Description = "NightPad - Professional Night Mode Text Editor"
+    $sc.WorkingDirectory = $myenvPath
+    $sc.Save()
+    Write-Host "Created NightPad shortcut." -ForegroundColor Green
+}
 
 Write-Host "`nSetup completed successfully!" -ForegroundColor Green

@@ -18,6 +18,7 @@ A high-performance, keyboard-driven tiling desktop environment for Windows devel
 | 🪟 **GlazeWM (Tiling Window Manager)** | 🇺🇸 [docs/en/glazewm.md](file:///%USERPROFILE%/Documents/myenv/docs/en/glazewm.md) | 🇸🇦 [docs/ar/glazewm.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/glazewm.md) |
 | 📊 **YASB Status Bar** | 🇺🇸 [docs/en/yasb.md](file:///%USERPROFILE%/Documents/myenv/docs/en/yasb.md) | 🇸🇦 [docs/ar/yasb.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/yasb.md) |
 | 🔠 **QuickTranslate Tool** | 🇺🇸 [docs/en/quick-translate.md](file:///%USERPROFILE%/Documents/myenv/docs/en/quick-translate.md) | 🇸🇦 [docs/ar/quick-translate.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/quick-translate.md) |
+| 🌙 **NightPad (Night Mode Editor)** | 🇺🇸 [docs/en/night-pad.md](file:///%USERPROFILE%/Documents/myenv/docs/en/night-pad.md) | 🇸🇦 [docs/ar/night-pad.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/night-pad.md) |
 | 🌐 **NetLimiter (Bandwidth Control)** | 🇺🇸 [docs/en/netlimiter.md](file:///%USERPROFILE%/Documents/myenv/docs/en/netlimiter.md) | 🇸🇦 [docs/ar/netlimiter.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/netlimiter.md) |
 | ⚙️ **Automation Scripts** | 🇺🇸 [docs/en/automation-scripts.md](file:///%USERPROFILE%/Documents/myenv/docs/en/automation-scripts.md) | 🇸🇦 [docs/ar/automation-scripts.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/automation-scripts.md) |
 
@@ -76,6 +77,15 @@ A high-performance, keyboard-driven tiling desktop environment for Windows devel
 - **Instant Arabic Translation**: Translates extracted text to Arabic using Google Translate API with Catppuccin dark mode floating window and one-click copy.
 - **GlazeWM Integration**: Bound to `Win + Shift + Q` and `Alt + Shift + T` with automatic floating window rules.
 
+### 9. NightPad - Professional Obsidian Night Mode Text Editor (`Alt + N` / `np`)
+- **Obsidian Dark Aesthetic**: Deep obsidian background (`#0d1117`), high-contrast text (`#f0f6fc`), electric cyan accents (`#58a6ff`), and sharp 0px rectangular edges.
+- **Multi-Document Tabs**: Tabbed interface with dirty state markers (`*`), drag-and-drop file opening, and middle-click tab closure.
+- **20+ Languages Syntax Highlighting**: Real-time syntax coloring for PowerShell, Python, JSON, YAML, Markdown, C#, C/C++, JavaScript, TypeScript, HTML, XML, CSS, PHP, SQL, Batch/CMD, INI/Config, Java, Rust, and Go.
+- **Live Markdown Preview (`Ctrl + Shift + M`)**: Split-panel instant markdown rendering for headers, lists, code blocks, bold, and italic text.
+- **Advanced Find & Replace (`Ctrl + F` / `Ctrl + H`)**: Regular expressions, match case, whole word search, and live match counters.
+- **Developer Productivity Tools**: JSON formatting & minifying, Base64/URL encoding and decoding, line sorting, line deduplication, and timestamp insertion.
+- **GlazeWM & Shell Integration**: GlazeWM hotkey (`Alt + N`), automatic tiling rule, and terminal commands (`np`, `nightpad`, `notepad`).
+
 ---
 
 ## 📂 Project Structure & Central Files
@@ -90,6 +100,8 @@ A high-performance, keyboard-driven tiling desktop environment for Windows devel
 | **Console Theme** | [powershell/console-theme.ps1](file:///%USERPROFILE%/Documents/myenv/powershell/console-theme.ps1) | Black console background & 32% transparency |
 | **CMD Macro Script** | [scripts/cmd-init.cmd](file:///%USERPROFILE%/Documents/myenv/scripts/cmd-init.cmd) | Doskey aliases, Clink injection, and prompt styling for `cmd.exe` |
 | **Clink Settings** | [clink/clink_settings](file:///%USERPROFILE%/Documents/myenv/clink/clink_settings) | Clink history auto-suggestions configuration |
+| **NightPad Source** | [tools/nightpad/](file:///%USERPROFILE%/Documents/myenv/tools/nightpad) | Source code for NightPad professional text editor (.NET 10 WPF + AvalonEdit) |
+| **NightPad Binary** | [scripts/nightpad/NightPad.exe](file:///%USERPROFILE%/Documents/myenv/scripts/nightpad/NightPad.exe) | Compiled standalone executable for NightPad |
 | **Package Manifest** | [winget-packages.json](file:///%USERPROFILE%/Documents/myenv/winget-packages.json) | Exported Winget package manifest for developer tools |
 
 ---
@@ -98,7 +110,8 @@ A high-performance, keyboard-driven tiling desktop environment for Windows devel
 
 | Script | Path | Description |
 |---|---|---|
-| **`setup-all.ps1`** | [scripts/setup-all.ps1](file:///%USERPROFILE%/Documents/myenv/scripts/setup-all.ps1) | Master setup script: applies junctions, taskbar autohide, PSReadLine, Clink, Winget packages, CMD autorun, Alt+Shift disable, and reloads YASB. |
+| **`setup-all.ps1`** | [scripts/setup-all.ps1](file:///%USERPROFILE%/Documents/myenv/scripts/setup-all.ps1) | Master setup script: applies junctions, taskbar autohide, PSReadLine, Clink, Winget packages, CMD autorun, Alt+Shift disable, reloads YASB, and builds NightPad. |
+| **`np.cmd` / `nightpad.cmd`** | [scripts/np.cmd](file:///%USERPROFILE%/Documents/myenv/scripts/np.cmd) | Instant command-line launcher for NightPad (`np [file]`). |
 | **`install-packages.ps1`** | [scripts/install-packages.ps1](file:///%USERPROFILE%/Documents/myenv/scripts/install-packages.ps1) | Restores/installs all developer packages from `winget-packages.json`. |
 | **`set-taskbar-autohide.ps1`** | [scripts/set-taskbar-autohide.ps1](file:///%USERPROFILE%/Documents/myenv/scripts/set-taskbar-autohide.ps1) | Toggles Windows Taskbar auto-hide in Registry and restarts Explorer. |
 | **`set-ctrl-backspace.ps1`** | [scripts/set-ctrl-backspace.ps1](file:///%USERPROFILE%/Documents/myenv/scripts/set-ctrl-backspace.ps1) | Binds `Ctrl+Backspace` for word deletion in PSReadLine and saves to `$PROFILE`. |
@@ -164,6 +177,7 @@ A high-performance, keyboard-driven tiling desktop environment for Windows devel
 | Keybinding | Action |
 |---|---|
 | `Alt + Shift + Q` | Launch App Launcher Search Dialog (`app-launcher.ps1`) |
+| `Alt + N` | Launch NightPad Text Editor (`NightPad.exe`) |
 | `Alt + Enter` | Launch Command Prompt (`cmd.exe`) |
 | `Alt + Ctrl + Enter` | Launch Windows PowerShell (`powershell.exe`) |
 | `Alt + Ctrl + T` | Open PowerShell at current File Explorer directory (`open-terminal-here.ps1`) |

@@ -26,12 +26,15 @@ doskey sudo="%USERPROFILE%\Documents\myenv\scripts\sudo.cmd" $1 $2 $3 $4 $5 $6 $
 doskey cb="%USERPROFILE%\Documents\myenv\scripts\cb.cmd" $*
 doskey c="%USERPROFILE%\Documents\myenv\scripts\cb.cmd" $*
 doskey docs=powershell -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\Documents\myenv\scripts\docs.ps1" $*
+doskey np="%USERPROFILE%\Documents\myenv\scripts\nightpad\NightPad.exe" $*
+doskey nightpad="%USERPROFILE%\Documents\myenv\scripts\nightpad\NightPad.exe" $*
+doskey notepad="%USERPROFILE%\Documents\myenv\scripts\nightpad\NightPad.exe" $*
 
 :: Prompt Styling
 prompt $E[36m$T[0..5]$E[0m $E[32m%USERNAME%@%COMPUTERNAME%$E[0m $E[34m$P$E[0m $E[35m$+$E[0m$G 
 
-:: Add Clink and MyEnv Tools (fzf) to PATH & Inject Clink for History Auto-Suggestions
-set "PATH=%USERPROFILE%\Documents\myenv\tools\fzf;%LOCALAPPDATA%\clink\bin;%PATH%"
+:: Add Clink, MyEnv Tools (fzf), Scripts & NightPad to PATH & Inject Clink for History Auto-Suggestions
+set "PATH=%USERPROFILE%\Documents\myenv\scripts;%USERPROFILE%\Documents\myenv\scripts\nightpad;%USERPROFILE%\Documents\myenv\tools\fzf;%LOCALAPPDATA%\clink\bin;%PATH%"
 if exist "%LOCALAPPDATA%\clink\bin\clink.exe" (
     "%LOCALAPPDATA%\clink\bin\clink.exe" inject --quiet
 ) else (

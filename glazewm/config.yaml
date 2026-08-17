@@ -104,10 +104,10 @@ window_rules:
       # Ignores the centered myenv application launcher.
       - window_title: { regex: '.*myenv-app-launcher.*' }
 
-  # Always tile terminals (CMD, PowerShell, Windows Terminal)
+  # Always tile terminals and text editors (CMD, PowerShell, Windows Terminal, NightPad)
   - commands: ['set-tiling']
     match:
-      - window_process: { regex: '(?i)^(cmd|powershell|pwsh|WindowsTerminal|conhost)$' }
+      - window_process: { regex: '(?i)^(cmd|powershell|pwsh|WindowsTerminal|conhost|NightPad)$' }
 
   - commands: ['set-floating --centered']
     match:
@@ -268,6 +268,10 @@ keybindings:
 
   - commands: ['shell-exec %USERPROFILE%\Documents\myenv\scripts\open-terminal-here.exe powershell']
     bindings: ['alt+ctrl+enter']
+
+  # NightPad Text Editor (Professional Night Mode Editor)
+  - commands: ['shell-exec %USERPROFILE%\Documents\myenv\scripts\nightpad\NightPad.exe']
+    bindings: ['alt+n']
 
 
 

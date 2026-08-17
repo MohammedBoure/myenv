@@ -27,6 +27,8 @@ $myenvDir = Join-Path $userProfile "Documents\myenv"
 $pathsToAdd = @(
     "$userProfile\AppData\Local\agy\bin",
     "$userProfile\AppData\Local\Microsoft\WindowsApps",
+    "$myenvDir\scripts",
+    "$myenvDir\scripts\nightpad",
     'C:\Program Files\dotnet',
     "$userProfile\development\flutter\bin",
     "$userProfile\development\jdk-17.0.19+10\bin",
@@ -99,3 +101,27 @@ function sudo {
         }
     }
 }
+
+# NightPad - Professional Night Mode Notepad
+function np {
+    $nightpadExe = Join-Path $myenvDir "scripts\nightpad\NightPad.exe"
+    if (Test-Path -LiteralPath $nightpadExe) {
+        if ($args.Count -eq 0) {
+            Start-Process -FilePath $nightpadExe
+        } else {
+            $resolvedArgs = @()
+            foreach ($a in $args) {
+                if (Test-Path -LiteralPath $a) {
+                    $resolvedArgs += "`"$((Resolve-Path -LiteralPath $a).Path)`""
+                } else {
+                    $resolvedArgs += "`"$([System.IO.Path]::GetFullPath($a))`""
+                }
+            }
+            Start-Process -FilePath $nightpadExe -ArgumentList ($resolvedArgs -join ' ')
+        }
+    } else {
+        notepad.exe @args
+    }
+}
+Set-Alias -Name nightpad -Value np -Option AllScope -ErrorAction SilentlyContinue
+Set-Alias -Name notepad -Value np -Option AllScope -ErrorAction SilentlyContinue
