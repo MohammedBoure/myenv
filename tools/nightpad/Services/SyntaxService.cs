@@ -17,15 +17,15 @@ public static class SyntaxService
     public static readonly string[] SupportedLanguages = new[]
     {
         "Plain Text",
-        "PowerShell",
         "Python",
+        "PowerShell",
+        "JavaScript",
+        "TypeScript",
         "JSON",
         "YAML",
         "Markdown",
         "C#",
         "C/C++",
-        "JavaScript",
-        "TypeScript",
         "HTML",
         "XML",
         "CSS",
@@ -81,8 +81,8 @@ public static class SyntaxService
 
         return ext switch
         {
-            ".ps1" or ".psm1" or ".psd1" => "PowerShell",
             ".py" or ".pyw" => "Python",
+            ".ps1" or ".psm1" or ".psd1" => "PowerShell",
             ".json" or ".jsonc" => "JSON",
             ".yml" or ".yaml" => "YAML",
             ".md" or ".markdown" => "Markdown",
@@ -106,8 +106,8 @@ public static class SyntaxService
 
     private static void InitializeCustomSyntaxes()
     {
-        RegisterXshd("PowerShell", PowerShellXshd, new[] { ".ps1", ".psm1", ".psd1" });
         RegisterXshd("Python", PythonXshd, new[] { ".py", ".pyw" });
+        RegisterXshd("PowerShell", PowerShellXshd, new[] { ".ps1", ".psm1", ".psd1" });
         RegisterXshd("JSON", JsonXshd, new[] { ".json", ".jsonc" });
         RegisterXshd("YAML", YamlXshd, new[] { ".yml", ".yaml" });
         RegisterXshd("SQL", SqlXshd, new[] { ".sql" });
@@ -137,13 +137,163 @@ public static class SyntaxService
 
     #region XSHD Syntax Definitions
 
+    private const string PythonXshd = @"<?xml version=""1.0""?>
+<SyntaxDefinition name=""Python"" extensions="".py;.pyw"" xmlns=""http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008"">
+    <Color name=""Comment"" foreground=""#6A9955"" fontStyle=""italic"" />
+    <Color name=""String"" foreground=""#CE9178"" />
+    <Color name=""DocString"" foreground=""#B5CEA8"" fontStyle=""italic"" />
+    <Color name=""Keyword"" foreground=""#C586C0"" fontWeight=""bold"" />
+    <Color name=""ControlKeyword"" foreground=""#569CD6"" fontWeight=""bold"" />
+    <Color name=""BuiltIn"" foreground=""#4EC9B0"" />
+    <Color name=""Number"" foreground=""#B5CEA8"" />
+    <Color name=""Function"" foreground=""#DCDCAA"" />
+    <Color name=""Decorator"" foreground=""#DCDCAA"" fontStyle=""italic"" />
+    <Color name=""Self"" foreground=""#569CD6"" fontStyle=""italic"" />
+    <Color name=""Magic"" foreground=""#569CD6"" fontWeight=""bold"" />
+
+    <RuleSet>
+        <!-- Single line comments -->
+        <Span color=""Comment"">
+            <Begin>#</Begin>
+        </Span>
+
+        <!-- Multi-line Docstrings -->
+        <Span color=""DocString"">
+            <Begin>""""""</Begin>
+            <End>""""""</End>
+        </Span>
+        <Span color=""DocString"">
+            <Begin>''''''</Begin>
+            <End>''''''</End>
+        </Span>
+
+        <!-- F-Strings & Raw strings -->
+        <Span color=""String"">
+            <Begin>[fFrRbBuU]?&quot;&quot;&quot;</Begin>
+            <End>&quot;&quot;&quot;</End>
+        </Span>
+        <Span color=""String"">
+            <Begin>[fFrRbBuU]?&apos;&apos;&apos;</Begin>
+            <End>&apos;&apos;&apos;</End>
+        </Span>
+        <Span color=""String"">
+            <Begin>[fFrRbBuU]?&quot;</Begin>
+            <End>&quot;</End>
+            <RuleSet>
+                <Span begin=""\\."" end="""" />
+            </RuleSet>
+        </Span>
+        <Span color=""String"">
+            <Begin>[fFrRbBuU]?&apos;</Begin>
+            <End>&apos;</End>
+            <RuleSet>
+                <Span begin=""\\."" end="""" />
+            </RuleSet>
+        </Span>
+
+        <!-- Decorators -->
+        <Rule color=""Decorator"">
+            @[a-zA-Z0-9_.]+
+        </Rule>
+
+        <!-- Magic Dunder Methods (__init__, __str__, etc.) -->
+        <Rule color=""Magic"">
+            __[a-zA-Z0-9_]+__
+        </Rule>
+
+        <!-- Function Definitions -->
+        <Rule color=""Function"">
+            \bdef\s+([a-zA-Z0-9_]+)
+        </Rule>
+
+        <!-- Class Definitions -->
+        <Rule color=""BuiltIn"">
+            \bclass\s+([a-zA-Z0-9_]+)
+        </Rule>
+
+        <!-- Self / Cls -->
+        <Keywords color=""Self"">
+            <Word>self</Word>
+            <Word>cls</Word>
+        </Keywords>
+
+        <!-- Control Flow Keywords -->
+        <Keywords color=""ControlKeyword"">
+            <Word>if</Word>
+            <Word>elif</Word>
+            <Word>else</Word>
+            <Word>for</Word>
+            <Word>while</Word>
+            <Word>break</Word>
+            <Word>continue</Word>
+            <Word>return</Word>
+            <Word>yield</Word>
+            <Word>try</Word>
+            <Word>except</Word>
+            <Word>finally</Word>
+            <Word>raise</Word>
+            <Word>with</Word>
+            <Word>as</Word>
+            <Word>match</Word>
+            <Word>case</Word>
+        </Keywords>
+
+        <!-- Core Python Keywords -->
+        <Keywords color=""Keyword"">
+            <Word>and</Word>
+            <Word>assert</Word>
+            <Word>async</Word>
+            <Word>await</Word>
+            <Word>class</Word>
+            <Word>def</Word>
+            <Word>del</Word>
+            <Word>from</Word>
+            <Word>global</Word>
+            <Word>import</Word>
+            <Word>in</Word>
+            <Word>is</Word>
+            <Word>lambda</Word>
+            <Word>nonlocal</Word>
+            <Word>not</Word>
+            <Word>or</Word>
+            <Word>pass</Word>
+            <Word>True</Word>
+            <Word>False</Word>
+            <Word>None</Word>
+        </Keywords>
+
+        <!-- Built-in Functions & Types -->
+        <Keywords color=""BuiltIn"">
+            <Word>abs</Word><Word>all</Word><Word>any</Word><Word>bin</Word><Word>bool</Word>
+            <Word>bytearray</Word><Word>bytes</Word><Word>callable</Word><Word>chr</Word>
+            <Word>classmethod</Word><Word>compile</Word><Word>complex</Word><Word>delattr</Word>
+            <Word>dict</Word><Word>dir</Word><Word>divmod</Word><Word>enumerate</Word><Word>eval</Word>
+            <Word>exec</Word><Word>filter</Word><Word>float</Word><Word>format</Word><Word>frozenset</Word>
+            <Word>getattr</Word><Word>globals</Word><Word>hasattr</Word><Word>hash</Word><Word>help</Word>
+            <Word>hex</Word><Word>id</Word><Word>input</Word><Word>int</Word><Word>isinstance</Word>
+            <Word>issubclass</Word><Word>iter</Word><Word>len</Word><Word>list</Word><Word>locals</Word>
+            <Word>map</Word><Word>max</Word><Word>memoryview</Word><Word>min</Word><Word>next</Word>
+            <Word>object</Word><Word>oct</Word><Word>open</Word><Word>ord</Word><Word>pow</Word>
+            <Word>print</Word><Word>property</Word><Word>range</Word><Word>repr</Word><Word>reversed</Word>
+            <Word>round</Word><Word>set</Word><Word>setattr</Word><Word>slice</Word><Word>sorted</Word>
+            <Word>staticmethod</Word><Word>str</Word><Word>sum</Word><Word>super</Word><Word>tuple</Word>
+            <Word>type</Word><Word>vars</Word><Word>zip</Word>
+        </Keywords>
+
+        <!-- Numbers (Binary, Hex, Octal, Floats, Scientific) -->
+        <Rule color=""Number"">
+            \b0[bB][01_]+\b|\b0[oO][0-7_]+\b|\b0[xX][0-9a-fA-F_]+\b|\b\d[\d_]*(\.[\d_]+)?([eE][+-]?\d+)?j?\b
+        </Rule>
+    </RuleSet>
+</SyntaxDefinition>";
+
     private const string PowerShellXshd = @"<?xml version=""1.0""?>
 <SyntaxDefinition name=""PowerShell"" extensions="".ps1;.psm1;.psd1"" xmlns=""http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008"">
-    <Color name=""Comment"" foreground=""#6A9955"" />
+    <Color name=""Comment"" foreground=""#6A9955"" fontStyle=""italic"" />
     <Color name=""String"" foreground=""#CE9178"" />
     <Color name=""Variable"" foreground=""#9CDCFE"" />
     <Color name=""Command"" foreground=""#DCDCAA"" />
-    <Color name=""Keyword"" foreground=""#569CD6"" />
+    <Color name=""Keyword"" foreground=""#569CD6"" fontWeight=""bold"" />
     <Color name=""Number"" foreground=""#B5CEA8"" />
     <Color name=""Parameter"" foreground=""#4EC9B0"" />
 
@@ -200,89 +350,9 @@ public static class SyntaxService
             <Word>function</Word>
             <Word>filter</Word>
             <Word>in</Word>
-            <Word>trap</Word>
             <Word>process</Word>
             <Word>begin</Word>
             <Word>end</Word>
-        </Keywords>
-    </RuleSet>
-</SyntaxDefinition>";
-
-    private const string PythonXshd = @"<?xml version=""1.0""?>
-<SyntaxDefinition name=""Python"" extensions="".py;.pyw"" xmlns=""http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008"">
-    <Color name=""Comment"" foreground=""#6A9955"" />
-    <Color name=""String"" foreground=""#CE9178"" />
-    <Color name=""Keyword"" foreground=""#C586C0"" />
-    <Color name=""BuiltIn"" foreground=""#569CD6"" />
-    <Color name=""Number"" foreground=""#B5CEA8"" />
-    <Color name=""Function"" foreground=""#DCDCAA"" />
-    <Color name=""Decorator"" foreground=""#4EC9B0"" />
-
-    <RuleSet>
-        <Span color=""Comment"">
-            <Begin>#</Begin>
-        </Span>
-        <Span color=""String"">
-            <Begin>""""""</Begin>
-            <End>""""""</End>
-        </Span>
-        <Span color=""String"">
-            <Begin>''''''</Begin>
-            <End>''''''</End>
-        </Span>
-        <Span color=""String"">
-            <Begin>""</Begin>
-            <End>""</End>
-        </Span>
-        <Span color=""String"">
-            <Begin>'</Begin>
-            <End>'</End>
-        </Span>
-        <Rule color=""Decorator"">
-            @[a-zA-Z0-9_.]+
-        </Rule>
-        <Rule color=""Function"">
-            \bdef\s+([a-zA-Z0-9_]+)
-        </Rule>
-        <Rule color=""Number"">
-            \b0[xX][0-9a-fA-F]+\b|\b\d+(\.[0-9]+)?\b
-        </Rule>
-        <Keywords color=""Keyword"">
-            <Word>and</Word>
-            <Word>as</Word>
-            <Word>assert</Word>
-            <Word>async</Word>
-            <Word>await</Word>
-            <Word>break</Word>
-            <Word>class</Word>
-            <Word>continue</Word>
-            <Word>def</Word>
-            <Word>del</Word>
-            <Word>elif</Word>
-            <Word>else</Word>
-            <Word>except</Word>
-            <Word>finally</Word>
-            <Word>for</Word>
-            <Word>from</Word>
-            <Word>global</Word>
-            <Word>if</Word>
-            <Word>import</Word>
-            <Word>in</Word>
-            <Word>is</Word>
-            <Word>lambda</Word>
-            <Word>nonlocal</Word>
-            <Word>not</Word>
-            <Word>or</Word>
-            <Word>pass</Word>
-            <Word>raise</Word>
-            <Word>return</Word>
-            <Word>try</Word>
-            <Word>while</Word>
-            <Word>with</Word>
-            <Word>yield</Word>
-            <Word>True</Word>
-            <Word>False</Word>
-            <Word>None</Word>
         </Keywords>
     </RuleSet>
 </SyntaxDefinition>";
@@ -293,7 +363,7 @@ public static class SyntaxService
     <Color name=""String"" foreground=""#CE9178"" />
     <Color name=""Number"" foreground=""#B5CEA8"" />
     <Color name=""Keyword"" foreground=""#569CD6"" />
-    <Color name=""Comment"" foreground=""#6A9955"" />
+    <Color name=""Comment"" foreground=""#6A9955"" fontStyle=""italic"" />
 
     <RuleSet>
         <Span color=""Comment"">
@@ -324,7 +394,7 @@ public static class SyntaxService
 
     private const string YamlXshd = @"<?xml version=""1.0""?>
 <SyntaxDefinition name=""YAML"" extensions="".yml;.yaml"" xmlns=""http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008"">
-    <Color name=""Comment"" foreground=""#6A9955"" />
+    <Color name=""Comment"" foreground=""#6A9955"" fontStyle=""italic"" />
     <Color name=""Key"" foreground=""#9CDCFE"" />
     <Color name=""String"" foreground=""#CE9178"" />
     <Color name=""Number"" foreground=""#B5CEA8"" />
@@ -362,9 +432,9 @@ public static class SyntaxService
 
     private const string SqlXshd = @"<?xml version=""1.0""?>
 <SyntaxDefinition name=""SQL"" extensions="".sql"" xmlns=""http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008"">
-    <Color name=""Comment"" foreground=""#6A9955"" />
+    <Color name=""Comment"" foreground=""#6A9955"" fontStyle=""italic"" />
     <Color name=""String"" foreground=""#CE9178"" />
-    <Color name=""Keyword"" foreground=""#569CD6"" />
+    <Color name=""Keyword"" foreground=""#569CD6"" fontWeight=""bold"" />
     <Color name=""Function"" foreground=""#DCDCAA"" />
     <Color name=""Number"" foreground=""#B5CEA8"" />
 
@@ -412,18 +482,30 @@ public static class SyntaxService
             <Word>NULL</Word><Word>null</Word>
             <Word>PRIMARY</Word><Word>primary</Word>
             <Word>KEY</Word><Word>key</Word>
+            <Word>AS</Word><Word>as</Word>
+            <Word>IN</Word><Word>in</Word>
+            <Word>IS</Word><Word>is</Word>
+            <Word>LIKE</Word><Word>like</Word>
+            <Word>BETWEEN</Word><Word>between</Word>
+            <Word>UNION</Word><Word>union</Word>
+            <Word>ALL</Word><Word>all</Word>
+            <Word>EXISTS</Word><Word>exists</Word>
+            <Word>CASE</Word><Word>case</Word>
+            <Word>WHEN</Word><Word>when</Word>
+            <Word>THEN</Word><Word>then</Word>
+            <Word>END</Word><Word>end</Word>
         </Keywords>
     </RuleSet>
 </SyntaxDefinition>";
 
     private const string MarkdownXshd = @"<?xml version=""1.0""?>
 <SyntaxDefinition name=""Markdown"" extensions="".md;.markdown"" xmlns=""http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008"">
-    <Color name=""Header"" foreground=""#569CD6"" fontStyle=""italic"" />
-    <Color name=""Bold"" foreground=""#DCDCAA"" />
+    <Color name=""Header"" foreground=""#569CD6"" fontWeight=""bold"" />
+    <Color name=""Bold"" foreground=""#DCDCAA"" fontWeight=""bold"" />
     <Color name=""Italic"" foreground=""#CE9178"" fontStyle=""italic"" />
     <Color name=""CodeBlock"" foreground=""#4EC9B0"" />
     <Color name=""Link"" foreground=""#9CDCFE"" />
-    <Color name=""Quote"" foreground=""#6A9955"" />
+    <Color name=""Quote"" foreground=""#6A9955"" fontStyle=""italic"" />
 
     <RuleSet>
         <Span color=""CodeBlock"">
@@ -441,10 +523,10 @@ public static class SyntaxService
             ^&gt;\s+.*$
         </Rule>
         <Rule color=""Bold"">
-            \*\*[^*]+\*\*
+            \*\*[^*]+\*\*|__[^_]+__
         </Rule>
         <Rule color=""Italic"">
-            \*[^*]+\*
+            \*[^*]+\*|_[^_]+_
         </Rule>
         <Rule color=""Link"">
             \[[^\]]+\]\([^)]+\)
@@ -454,9 +536,9 @@ public static class SyntaxService
 
     private const string BatchXshd = @"<?xml version=""1.0""?>
 <SyntaxDefinition name=""Batch"" extensions="".bat;.cmd"" xmlns=""http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008"">
-    <Color name=""Comment"" foreground=""#6A9955"" />
+    <Color name=""Comment"" foreground=""#6A9955"" fontStyle=""italic"" />
     <Color name=""Variable"" foreground=""#9CDCFE"" />
-    <Color name=""Keyword"" foreground=""#569CD6"" />
+    <Color name=""Keyword"" foreground=""#569CD6"" fontWeight=""bold"" />
     <Color name=""Label"" foreground=""#4EC9B0"" />
 
     <RuleSet>
@@ -500,8 +582,8 @@ public static class SyntaxService
 
     private const string IniXshd = @"<?xml version=""1.0""?>
 <SyntaxDefinition name=""INI / Config"" extensions="".ini;.cfg;.conf;.env"" xmlns=""http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008"">
-    <Color name=""Comment"" foreground=""#6A9955"" />
-    <Color name=""Section"" foreground=""#569CD6"" />
+    <Color name=""Comment"" foreground=""#6A9955"" fontStyle=""italic"" />
+    <Color name=""Section"" foreground=""#569CD6"" fontWeight=""bold"" />
     <Color name=""Key"" foreground=""#9CDCFE"" />
     <Color name=""Value"" foreground=""#CE9178"" />
 
@@ -523,9 +605,9 @@ public static class SyntaxService
 
     private const string RustXshd = @"<?xml version=""1.0""?>
 <SyntaxDefinition name=""Rust"" extensions="".rs"" xmlns=""http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008"">
-    <Color name=""Comment"" foreground=""#6A9955"" />
+    <Color name=""Comment"" foreground=""#6A9955"" fontStyle=""italic"" />
     <Color name=""String"" foreground=""#CE9178"" />
-    <Color name=""Keyword"" foreground=""#569CD6"" />
+    <Color name=""Keyword"" foreground=""#569CD6"" fontWeight=""bold"" />
     <Color name=""Type"" foreground=""#4EC9B0"" />
     <Color name=""Macro"" foreground=""#DCDCAA"" />
 
@@ -559,9 +641,9 @@ public static class SyntaxService
 
     private const string GoXshd = @"<?xml version=""1.0""?>
 <SyntaxDefinition name=""Go"" extensions="".go"" xmlns=""http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008"">
-    <Color name=""Comment"" foreground=""#6A9955"" />
+    <Color name=""Comment"" foreground=""#6A9955"" fontStyle=""italic"" />
     <Color name=""String"" foreground=""#CE9178"" />
-    <Color name=""Keyword"" foreground=""#569CD6"" />
+    <Color name=""Keyword"" foreground=""#569CD6"" fontWeight=""bold"" />
     <Color name=""Type"" foreground=""#4EC9B0"" />
 
     <RuleSet>

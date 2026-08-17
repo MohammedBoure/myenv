@@ -10,6 +10,7 @@ using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Threading;
 using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.Document;
 using ICSharpCode.AvalonEdit.Editing;
@@ -28,8 +29,13 @@ public partial class MainWindow : Window
     private int _untitledCounter = 1;
     private EditorDocument? _activeDocument;
     private bool _isMarkdownPreviewActive = false;
+    private bool _isSidebarVisible = true;
+    private bool _isAutoSaveEnabled = true;
+    private string? _currentWorkspaceFolder;
+    private readonly DispatcherTimer _autoSaveTimer;
 
     public ObservableCollection<EditorDocument> Documents { get; } = new();
+    public ObservableCollection<FileNode> RootNodes { get; } = new();
 
     public EditorDocument? ActiveDocument
     {
@@ -50,9 +56,220 @@ public partial class MainWindow : Window
         DataContext = this;
         InitializeSyntaxMenu();
 
+        // Configure Auto-Save background timer (runs every 3 seconds)
+        _autoSaveTimer = new DispatcherTimer
+        {
+            Interval = TimeSpan.FromSeconds(3)
+        };
+        _autoSaveTimer.Tick += AutoSaveTimer_Tick;
+        _autoSaveTimer.Start();
+
         // Create initial document
         CreateNewTab();
+
+        // Open current working directory into Explorer sidebar
+        string currentDir = Environment.CurrentDirectory;
+        if (!string.IsNullOrEmpty(currentDir) && Directory.Exists(currentDir))
+        {
+            OpenFolder(currentDir);
+        }
     }
+
+    #region Workspace & File Tree Sidebar
+
+    public void OpenFolder(string folderPath)
+    {
+        if (string.IsNullOrWhiteSpace(folderPath) || !Directory.Exists(folderPath))
+            return;
+
+        try
+        {
+            _currentWorkspaceFolder = Path.GetFullPath(folderPath);
+            LblWorkspaceName.Text = Path.GetFileName(_currentWorkspaceFolder).ToUpperInvariant();
+            if (string.IsNullOrEmpty(LblWorkspaceName.Text))
+            {
+                LblWorkspaceName.Text = _currentWorkspaceFolder;
+            }
+            LblWorkspaceName.ToolTip = _currentWorkspaceFolder;
+
+            RefreshFileTree();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Failed to open workspace folder:\n{ex.Message}", "Explorer Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    public void RefreshFileTree()
+    {
+        if (string.IsNullOrEmpty(_currentWorkspaceFolder) || !Directory.Exists(_currentWorkspaceFolder))
+            return;
+
+        RootNodes.Clear();
+
+        try
+        {
+            var dirInfo = new DirectoryInfo(_currentWorkspaceFolder);
+
+            // Add subdirectories
+            foreach (var dir in dirInfo.GetDirectories())
+            {
+                if ((dir.Attributes & FileAttributes.Hidden) != 0 && dir.Name.StartsWith("."))
+                    continue;
+
+                var node = new FileNode(dir.FullName, true);
+                RootNodes.Add(node);
+            }
+
+            // Add files
+            foreach (var file in dirInfo.GetFiles())
+            {
+                if ((file.Attributes & FileAttributes.Hidden) != 0 && file.Name.StartsWith("."))
+                    continue;
+
+                var node = new FileNode(file.FullName, false);
+                RootNodes.Add(node);
+            }
+        }
+        catch
+        {
+            // Ignore directory enumeration issues
+        }
+    }
+
+    private void BtnRefreshTree_Click(object sender, RoutedEventArgs e) => RefreshFileTree();
+
+    private void MenuOpenFolderDialog_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new OpenFolderDialog
+        {
+            Title = "Select Workspace / Project Folder",
+            InitialDirectory = _currentWorkspaceFolder ?? Environment.CurrentDirectory
+        };
+
+        if (dialog.ShowDialog(this) == true)
+        {
+            OpenFolder(dialog.FolderName);
+        }
+    }
+
+    private void FileTreeView_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        if (FileTreeView.SelectedItem is FileNode node && !node.IsDirectory)
+        {
+            if (File.Exists(node.FullPath))
+            {
+                OpenFile(node.FullPath);
+            }
+        }
+    }
+
+    private void FileTreeView_KeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Enter && FileTreeView.SelectedItem is FileNode node && !node.IsDirectory)
+        {
+            if (File.Exists(node.FullPath))
+            {
+                OpenFile(node.FullPath);
+            }
+        }
+    }
+
+    private void TreeContextOpen_Click(object sender, RoutedEventArgs e)
+    {
+        if (FileTreeView.SelectedItem is FileNode node && !node.IsDirectory && File.Exists(node.FullPath))
+        {
+            OpenFile(node.FullPath);
+        }
+    }
+
+    private void TreeContextOpenInExplorer_Click(object sender, RoutedEventArgs e)
+    {
+        if (FileTreeView.SelectedItem is FileNode node && !string.IsNullOrEmpty(node.FullPath))
+        {
+            Process.Start("explorer.exe", $"/select,\"{node.FullPath}\"");
+        }
+    }
+
+    private void TreeContextCopyPath_Click(object sender, RoutedEventArgs e)
+    {
+        if (FileTreeView.SelectedItem is FileNode node && !string.IsNullOrEmpty(node.FullPath))
+        {
+            Clipboard.SetText(node.FullPath);
+        }
+    }
+
+    private void ToggleSidebar()
+    {
+        _isSidebarVisible = !_isSidebarVisible;
+
+        if (_isSidebarVisible)
+        {
+            ColSidebar.Width = new GridLength(240);
+            ColSidebarSplitter.Width = new GridLength(4);
+            SidebarPanel.Visibility = Visibility.Visible;
+            SidebarSplitter.Visibility = Visibility.Visible;
+            MenuSidebarToggle.IsChecked = true;
+        }
+        else
+        {
+            ColSidebar.Width = new GridLength(0);
+            ColSidebarSplitter.Width = new GridLength(0);
+            SidebarPanel.Visibility = Visibility.Collapsed;
+            SidebarSplitter.Visibility = Visibility.Collapsed;
+            MenuSidebarToggle.IsChecked = false;
+        }
+    }
+
+    private void MenuToggleSidebar_Click(object sender, RoutedEventArgs e) => ToggleSidebar();
+
+    #endregion
+
+    #region Auto-Save
+
+    private void AutoSaveTimer_Tick(object? sender, EventArgs e)
+    {
+        if (!_isAutoSaveEnabled) return;
+
+        foreach (var doc in Documents)
+        {
+            if (doc.IsModified && !string.IsNullOrEmpty(doc.FilePath) && File.Exists(doc.FilePath))
+            {
+                try
+                {
+                    File.WriteAllText(doc.FilePath, doc.Document.Text, new UTF8Encoding(false));
+                    doc.IsModified = false;
+                    doc.UpdateTitle();
+                }
+                catch
+                {
+                    // Fail silently on auto-save
+                }
+            }
+        }
+    }
+
+    private void ToggleAutoSave()
+    {
+        _isAutoSaveEnabled = !_isAutoSaveEnabled;
+        MenuAutoSave.IsChecked = _isAutoSaveEnabled;
+
+        if (_isAutoSaveEnabled)
+        {
+            StatusAutoSave.Text = "💾 Auto-Save: ON";
+            StatusAutoSave.Foreground = (SolidColorBrush)FindResource("AccentGreenBrush");
+        }
+        else
+        {
+            StatusAutoSave.Text = "💾 Auto-Save: OFF";
+            StatusAutoSave.Foreground = (SolidColorBrush)FindResource("TextSecondaryBrush");
+        }
+    }
+
+    private void MenuAutoSave_Click(object sender, RoutedEventArgs e) => ToggleAutoSave();
+    private void StatusAutoSave_MouseLeftButtonDown(object sender, MouseButtonEventArgs e) => ToggleAutoSave();
+
+    #endregion
 
     #region Tab & Document Management
 
@@ -136,6 +353,36 @@ public partial class MainWindow : Window
                 e.Handled = true;
                 if (e.Delta > 0) ZoomIn();
                 else if (e.Delta < 0) ZoomOut();
+            }
+        };
+
+        // Smart Indentation & Python colon indent handler
+        editor.TextArea.PreviewKeyDown += (s, e) =>
+        {
+            if (e.Key == Key.Enter && Keyboard.Modifiers == ModifierKeys.None)
+            {
+                var curLine = editor.Document.GetLineByNumber(editor.TextArea.Caret.Line);
+                string lineText = editor.Document.GetText(curLine.Offset, editor.CaretOffset - curLine.Offset);
+                
+                // Count leading spaces
+                int leadingSpaces = 0;
+                while (leadingSpaces < lineText.Length && lineText[leadingSpaces] == ' ')
+                {
+                    leadingSpaces++;
+                }
+
+                // If line ends in colon (e.g. Python def, class, if, for), add 4 extra spaces
+                if (lineText.TrimEnd().EndsWith(":"))
+                {
+                    leadingSpaces += 4;
+                }
+
+                if (leadingSpaces > 0)
+                {
+                    e.Handled = true;
+                    string indent = Environment.NewLine + new string(' ', leadingSpaces);
+                    editor.Document.Insert(editor.CaretOffset, indent);
+                }
             }
         };
 
@@ -263,6 +510,16 @@ public partial class MainWindow : Window
             {
                 CreateNewTab(filePath, content);
             }
+
+            // Also ensure workspace folder is set if null
+            if (string.IsNullOrEmpty(_currentWorkspaceFolder))
+            {
+                string? dir = Path.GetDirectoryName(filePath);
+                if (!string.IsNullOrEmpty(dir))
+                {
+                    OpenFolder(dir);
+                }
+            }
         }
         catch (Exception ex)
         {
@@ -274,7 +531,7 @@ public partial class MainWindow : Window
     {
         var dlg = new OpenFileDialog
         {
-            Filter = "All Supported Files (*.*)|*.*|Text Files (*.txt)|*.txt|PowerShell (*.ps1;*.psm1)|*.ps1;*.psm1|Python (*.py)|*.py|JSON (*.json)|*.json|Markdown (*.md)|*.md|C# (*.cs)|*.cs|Web Files (*.html;*.css;*.js)|*.html;*.css;*.js",
+            Filter = "All Supported Files (*.*)|*.*|Python (*.py;*.pyw)|*.py;*.pyw|PowerShell (*.ps1;*.psm1)|*.ps1;*.psm1|Text Files (*.txt)|*.txt|JSON (*.json)|*.json|Markdown (*.md)|*.md|C# (*.cs)|*.cs|Web Files (*.html;*.css;*.js;*.ts)|*.html;*.css;*.js;*.ts",
             Multiselect = true
         };
 
@@ -319,7 +576,7 @@ public partial class MainWindow : Window
         var dlg = new SaveFileDialog
         {
             FileName = doc.FileName.Replace(" *", ""),
-            Filter = "All Files (*.*)|*.*|Text Files (*.txt)|*.txt|PowerShell (*.ps1)|*.ps1|Python (*.py)|*.py|JSON (*.json)|*.json|Markdown (*.md)|*.md|C# (*.cs)|*.cs"
+            Filter = "All Files (*.*)|*.*|Python (*.py)|*.py|Text Files (*.txt)|*.txt|PowerShell (*.ps1)|*.ps1|JSON (*.json)|*.json|Markdown (*.md)|*.md|C# (*.cs)|*.cs"
         };
 
         if (dlg.ShowDialog(this) == true)
@@ -333,6 +590,7 @@ public partial class MainWindow : Window
                 ApplySyntax(doc.Editor, doc.SyntaxName);
                 doc.UpdateTitle();
                 UpdateStatusBar();
+                RefreshFileTree();
                 return true;
             }
             catch (Exception ex)
@@ -1094,7 +1352,11 @@ public partial class MainWindow : Window
             string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
             foreach (string file in files)
             {
-                if (File.Exists(file))
+                if (Directory.Exists(file))
+                {
+                    OpenFolder(file);
+                }
+                else if (File.Exists(file))
                 {
                     OpenFile(file);
                 }
@@ -1111,6 +1373,7 @@ public partial class MainWindow : Window
             else if (e.Key == Key.O) { e.Handled = true; MenuOpen_Click(sender, e); }
             else if (e.Key == Key.S) { e.Handled = true; SaveDocument(ActiveDocument); }
             else if (e.Key == Key.W) { e.Handled = true; if (ActiveDocument != null) CloseDocument(ActiveDocument); }
+            else if (e.Key == Key.B) { e.Handled = true; ToggleSidebar(); }
             else if (e.Key == Key.F) { e.Handled = true; MenuFind_Click(sender, e); }
             else if (e.Key == Key.H) { e.Handled = true; MenuReplace_Click(sender, e); }
             else if (e.Key == Key.G) { e.Handled = true; MenuGoToLine_Click(sender, e); }
@@ -1123,6 +1386,8 @@ public partial class MainWindow : Window
         else if (Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift))
         {
             if (e.Key == Key.S) { e.Handled = true; SaveAsDocument(ActiveDocument); }
+            else if (e.Key == Key.O) { e.Handled = true; MenuOpenFolderDialog_Click(sender, e); }
+            else if (e.Key == Key.A) { e.Handled = true; ToggleAutoSave(); }
             else if (e.Key == Key.M) { e.Handled = true; MenuMarkdownPreview_Click(sender, e); }
             else if (e.Key == Key.L) { e.Handled = true; MenuLineNumbers.IsChecked = !MenuLineNumbers.IsChecked; MenuLineNumbers_Click(sender, e); }
             else if (e.Key == Key.K) { e.Handled = true; MenuDeleteLine_Click(sender, e); }
@@ -1179,29 +1444,32 @@ public partial class MainWindow : Window
     {
         string shortcuts =
             "🌙 NightPad Keyboard Shortcuts:\n\n" +
-            "File:\n" +
+            "File & Workspace:\n" +
             "  Ctrl + N : New Tab\n" +
             "  Ctrl + O : Open File\n" +
+            "  Ctrl + Shift + O : Open Workspace Folder\n" +
             "  Ctrl + S : Save File\n" +
             "  Ctrl + Shift + S : Save As\n" +
+            "  Ctrl + Shift + A : Toggle Auto-Save\n" +
             "  Ctrl + W : Close Tab\n\n" +
+            "Explorer & View:\n" +
+            "  Ctrl + B : Toggle Sidebar Explorer\n" +
+            "  Alt + Z : Toggle Word Wrap\n" +
+            "  Ctrl + Shift + M : Markdown Live Preview\n" +
+            "  Ctrl + Shift + L : Toggle Line Numbers\n" +
+            "  Ctrl + Plus/Minus/0 : Zoom In/Out/Reset\n\n" +
             "Editing:\n" +
             "  Ctrl + D : Duplicate Line\n" +
             "  Ctrl + Shift + K : Delete Line\n" +
             "  Alt + Up/Down : Move Line Up/Down\n" +
             "  Ctrl + / : Toggle Comment\n" +
+            "  Ctrl + Shift + J : Format JSON\n" +
             "  F5 : Insert Date/Time\n\n" +
             "Search & Navigation:\n" +
             "  Ctrl + F : Find\n" +
             "  Ctrl + H : Replace\n" +
             "  F3 / Shift + F3 : Find Next / Prev\n" +
-            "  Ctrl + G : Go to Line\n\n" +
-            "View & Tools:\n" +
-            "  Alt + Z : Toggle Word Wrap\n" +
-            "  Ctrl + Shift + M : Markdown Live Preview\n" +
-            "  Ctrl + Shift + J : Format JSON\n" +
-            "  Ctrl + Plus/Minus/0 : Zoom In/Out/Reset\n" +
-            "  Ctrl + Shift + L : Toggle Line Numbers";
+            "  Ctrl + G : Go to Line";
 
         MessageBox.Show(shortcuts, "NightPad Shortcuts", MessageBoxButton.OK, MessageBoxImage.Information);
     }
@@ -1210,9 +1478,9 @@ public partial class MainWindow : Window
     {
         MessageBox.Show(
             "🌙 NightPad - Professional Night Mode Text Editor\n" +
-            "Version 1.0.0 (x64 Native)\n\n" +
-            "Designed exclusively for the MyEnv Windows Desktop Environment.\n" +
-            "Crafted with deep Obsidian Night Dark Theme & Sharp Aesthetics.",
+            "Version 1.2.0 (x64 Native)\n\n" +
+            "Featuring Workspace File Explorer, Auto-Save, and Multi-Language Syntax Highlighting (Python, C#, JS/TS, HTML/CSS, SQL, PowerShell, YAML, JSON, Rust, Go).\n" +
+            "Designed exclusively for the MyEnv Windows Desktop Environment.",
             "About NightPad",
             MessageBoxButton.OK,
             MessageBoxImage.Information);
@@ -1220,6 +1488,17 @@ public partial class MainWindow : Window
 
     protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
     {
+        _autoSaveTimer.Stop();
+
+        // Perform a final auto-save of any valid files
+        if (_isAutoSaveEnabled)
+        {
+            foreach (var doc in Documents.Where(d => d.IsModified && !string.IsNullOrEmpty(d.FilePath)))
+            {
+                SaveDocument(doc);
+            }
+        }
+
         var modified = Documents.Where(d => d.IsModified).ToList();
         if (modified.Count > 0)
         {

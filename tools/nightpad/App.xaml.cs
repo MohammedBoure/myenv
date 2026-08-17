@@ -22,13 +22,28 @@ public partial class App : Application
                     try
                     {
                         string fullPath = Path.GetFullPath(arg);
-                        mainWindow.OpenFile(fullPath);
+                        if (Directory.Exists(fullPath))
+                        {
+                            mainWindow.OpenFolder(fullPath);
+                        }
+                        else
+                        {
+                            mainWindow.OpenFile(fullPath);
+                        }
                     }
                     catch
                     {
                         // Ignore invalid paths
                     }
                 }
+            }
+        }
+        else
+        {
+            string currentDir = Environment.CurrentDirectory;
+            if (!string.IsNullOrEmpty(currentDir) && Directory.Exists(currentDir))
+            {
+                mainWindow.OpenFolder(currentDir);
             }
         }
 

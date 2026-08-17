@@ -5,8 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
         xmlns:local="clr-namespace:NightPad"
+        xmlns:models="clr-namespace:NightPad.Models"
         mc:Ignorable="d"
-        Title="NightPad" Height="700" Width="1000"
+        Title="NightPad" Height="720" Width="1100"
         WindowStartupLocation="CenterScreen"
         WindowStyle="None"
         AllowsTransparency="False"
@@ -32,7 +33,7 @@
             <RowDefinition Height="Auto" />
             <!-- Row 3: Go To Line Bar -->
             <RowDefinition Height="Auto" />
-            <!-- Row 4: Main Content / Editor Host -->
+            <!-- Row 4: Main Content / Sidebar + Editor Host -->
             <RowDefinition Height="*" />
             <!-- Row 5: Status Bar -->
             <RowDefinition Height="26" />
@@ -132,10 +133,12 @@
                     <MenuItem Header="_File">
                         <MenuItem Header="_New Tab" InputGestureText="Ctrl+N" Click="MenuNew_Click" />
                         <MenuItem Header="_Open File..." InputGestureText="Ctrl+O" Click="MenuOpen_Click" />
+                        <MenuItem Header="Open _Folder / Workspace..." InputGestureText="Ctrl+Shift+O" Click="MenuOpenFolderDialog_Click" />
                         <Separator Background="{StaticResource BorderDarkBrush}" />
                         <MenuItem Header="_Save" InputGestureText="Ctrl+S" Click="MenuSave_Click" />
                         <MenuItem Header="Save _As..." InputGestureText="Ctrl+Shift+S" Click="MenuSaveAs_Click" />
                         <MenuItem Header="Save A_ll" InputGestureText="Ctrl+Alt+S" Click="MenuSaveAll_Click" />
+                        <MenuItem x:Name="MenuAutoSave" Header="_Auto Save" InputGestureText="Ctrl+Shift+A" IsCheckable="True" IsChecked="True" Click="MenuAutoSave_Click" />
                         <Separator Background="{StaticResource BorderDarkBrush}" />
                         <MenuItem Header="_Close Tab" InputGestureText="Ctrl+W" Click="MenuCloseTab_Click" />
                         <MenuItem Header="Close _All Tabs" Click="MenuCloseAll_Click" />
@@ -171,6 +174,7 @@
                     </MenuItem>
 
                     <MenuItem Header="_View">
+                        <MenuItem x:Name="MenuSidebarToggle" Header="Toggle _Sidebar (Explorer)" InputGestureText="Ctrl+B" IsCheckable="True" IsChecked="True" Click="MenuToggleSidebar_Click" />
                         <MenuItem x:Name="MenuWordWrap" Header="Word _Wrap" InputGestureText="Alt+Z" IsCheckable="True" Click="MenuWordWrap_Click" />
                         <MenuItem x:Name="MenuLineNumbers" Header="Show _Line Numbers" InputGestureText="Ctrl+Shift+L" IsCheckable="True" IsChecked="True" Click="MenuLineNumbers_Click" />
                         <Separator Background="{StaticResource BorderDarkBrush}" />
@@ -219,6 +223,7 @@
 
                 <!-- Quick Action Icons Toolbar -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="0,0,8,0">
+                    <Button x:Name="BtnSidebarToggle" Style="{StaticResource ToolbarButton}" Content="📁" ToolTip="Toggle Explorer Sidebar (Ctrl+B)" Click="MenuToggleSidebar_Click" />
                     <Button Style="{StaticResource ToolbarButton}" Content="📂" ToolTip="Open File (Ctrl+O)" Click="MenuOpen_Click" />
                     <Button Style="{StaticResource ToolbarButton}" Content="💾" ToolTip="Save (Ctrl+S)" Click="MenuSave_Click" />
                     <Rectangle Width="1" Height="14" Fill="{StaticResource BorderDarkBrush}" Margin="4,0" VerticalAlignment="Center" />
@@ -300,24 +305,86 @@
             </Grid>
         </Border>
 
-        <!-- ROW 4: MAIN EDITOR AREA -->
+        <!-- ROW 4: MAIN EDITOR & SIDEBAR AREA -->
         <Grid Grid.Row="4" Background="{StaticResource BgEditorBrush}">
             <Grid.ColumnDefinitions>
-                <!-- Editor Column -->
+                <!-- Column 0: Sidebar File Explorer -->
+                <ColumnDefinition x:Name="ColSidebar" Width="240" MinWidth="150" MaxWidth="500" />
+                <!-- Column 1: Sidebar GridSplitter -->
+                <ColumnDefinition x:Name="ColSidebarSplitter" Width="4" />
+                <!-- Column 2: Editor Column -->
                 <ColumnDefinition Width="*" />
-                <!-- Markdown Splitter & Preview (Optional) -->
+                <!-- Column 3: Markdown Splitter -->
                 <ColumnDefinition x:Name="ColSplitter" Width="Auto" />
+                <!-- Column 4: Markdown Preview Pane -->
                 <ColumnDefinition x:Name="ColPreview" Width="0" />
             </Grid.ColumnDefinitions>
 
-            <!-- AvalonEdit Host Container -->
-            <ContentControl x:Name="EditorHost" Grid.Column="0" />
+            <!-- SIDEBAR FILE EXPLORER (Column 0) -->
+            <Border x:Name="SidebarPanel" Grid.Column="0" Background="{StaticResource BgSurfaceBrush}" BorderBrush="{StaticResource BorderLightBrush}" BorderThickness="0,0,1,0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <!-- Sidebar Header -->
+                        <RowDefinition Height="32" />
+                        <!-- TreeView Explorer -->
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
 
-            <!-- Grid Splitter for Markdown live view -->
-            <GridSplitter x:Name="MarkdownSplitter" Grid.Column="1" Width="4" Background="{StaticResource BorderDarkBrush}" HorizontalAlignment="Center" VerticalAlignment="Stretch" Visibility="Collapsed" />
+                    <!-- Sidebar Header with Actions -->
+                    <Border Grid.Row="0" Background="{StaticResource BgDarkBrush}" BorderBrush="{StaticResource BorderDarkBrush}" BorderThickness="0,0,0,1" Padding="8,4">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
 
-            <!-- Markdown Preview Pane -->
-            <Border x:Name="MarkdownPreviewPane" Grid.Column="2" Background="{StaticResource BgDarkBrush}" BorderBrush="{StaticResource BorderDarkBrush}" BorderThickness="1,0,0,0" Visibility="Collapsed">
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="📁 " FontSize="12" />
+                                <TextBlock x:Name="LblWorkspaceName" Text="EXPLORER" FontWeight="Bold" FontSize="11" Foreground="{StaticResource AccentBlueBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="140" ToolTip="Current Workspace" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <Button Style="{StaticResource ToolbarButton}" Content="📂" ToolTip="Open Folder... (Ctrl+Shift+O)" Padding="3,1" Click="MenuOpenFolderDialog_Click" />
+                                <Button Style="{StaticResource ToolbarButton}" Content="🔄" ToolTip="Refresh File Tree" Padding="3,1" Click="BtnRefreshTree_Click" />
+                                <Button Style="{StaticResource ToolbarButton}" Content="◀" ToolTip="Hide Sidebar (Ctrl+B)" Padding="3,1" Click="MenuToggleSidebar_Click" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- File & Folder TreeView -->
+                    <TreeView x:Name="FileTreeView" Grid.Row="1" ItemsSource="{Binding RootNodes, RelativeSource={RelativeSource AncestorType=local:MainWindow}}" MouseDoubleClick="FileTreeView_MouseDoubleClick" KeyDown="FileTreeView_KeyDown">
+                        <TreeView.ItemTemplate>
+                            <HierarchicalDataTemplate DataType="{x:Type models:FileNode}" ItemsSource="{Binding Children}">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="2,1">
+                                    <TextBlock Text="{Binding Icon}" Margin="0,0,6,0" FontSize="12" VerticalAlignment="Center" />
+                                    <TextBlock Text="{Binding Name}" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                </StackPanel>
+                            </HierarchicalDataTemplate>
+                        </TreeView.ItemTemplate>
+                        <TreeView.ContextMenu>
+                            <ContextMenu>
+                                <MenuItem Header="Open File in Tab" Click="TreeContextOpen_Click" />
+                                <MenuItem Header="Open in File Explorer" Click="TreeContextOpenInExplorer_Click" />
+                                <MenuItem Header="Copy Full Path" Click="TreeContextCopyPath_Click" />
+                                <Separator Background="{StaticResource BorderDarkBrush}" />
+                                <MenuItem Header="Refresh Tree" Click="BtnRefreshTree_Click" />
+                            </ContextMenu>
+                        </TreeView.ContextMenu>
+                    </TreeView>
+                </Grid>
+            </Border>
+
+            <!-- Grid Splitter for Sidebar (Column 1) -->
+            <GridSplitter x:Name="SidebarSplitter" Grid.Column="1" Width="4" Background="{StaticResource BorderDarkBrush}" HorizontalAlignment="Center" VerticalAlignment="Stretch" Cursor="SizeWE" />
+
+            <!-- AvalonEdit Host Container (Column 2) -->
+            <ContentControl x:Name="EditorHost" Grid.Column="2" />
+
+            <!-- Grid Splitter for Markdown live view (Column 3) -->
+            <GridSplitter x:Name="MarkdownSplitter" Grid.Column="3" Width="4" Background="{StaticResource BorderDarkBrush}" HorizontalAlignment="Center" VerticalAlignment="Stretch" Visibility="Collapsed" />
+
+            <!-- Markdown Preview Pane (Column 4) -->
+            <Border x:Name="MarkdownPreviewPane" Grid.Column="4" Background="{StaticResource BgDarkBrush}" BorderBrush="{StaticResource BorderDarkBrush}" BorderThickness="1,0,0,0" Visibility="Collapsed">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="28" />
@@ -340,7 +407,7 @@
                     <!-- Left: Caret & Selection Stats -->
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
-                    <!-- Right: Encoding, EOL, Language, Zoom -->
+                    <!-- Right: Auto-Save, Encoding, EOL, Language, Zoom -->
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
@@ -353,6 +420,9 @@
 
                 <!-- Right Stats -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- Auto Save Toggle Button -->
+                    <TextBlock x:Name="StatusAutoSave" Text="💾 Auto-Save: ON" Foreground="{StaticResource AccentGreenBrush}" Margin="0,0,12,0" Cursor="Hand" MouseLeftButtonDown="StatusAutoSave_MouseLeftButtonDown" ToolTip="Click to toggle Auto-Save On/Off" />
+
                     <TextBlock x:Name="StatusEncoding" Text="UTF-8" Margin="0,0,12,0" Foreground="{StaticResource TextSecondaryBrush}" />
                     <TextBlock x:Name="StatusEol" Text="CRLF" Margin="0,0,12,0" Foreground="{StaticResource TextSecondaryBrush}" />
 

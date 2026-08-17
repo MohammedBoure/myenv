@@ -105,9 +105,10 @@ function sudo {
 # NightPad - Professional Night Mode Notepad
 function np {
     $nightpadExe = Join-Path $myenvDir "scripts\nightpad\NightPad.exe"
+    $currentDir = (Get-Location).ProviderPath
     if (Test-Path -LiteralPath $nightpadExe) {
         if ($args.Count -eq 0) {
-            Start-Process -FilePath $nightpadExe
+            Start-Process -FilePath $nightpadExe -ArgumentList "`"$currentDir`"" -WorkingDirectory $currentDir
         } else {
             $resolvedArgs = @()
             foreach ($a in $args) {
@@ -117,7 +118,7 @@ function np {
                     $resolvedArgs += "`"$([System.IO.Path]::GetFullPath($a))`""
                 }
             }
-            Start-Process -FilePath $nightpadExe -ArgumentList ($resolvedArgs -join ' ')
+            Start-Process -FilePath $nightpadExe -ArgumentList ($resolvedArgs -join ' ') -WorkingDirectory $currentDir
         }
     } else {
         notepad.exe @args

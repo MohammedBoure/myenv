@@ -7,3 +7,4 @@ Data models and state representations for the NightPad text editor.
 | File | Purpose |
 |---|---|
 | [`EditorDocument.cs`](file:///C:/Users/moham/Documents/myenv/tools/nightpad/Models/EditorDocument.cs) | Model class representing an open tab/document in NightPad, implementing `INotifyPropertyChanged` to track file path, title, dirty state, encoding, EOL, caret positions, selection statistics, and the underlying `TextDocument`. |
+| [`FileNode.cs`](file:///C:/Users/moham/Documents/myenv/tools/nightpad/Models/FileNode.cs) | Model class representing a directory or file node in the sidebar Explorer tree view, with support for lazy-loading subdirectories and filetype-specific icons. |
