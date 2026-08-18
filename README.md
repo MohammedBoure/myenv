@@ -78,7 +78,9 @@ A high-performance, keyboard-driven tiling desktop environment for Windows devel
 - **GlazeWM Integration**: Bound to `Win + Shift + Q` and `Alt + Shift + T` with automatic floating window rules.
 
 ### 9. Notepad - Lightweight Professional Text Editor (`Alt + N` / `np`)
-- **Minimalist & Clean Interface**: Clean dark styling, zero clutter, instant launch (<20ms), and sharp 0px rectangular edges.
+- **Instant Launch & Direct Typing**: Ready to type immediately upon opening (<20ms) with automatic keyboard focus.
+- **Terminal-Style Fast Keyboard Saving (`Ctrl + S` / `Ctrl + Shift + S` / `F2`)**: Inline interactive path bar with `Tab` autocompletion, directory jumping (`F1`-`F4`), and automatic folder creation.
+- **Arabic & RTL Bidirectional Support (`Ctrl + Shift + R`)**: Seamless Right-to-Left text flow switching, automatic Arabic detection, and Cairo/Segoe UI typography.
 - **Classic Menu Bar**: Intuitive and direct access to `File`, `Edit`, `View`, and `Tools`.
 - **20+ Languages Syntax Highlighting**: Comprehensive coloring for Python 3 (with smart indentation on `:`), PowerShell, JavaScript, TypeScript, JSON, YAML, Markdown, C#, C/C++, HTML, XML, CSS, PHP, SQL, Batch/CMD, INI/Config, Java, Rust, and Go.
 - **Search & Replace (`Ctrl + F` / `Ctrl + H`)**: Fast search panel with match case, whole word, regular expressions, and match counters.

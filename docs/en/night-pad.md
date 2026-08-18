@@ -1,19 +1,30 @@
 # Notepad: Lightweight Professional Text Editor
 
-A fast, lightweight, and clean text and code editor built natively for the **MyEnv** Windows desktop environment. Designed with a dark interface, 0px sharp rectangular aesthetics, classic uncluttered menu bar (`File`, `Edit`, `View`, `Tools`), bottom taskbar/status bar, and accurate multi-language syntax support.
+A fast, lightweight, and keyboard-driven text and code editor built natively for the **MyEnv** Windows desktop environment. Designed with an obsidian dark interface, 0px sharp rectangular aesthetics, classic uncluttered menu bar (`File`, `Edit`, `View`, `Tools`), bottom status bar, instant launch readiness, terminal-style fast saving, and robust Arabic RTL support.
 
 ---
 
 ## 🚀 Overview & Key Highlights
 
-- **Clean & Uncluttered**: Zero distraction, instant launch in <20ms, clean layout without sidebars, bloated tabs, or decorative badges.
+- **Instant Launch & Direct Typing**: Ready to type immediately upon opening (<20ms) — keyboard focus is acquired instantly with zero mouse interaction required.
+- **Terminal-Style Fast Keyboard Saving (`Ctrl + S` / `Ctrl + Shift + S` / `F2`)**:
+  - Interactive keyboard path input bar embedded directly in the window (no slow OS dialog lag).
+  - **Tab Auto-Completion**: Autocompletes folder and file paths interactively.
+  - **Quick Preset Jump**: Instant shortcuts for key directories: `F1` (Current Dir), `F2` (Documents), `F3` (Desktop), `F4` (MyEnv).
+  - **Auto Directory Creation**: Automatically creates missing parent directories on save.
+  - **Classic Dialog Fallback**: Press `Alt + B` or `Ctrl + Alt + S` for the traditional Windows File Dialog.
+- **Arabic Language & Bidirectional (RTL) Support**:
+  - **RTL / LTR Toggle (`Ctrl + Shift + R`)**: Switch writing flow between Left-to-Right and Right-to-Left instantly.
+  - **Smart Arabic Auto-Detection**: Automatically aligns text to Right-to-Left when Arabic characters are detected.
+  - **Enhanced Typography**: Cascadia Code with Cairo, Segoe UI, and Tahoma font fallbacks for Arabic script and ligatures.
+  - **Multilingual Word Counter**: Accurately counts Arabic and Latin words using Unicode word boundaries.
 - **Classic Menu Bar**: Clean and responsive menus for `File`, `Edit`, `View`, and `Tools`.
 - **Accurate Python 3 & Language Syntax Highlighting**:
   - **Python**: Full coloring for keywords, built-ins (`print`, `len`, `range`, `isinstance`, `enumerate`, `dict`, `list`...), magic methods (`__init__`, `__str__`...), decorators (`@decorator`), type annotations, `self`, `cls`, f-strings, docstrings, and smart auto-indentation after `:` colons.
   - **20+ Supported Languages**: Python, PowerShell, JavaScript, TypeScript, JSON, YAML, Markdown, C#, C/C++, HTML, XML, CSS, PHP, SQL, Batch/CMD, INI/Config, Java, Rust, and Go.
 - **Search & Replace (`Ctrl + F` / `Ctrl + H`)**: Sleek search panel supporting Match Case, Whole Word, Regular Expressions, and instant match counter.
 - **Developer Tools**: JSON formatter & minifier (`Ctrl + Shift + J`), Base64 and URL encoding/decoding, case transformation (`Ctrl + Shift + U` / `Ctrl + U`), line sorting, duplicate line removal, and timestamp insertion (`F5`).
-- **Clean Taskbar / Status Bar**: Real-time cursor location (`Ln`, `Col`), character/word/line counters, encoding (`UTF-8`), line ending (`Windows CRLF` / `Unix LF`), and language selector.
+- **Status Bar**: Real-time cursor position (`Ln`, `Col`), text direction (`LTR` / `RTL`), character/word/line counters, encoding (`UTF-8`), line ending (`Windows CRLF` / `Unix LF`), and language selector.
 - **Desktop & CLI Integration**: Bound to `Alt + N` in GlazeWM and runnable via `np [file]` or `nightpad` from CMD and PowerShell.
 
 ---
@@ -32,14 +43,23 @@ A fast, lightweight, and clean text and code editor built natively for the **MyE
 
 ## ⌨️ Keyboard Shortcuts Reference
 
-### File Management
+### File Management & Fast Saving
 | Shortcut | Action |
 |---|---|
 | `Ctrl + N` | Create new document |
 | `Ctrl + O` | Open file dialog |
-| `Ctrl + S` | Save current document |
-| `Ctrl + Shift + S` | Save As dialog |
+| `Ctrl + S` | Save current file (opens Quick Save bar if untitled) |
+| `Ctrl + Shift + S` / `F2` / `Alt + S` | Open Quick Save bar with Tab completion & presets |
+| `Ctrl + Alt + S` | Open classic Windows Save Dialog |
+| `F1` / `F2` / `F3` / `F4` | Jump to Current, Documents, Desktop, MyEnv directory in Quick Save |
+| `Tab` | Autocomplete directory and file paths in Quick Save |
 | `Alt + F4` | Exit Notepad (prompts to save if modified) |
+
+### Arabic & Direction Controls
+| Shortcut | Action |
+|---|---|
+| `Ctrl + Shift + R` | Toggle Right-to-Left (RTL / عربي) and Left-to-Right (LTR) text direction |
+| Click `[LTR]` / `[RTL]` in Status Bar | Switch text flow direction |
 
 ### Text Editing & Formatting
 | Shortcut | Action |
@@ -63,7 +83,7 @@ A fast, lightweight, and clean text and code editor built natively for the **MyE
 | `F3` / `Enter` | Find Next match |
 | `Shift + F3` | Find Previous match |
 | `Ctrl + G` | Go to line |
-| `Esc` | Close search / Go-To bar |
+| `Esc` | Close Quick Save / Search / Go-To bar and return to editor |
 
 ### View & Zoom
 | Shortcut | Action |

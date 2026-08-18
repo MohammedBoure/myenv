@@ -19,6 +19,8 @@
         BorderThickness="1"
         AllowDrop="True"
         Drop="Window_Drop"
+        Loaded="MainWindow_Loaded"
+        Activated="MainWindow_Activated"
         PreviewKeyDown="Window_PreviewKeyDown">
 
     <Grid>
@@ -27,13 +29,15 @@
             <RowDefinition Height="32" />
             <!-- Row 1: Classic Menu Bar (File, Edit, View, Tools) -->
             <RowDefinition Height="28" />
-            <!-- Row 2: Search & Replace Panel (Collapsible) -->
+            <!-- Row 2: Fast Terminal-Style Quick Save Panel (Collapsible) -->
             <RowDefinition Height="Auto" />
-            <!-- Row 3: Go To Line Panel (Collapsible) -->
+            <!-- Row 3: Search & Replace Panel (Collapsible) -->
             <RowDefinition Height="Auto" />
-            <!-- Row 4: Main Text Editor Area -->
+            <!-- Row 4: Go To Line Panel (Collapsible) -->
+            <RowDefinition Height="Auto" />
+            <!-- Row 5: Main Text Editor Area -->
             <RowDefinition Height="*" />
-            <!-- Row 5: Clean Bottom Status Bar -->
+            <!-- Row 6: Clean Bottom Status Bar -->
             <RowDefinition Height="24" />
         </Grid.RowDefinitions>
 
@@ -77,7 +81,8 @@
                     <MenuItem Header="_New" InputGestureText="Ctrl+N" Click="MenuNew_Click" />
                     <MenuItem Header="_Open..." InputGestureText="Ctrl+O" Click="MenuOpen_Click" />
                     <MenuItem Header="_Save" InputGestureText="Ctrl+S" Click="MenuSave_Click" />
-                    <MenuItem Header="Save _As..." InputGestureText="Ctrl+Shift+S" Click="MenuSaveAs_Click" />
+                    <MenuItem Header="Save _As (Quick)..." InputGestureText="Ctrl+Shift+S" Click="MenuSaveAsQuick_Click" />
+                    <MenuItem Header="Save As (_Dialog)..." InputGestureText="Ctrl+Alt+S" Click="MenuSaveAsDialog_Click" />
                     <Separator Background="{StaticResource BorderDarkBrush}" />
                     <MenuItem Header="E_xit" InputGestureText="Alt+F4" Click="MenuExit_Click" />
                 </MenuItem>
@@ -112,6 +117,9 @@
                     <MenuItem x:Name="MenuLineNumbers" Header="Show _Line Numbers" InputGestureText="Ctrl+Shift+L" IsCheckable="True" IsChecked="True" Click="MenuLineNumbers_Click" />
                     <MenuItem x:Name="MenuStatusBarToggle" Header="_Status Bar" IsCheckable="True" IsChecked="True" Click="MenuStatusBarToggle_Click" />
                     <Separator Background="{StaticResource BorderDarkBrush}" />
+                    <MenuItem x:Name="MenuRtlDirection" Header="Right-to-Left Direction (_RTL / عربي)" InputGestureText="Ctrl+Shift+R" IsCheckable="True" Click="MenuRtlDirection_Click" />
+                    <MenuItem x:Name="MenuAutoArabicDetect" Header="_Auto-Detect Arabic Direction" IsCheckable="True" IsChecked="True" Click="MenuAutoArabicDetect_Click" />
+                    <Separator Background="{StaticResource BorderDarkBrush}" />
                     <MenuItem Header="Zoom _In" InputGestureText="Ctrl++" Click="MenuZoomIn_Click" />
                     <MenuItem Header="Zoom _Out" InputGestureText="Ctrl+-" Click="MenuZoomOut_Click" />
                     <MenuItem Header="_Restore Default Zoom" InputGestureText="Ctrl+0" Click="MenuZoomReset_Click" />
@@ -141,8 +149,58 @@
             </Menu>
         </Border>
 
-        <!-- ROW 2: SEARCH & REPLACE PANEL (Collapsible) -->
-        <Border x:Name="SearchPanel" Grid.Row="2" Background="{StaticResource BgSurfaceBrush}" BorderBrush="{StaticResource BorderDarkBrush}" BorderThickness="0,0,0,1" Padding="8,5" Visibility="Collapsed">
+        <!-- ROW 2: FAST TERMINAL-STYLE QUICK SAVE PANEL (Collapsible) -->
+        <Border x:Name="QuickSavePanel" Grid.Row="2" Background="{StaticResource BgSurfaceBrush}" BorderBrush="{StaticResource BorderDarkBrush}" BorderThickness="0,0,0,1" Padding="10,8" Visibility="Collapsed">
+            <StackPanel Orientation="Vertical">
+                <!-- Top Row: Label, Path Input, Action Buttons -->
+                <Grid Margin="0,0,0,6">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Save Label / Prompt -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,8,0">
+                        <TextBlock Text="💾" FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center" />
+                        <TextBlock Text="Save As / حفظ:" FontWeight="SemiBold" Foreground="{StaticResource AccentBlueBrush}" VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <!-- Keyboard Path Input with Auto-completion -->
+                    <TextBox x:Name="TxtQuickSavePath" Grid.Column="1" Height="26" FontFamily="Cascadia Code, Consolas, Segoe UI" FontSize="12" VerticalContentAlignment="Center" KeyDown="TxtQuickSavePath_KeyDown" TextChanged="TxtQuickSavePath_TextChanged" PreviewKeyDown="TxtQuickSavePath_PreviewKeyDown" />
+
+                    <!-- Actions -->
+                    <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="8,0,0,0">
+                        <Button Style="{StaticResource NightButton}" Content="Save (Enter)" FontWeight="SemiBold" Foreground="{StaticResource AccentBlueBrush}" Padding="10,2" Margin="0,0,4,0" Click="BtnQuickSaveConfirm_Click" />
+                        <Button Style="{StaticResource NightButton}" Content="Browse..." ToolTip="Open classic Windows Save Dialog (Alt+B)" Padding="8,2" Margin="0,0,4,0" Click="BtnQuickSaveBrowse_Click" />
+                        <Button Style="{StaticResource StatusButton}" Content="Cancel (Esc)" Padding="6,2" Click="BtnQuickSaveCancel_Click" />
+                    </StackPanel>
+                </Grid>
+
+                <!-- Bottom Row: Quick Preset Chips & Real-time Path Status -->
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Preset Folder Buttons -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock Text="Quick Jump:" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" VerticalAlignment="Center" Margin="0,0,6,0" />
+                        <Button Style="{StaticResource StatusButton}" Content="📁 Current [F1]" FontSize="11" Margin="0,0,4,0" Click="BtnPresetCurrent_Click" ToolTip="Save to Current Directory (F1)" />
+                        <Button Style="{StaticResource StatusButton}" Content="📁 Documents [F2]" FontSize="11" Margin="0,0,4,0" Click="BtnPresetDocuments_Click" ToolTip="Save to Documents (F2)" />
+                        <Button Style="{StaticResource StatusButton}" Content="📁 Desktop [F3]" FontSize="11" Margin="0,0,4,0" Click="BtnPresetDesktop_Click" ToolTip="Save to Desktop (F3)" />
+                        <Button Style="{StaticResource StatusButton}" Content="📁 MyEnv [F4]" FontSize="11" Click="BtnPresetMyEnv_Click" ToolTip="Save to MyEnv (F4)" />
+                    </StackPanel>
+
+                    <!-- Real-time Status / Auto-complete Hint -->
+                    <TextBlock x:Name="LblQuickSaveStatus" Grid.Column="1" Text="Press Tab to autocomplete path | Enter to save" Foreground="{StaticResource TextSecondaryBrush}" FontSize="11" FontStyle="Italic" VerticalAlignment="Center" HorizontalAlignment="Right" Margin="8,0,0,0" TextTrimming="CharacterEllipsis" />
+                </Grid>
+            </StackPanel>
+        </Border>
+
+        <!-- ROW 3: SEARCH & REPLACE PANEL (Collapsible) -->
+        <Border x:Name="SearchPanel" Grid.Row="3" Background="{StaticResource BgSurfaceBrush}" BorderBrush="{StaticResource BorderDarkBrush}" BorderThickness="0,0,0,1" Padding="8,5" Visibility="Collapsed">
             <StackPanel Orientation="Vertical">
                 <!-- Find Row -->
                 <Grid Margin="0,0,0,4">
@@ -190,8 +248,8 @@
             </StackPanel>
         </Border>
 
-        <!-- ROW 3: GO TO LINE PANEL (Collapsible) -->
-        <Border x:Name="GoToLinePanel" Grid.Row="3" Background="{StaticResource BgSurfaceBrush}" BorderBrush="{StaticResource BorderDarkBrush}" BorderThickness="0,0,0,1" Padding="8,4" Visibility="Collapsed">
+        <!-- ROW 4: GO TO LINE PANEL (Collapsible) -->
+        <Border x:Name="GoToLinePanel" Grid.Row="4" Background="{StaticResource BgSurfaceBrush}" BorderBrush="{StaticResource BorderDarkBrush}" BorderThickness="0,0,0,1" Padding="8,4" Visibility="Collapsed">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
@@ -208,29 +266,30 @@
             </Grid>
         </Border>
 
-        <!-- ROW 4: MAIN TEXT EDITOR AREA -->
-        <Grid Grid.Row="4" Background="{StaticResource BgEditorBrush}">
+        <!-- ROW 5: MAIN TEXT EDITOR AREA -->
+        <Grid Grid.Row="5" Background="{StaticResource BgEditorBrush}">
             <avalonEdit:TextEditor x:Name="MainEditor"
                                    Background="{StaticResource BgEditorBrush}"
                                    Foreground="{StaticResource TextPrimaryBrush}"
-                                   FontFamily="Cascadia Code, JetBrains Mono, Consolas, Courier New"
+                                   FontFamily="Cascadia Code, Segoe UI, Cairo, Tahoma, Consolas, Arial"
                                    FontSize="14"
                                    ShowLineNumbers="True"
                                    WordWrap="False"
                                    HorizontalScrollBarVisibility="Auto"
                                    VerticalScrollBarVisibility="Auto"
                                    BorderThickness="0"
-                                   Padding="6,4,6,4" />
+                                   Padding="6,4,6,4"
+                                   Loaded="MainEditor_Loaded" />
         </Grid>
 
-        <!-- ROW 5: CLEAN BOTTOM STATUS BAR -->
-        <Border x:Name="StatusBarBorder" Grid.Row="5" Background="{StaticResource BgSurfaceBrush}" BorderBrush="{StaticResource BorderLightBrush}" BorderThickness="0,1,0,0" Padding="8,0">
+        <!-- ROW 6: CLEAN BOTTOM STATUS BAR -->
+        <Border x:Name="StatusBarBorder" Grid.Row="6" Background="{StaticResource BgSurfaceBrush}" BorderBrush="{StaticResource BorderLightBrush}" BorderThickness="0,1,0,0" Padding="8,0">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <!-- Left: Caret & Selection Stats -->
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
-                    <!-- Right: Encoding, EOL, Language, Zoom -->
+                    <!-- Right: Direction, Encoding, EOL, Language, Zoom -->
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
@@ -243,6 +302,9 @@
 
                 <!-- Right Stats -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- Text Direction Toggle Button (LTR / RTL) -->
+                    <Button x:Name="BtnDirectionToggle" Style="{StaticResource StatusButton}" Content="LTR" ToolTip="Text Direction: Left-To-Right (Click or press Ctrl+Shift+R to toggle RTL / عربي)" Margin="0,0,12,0" Foreground="{StaticResource AccentBlueBrush}" Click="BtnToggleDirection_Click" />
+
                     <!-- Zoom Level -->
                     <TextBlock x:Name="StatusZoom" Text="100%" Margin="0,0,16,0" Foreground="{StaticResource TextSecondaryBrush}" Cursor="Hand" MouseLeftButtonDown="StatusZoom_MouseLeftButtonDown" ToolTip="Click to reset zoom" />
 

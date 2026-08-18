@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -25,6 +26,12 @@ public partial class MainWindow : Window
     private bool _isModified;
     private string _currentSyntaxName = "Plain Text";
 
+    // Auto-completion state for quick keyboard save
+    private List<string>? _currentCompletions;
+    private int _completionIndex = -1;
+    private string _completionOriginalInput = string.Empty;
+    private bool _suppressTextChange;
+
     public MainWindow()
     {
         InitializeComponent();
@@ -32,6 +39,41 @@ public partial class MainWindow : Window
         InitializeSyntaxMenu();
         UpdateTitle();
         UpdateStatusBar();
+    }
+
+    private void MainWindow_Loaded(object sender, RoutedEventArgs e)
+    {
+        FocusEditor();
+    }
+
+    private void MainWindow_Activated(object? sender, EventArgs e)
+    {
+        if (QuickSavePanel.Visibility != Visibility.Visible &&
+            SearchPanel.Visibility != Visibility.Visible &&
+            GoToLinePanel.Visibility != Visibility.Visible)
+        {
+            FocusEditor();
+        }
+    }
+
+    private void MainEditor_Loaded(object sender, RoutedEventArgs e)
+    {
+        FocusEditor();
+    }
+
+    /// <summary>
+    /// Instantly focuses the AvalonEdit editor buffer so the user can type immediately upon launch without mouse interaction.
+    /// </summary>
+    private void FocusEditor()
+    {
+        Dispatcher.InvokeAsync(() =>
+        {
+            MainEditor.Focus();
+            if (MainEditor.TextArea != null)
+            {
+                Keyboard.Focus(MainEditor.TextArea);
+            }
+        }, System.Windows.Threading.DispatcherPriority.Input);
     }
 
     private void ConfigureEditor()
@@ -55,6 +97,8 @@ public partial class MainWindow : Window
                 _isModified = true;
                 UpdateTitle();
             }
+
+            CheckAutoArabicDetection();
             UpdateStatusBar();
         };
 
@@ -86,7 +130,7 @@ public partial class MainWindow : Window
                 }
 
                 // If line ends in colon (Python block), indent extra 4 spaces
-                if (lineText.TrimEnd().EndsWith(":"))
+                if (lineText.TrimEnd().EndsWith(':'))
                 {
                     leadingSpaces += 4;
                 }
@@ -110,7 +154,7 @@ public partial class MainWindow : Window
         TxtWindowTitle.Text = titleText;
     }
 
-    #region File Operations
+    #region File Operations & Fast Terminal Saving
 
     public void OpenFile(string filePath)
     {
@@ -130,8 +174,10 @@ public partial class MainWindow : Window
             _currentSyntaxName = SyntaxService.GetLanguageByExtension(_currentFilePath);
             ApplySyntax(_currentSyntaxName);
 
+            CheckAutoArabicDetection();
             UpdateTitle();
             UpdateStatusBar();
+            FocusEditor();
         }
         catch (Exception ex)
         {
@@ -150,15 +196,21 @@ public partial class MainWindow : Window
         _currentSyntaxName = "Plain Text";
         ApplySyntax(_currentSyntaxName);
 
+        SetTextDirection(FlowDirection.LeftToRight);
         UpdateTitle();
         UpdateStatusBar();
+        FocusEditor();
     }
 
+    /// <summary>
+    /// Fast save: saves instantly if file has path, otherwise opens keyboard Quick Save bar.
+    /// </summary>
     public bool SaveFile()
     {
         if (string.IsNullOrEmpty(_currentFilePath))
         {
-            return SaveAsFile();
+            ShowQuickSave();
+            return false;
         }
 
         try
@@ -175,11 +227,270 @@ public partial class MainWindow : Window
         }
     }
 
-    public bool SaveAsFile()
+    /// <summary>
+    /// Opens the fast keyboard-driven Quick Save bar.
+    /// </summary>
+    public void ShowQuickSave()
+    {
+        SearchPanel.Visibility = Visibility.Collapsed;
+        GoToLinePanel.Visibility = Visibility.Collapsed;
+        QuickSavePanel.Visibility = Visibility.Visible;
+
+        string defaultDir = !string.IsNullOrEmpty(_currentFilePath)
+            ? Path.GetDirectoryName(_currentFilePath) ?? Environment.CurrentDirectory
+            : Environment.CurrentDirectory;
+
+        string defaultFileName = !string.IsNullOrEmpty(_currentFilePath)
+            ? Path.GetFileName(_currentFilePath)
+            : SuggestDefaultFileName();
+
+        string initialPath = Path.Combine(defaultDir, defaultFileName);
+        _suppressTextChange = true;
+        TxtQuickSavePath.Text = initialPath;
+        _suppressTextChange = false;
+
+        ResetCompletion();
+        UpdateQuickSaveStatus(initialPath);
+
+        TxtQuickSavePath.Focus();
+
+        // Select the filename portion for instant overwrite/editing
+        int lastSep = initialPath.LastIndexOfAny(new[] { '\\', '/' });
+        if (lastSep >= 0 && lastSep + 1 < initialPath.Length)
+        {
+            TxtQuickSavePath.Select(lastSep + 1, initialPath.Length - lastSep - 1);
+        }
+        else
+        {
+            TxtQuickSavePath.SelectAll();
+        }
+    }
+
+    private string SuggestDefaultFileName()
+    {
+        string ext = _currentSyntaxName switch
+        {
+            "Python" => ".py",
+            "PowerShell" => ".ps1",
+            "JavaScript" => ".js",
+            "TypeScript" => ".ts",
+            "JSON" => ".json",
+            "Markdown" => ".md",
+            "C#" => ".cs",
+            "HTML" => ".html",
+            "CSS" => ".css",
+            "Batch" => ".cmd",
+            "SQL" => ".sql",
+            _ => ".txt"
+        };
+
+        return $"untitled{ext}";
+    }
+
+    public void CloseQuickSave()
+    {
+        QuickSavePanel.Visibility = Visibility.Collapsed;
+        ResetCompletion();
+        FocusEditor();
+    }
+
+    private void ResetCompletion()
+    {
+        _currentCompletions = null;
+        _completionIndex = -1;
+        _completionOriginalInput = string.Empty;
+    }
+
+    private void TxtQuickSavePath_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        if (e.Key == Key.Tab)
+        {
+            e.Handled = true;
+            HandlePathTabCompletion();
+        }
+        else if (e.Key == Key.Escape)
+        {
+            e.Handled = true;
+            CloseQuickSave();
+        }
+        else if (e.Key == Key.Enter)
+        {
+            e.Handled = true;
+            ConfirmQuickSave();
+        }
+        else if (e.Key == Key.F1)
+        {
+            e.Handled = true;
+            ApplyPresetDirectory(Environment.CurrentDirectory);
+        }
+        else if (e.Key == Key.F2)
+        {
+            e.Handled = true;
+            ApplyPresetDirectory(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments));
+        }
+        else if (e.Key == Key.F3)
+        {
+            e.Handled = true;
+            ApplyPresetDirectory(Environment.GetFolderPath(Environment.SpecialFolder.Desktop));
+        }
+        else if (e.Key == Key.F4)
+        {
+            e.Handled = true;
+            ApplyPresetDirectory(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "myenv"));
+        }
+        else if (e.Key != Key.LeftShift && e.Key != Key.RightShift && e.Key != Key.LeftCtrl && e.Key != Key.RightCtrl)
+        {
+            ResetCompletion();
+        }
+    }
+
+    private void HandlePathTabCompletion()
+    {
+        string input = TxtQuickSavePath.Text;
+
+        if (_currentCompletions == null || _currentCompletions.Count == 0)
+        {
+            _completionOriginalInput = input;
+            _currentCompletions = PathCompletionService.GetCompletions(input);
+            _completionIndex = -1;
+        }
+
+        if (_currentCompletions != null && _currentCompletions.Count > 0)
+        {
+            _completionIndex = (_completionIndex + 1) % _currentCompletions.Count;
+            string match = _currentCompletions[_completionIndex];
+
+            _suppressTextChange = true;
+            TxtQuickSavePath.Text = match;
+            TxtQuickSavePath.CaretIndex = match.Length;
+            _suppressTextChange = false;
+
+            LblQuickSaveStatus.Text = $"[{_completionIndex + 1}/{_currentCompletions.Count}] {match}";
+        }
+        else
+        {
+            LblQuickSaveStatus.Text = "No path matches found";
+        }
+    }
+
+    private void ApplyPresetDirectory(string dir)
+    {
+        if (string.IsNullOrWhiteSpace(dir)) return;
+
+        string currentVal = TxtQuickSavePath.Text;
+        string fileName = Path.GetFileName(currentVal);
+        if (string.IsNullOrWhiteSpace(fileName))
+        {
+            fileName = SuggestDefaultFileName();
+        }
+
+        string newPath = Path.Combine(dir, fileName);
+        _suppressTextChange = true;
+        TxtQuickSavePath.Text = newPath;
+        _suppressTextChange = false;
+
+        ResetCompletion();
+        UpdateQuickSaveStatus(newPath);
+        TxtQuickSavePath.Focus();
+        TxtQuickSavePath.CaretIndex = newPath.Length;
+    }
+
+    private void TxtQuickSavePath_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        if (_suppressTextChange) return;
+        ResetCompletion();
+        UpdateQuickSaveStatus(TxtQuickSavePath.Text);
+    }
+
+    private void TxtQuickSavePath_KeyDown(object sender, KeyEventArgs e)
+    {
+        // Handled in PreviewKeyDown
+    }
+
+    private void UpdateQuickSaveStatus(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            LblQuickSaveStatus.Text = "Enter a file path";
+            return;
+        }
+
+        string resolved = PathCompletionService.ResolvePath(input);
+        string? dir = Path.GetDirectoryName(resolved);
+
+        if (string.IsNullOrEmpty(dir))
+        {
+            LblQuickSaveStatus.Text = "Invalid directory path";
+        }
+        else if (Directory.Exists(dir))
+        {
+            LblQuickSaveStatus.Text = $"Directory exists ✓ | Press Enter to save";
+        }
+        else
+        {
+            LblQuickSaveStatus.Text = $"📁 New directory: will create on save | Press Enter to save";
+        }
+    }
+
+    private void ConfirmQuickSave()
+    {
+        string raw = TxtQuickSavePath.Text;
+        if (string.IsNullOrWhiteSpace(raw))
+        {
+            MessageBox.Show("Please enter a valid file path.", "Save", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        string targetPath = PathCompletionService.ResolvePath(raw);
+
+        // If target is a directory path, append default filename
+        if (Directory.Exists(targetPath) || targetPath.EndsWith('\\') || targetPath.EndsWith('/'))
+        {
+            targetPath = Path.Combine(targetPath, SuggestDefaultFileName());
+        }
+
+        try
+        {
+            PathCompletionService.EnsureDirectoryExists(targetPath);
+            File.WriteAllText(targetPath, MainEditor.Document.Text, new UTF8Encoding(false));
+
+            _currentFilePath = Path.GetFullPath(targetPath);
+            _isModified = false;
+
+            _currentSyntaxName = SyntaxService.GetLanguageByExtension(_currentFilePath);
+            ApplySyntax(_currentSyntaxName);
+
+            UpdateTitle();
+            UpdateStatusBar();
+            CloseQuickSave();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Could not save file to '{targetPath}':\n{ex.Message}", "Save Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private void BtnQuickSaveConfirm_Click(object sender, RoutedEventArgs e) => ConfirmQuickSave();
+    private void BtnQuickSaveCancel_Click(object sender, RoutedEventArgs e) => CloseQuickSave();
+    private void BtnQuickSaveBrowse_Click(object sender, RoutedEventArgs e)
+    {
+        CloseQuickSave();
+        SaveAsDialog();
+    }
+
+    private void BtnPresetCurrent_Click(object sender, RoutedEventArgs e) => ApplyPresetDirectory(Environment.CurrentDirectory);
+    private void BtnPresetDocuments_Click(object sender, RoutedEventArgs e) => ApplyPresetDirectory(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments));
+    private void BtnPresetDesktop_Click(object sender, RoutedEventArgs e) => ApplyPresetDirectory(Environment.GetFolderPath(Environment.SpecialFolder.Desktop));
+    private void BtnPresetMyEnv_Click(object sender, RoutedEventArgs e) => ApplyPresetDirectory(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "myenv"));
+
+    /// <summary>
+    /// Classic Windows Save As Dialog fallback.
+    /// </summary>
+    public bool SaveAsDialog()
     {
         var dlg = new SaveFileDialog
         {
-            FileName = string.IsNullOrEmpty(_currentFilePath) ? "Untitled" : Path.GetFileName(_currentFilePath),
+            FileName = string.IsNullOrEmpty(_currentFilePath) ? SuggestDefaultFileName() : Path.GetFileName(_currentFilePath),
             Filter = "All Files (*.*)|*.*|Python (*.py)|*.py|Text Documents (*.txt)|*.txt|PowerShell (*.ps1)|*.ps1|JSON (*.json)|*.json|Markdown (*.md)|*.md|C# (*.cs)|*.cs"
         };
 
@@ -196,6 +507,7 @@ public partial class MainWindow : Window
 
                 UpdateTitle();
                 UpdateStatusBar();
+                FocusEditor();
                 return true;
             }
             catch (Exception ex)
@@ -240,8 +552,70 @@ public partial class MainWindow : Window
     }
 
     private void MenuSave_Click(object sender, RoutedEventArgs e) => SaveFile();
-    private void MenuSaveAs_Click(object sender, RoutedEventArgs e) => SaveAsFile();
+    private void MenuSaveAsQuick_Click(object sender, RoutedEventArgs e) => ShowQuickSave();
+    private void MenuSaveAsDialog_Click(object sender, RoutedEventArgs e) => SaveAsDialog();
     private void MenuExit_Click(object sender, RoutedEventArgs e) => Close();
+
+    #endregion
+
+    #region Arabic & Text Direction Support
+
+    private void SetTextDirection(FlowDirection direction)
+    {
+        MainEditor.FlowDirection = direction;
+        if (MainEditor.TextArea != null)
+        {
+            MainEditor.TextArea.FlowDirection = direction;
+        }
+
+        bool isRtl = direction == FlowDirection.RightToLeft;
+        MenuRtlDirection.IsChecked = isRtl;
+        BtnDirectionToggle.Content = isRtl ? "RTL" : "LTR";
+        BtnDirectionToggle.ToolTip = isRtl
+            ? "Text Direction: Right-To-Left (عربي) - Click or Ctrl+Shift+R to toggle LTR"
+            : "Text Direction: Left-To-Right - Click or Ctrl+Shift+R to toggle RTL / عربي";
+    }
+
+    public void ToggleTextDirection()
+    {
+        var next = MainEditor.FlowDirection == FlowDirection.RightToLeft
+            ? FlowDirection.LeftToRight
+            : FlowDirection.RightToLeft;
+        SetTextDirection(next);
+    }
+
+    private void CheckAutoArabicDetection()
+    {
+        if (MenuAutoArabicDetect?.IsChecked != true)
+            return;
+
+        string text = MainEditor.Document.Text;
+        if (string.IsNullOrWhiteSpace(text))
+            return;
+
+        if (ArabicTextService.ShouldBeRightToLeft(text))
+        {
+            if (MainEditor.FlowDirection != FlowDirection.RightToLeft)
+            {
+                SetTextDirection(FlowDirection.RightToLeft);
+            }
+        }
+    }
+
+    private void MenuRtlDirection_Click(object sender, RoutedEventArgs e)
+    {
+        SetTextDirection(MenuRtlDirection.IsChecked ? FlowDirection.RightToLeft : FlowDirection.LeftToRight);
+    }
+
+    private void MenuAutoArabicDetect_Click(object sender, RoutedEventArgs e)
+    {
+        CheckAutoArabicDetection();
+    }
+
+    private void BtnToggleDirection_Click(object sender, RoutedEventArgs e)
+    {
+        ToggleTextDirection();
+    }
 
     #endregion
 
@@ -292,6 +666,8 @@ public partial class MainWindow : Window
 
     private void MenuFind_Click(object sender, RoutedEventArgs e)
     {
+        QuickSavePanel.Visibility = Visibility.Collapsed;
+        GoToLinePanel.Visibility = Visibility.Collapsed;
         SearchPanel.Visibility = Visibility.Visible;
         ReplaceRow.Visibility = Visibility.Collapsed;
         TxtSearch.Focus();
@@ -305,6 +681,8 @@ public partial class MainWindow : Window
 
     private void MenuReplace_Click(object sender, RoutedEventArgs e)
     {
+        QuickSavePanel.Visibility = Visibility.Collapsed;
+        GoToLinePanel.Visibility = Visibility.Collapsed;
         SearchPanel.Visibility = Visibility.Visible;
         ReplaceRow.Visibility = Visibility.Visible;
         TxtSearch.Focus();
@@ -319,7 +697,7 @@ public partial class MainWindow : Window
     private void BtnCloseSearch_Click(object sender, RoutedEventArgs e)
     {
         SearchPanel.Visibility = Visibility.Collapsed;
-        MainEditor.Focus();
+        FocusEditor();
     }
 
     private void SearchOption_Click(object sender, RoutedEventArgs e) => UpdateMatchCount();
@@ -499,6 +877,8 @@ public partial class MainWindow : Window
 
     private void MenuGoToLine_Click(object sender, RoutedEventArgs e)
     {
+        QuickSavePanel.Visibility = Visibility.Collapsed;
+        SearchPanel.Visibility = Visibility.Collapsed;
         GoToLinePanel.Visibility = Visibility.Visible;
         TxtGoToLine.Text = MainEditor.TextArea.Caret.Line.ToString();
         TxtGoToLine.SelectAll();
@@ -508,7 +888,7 @@ public partial class MainWindow : Window
     private void BtnCloseGoToLine_Click(object sender, RoutedEventArgs e)
     {
         GoToLinePanel.Visibility = Visibility.Collapsed;
-        MainEditor.Focus();
+        FocusEditor();
     }
 
     private void BtnGoToLine_Click(object sender, RoutedEventArgs e) => ExecuteGoToLine();
@@ -536,7 +916,7 @@ public partial class MainWindow : Window
             MainEditor.TextArea.Caret.Line = clamped;
             MainEditor.TextArea.Caret.Column = 1;
             GoToLinePanel.Visibility = Visibility.Collapsed;
-            MainEditor.Focus();
+            FocusEditor();
         }
     }
 
@@ -771,7 +1151,20 @@ public partial class MainWindow : Window
 
     private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
     {
-        if (Keyboard.Modifiers == ModifierKeys.Control)
+        if (Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Alt))
+        {
+            if (e.Key == Key.S) { e.Handled = true; SaveAsDialog(); }
+        }
+        else if (Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift))
+        {
+            if (e.Key == Key.S) { e.Handled = true; ShowQuickSave(); }
+            else if (e.Key == Key.R) { e.Handled = true; ToggleTextDirection(); }
+            else if (e.Key == Key.L) { e.Handled = true; MenuLineNumbers.IsChecked = !MenuLineNumbers.IsChecked; MenuLineNumbers_Click(sender, e); }
+            else if (e.Key == Key.K) { e.Handled = true; MenuDeleteLine_Click(sender, e); }
+            else if (e.Key == Key.J) { e.Handled = true; MenuFormatJson_Click(sender, e); }
+            else if (e.Key == Key.U) { e.Handled = true; MenuUpper_Click(sender, e); }
+        }
+        else if (Keyboard.Modifiers == ModifierKeys.Control)
         {
             if (e.Key == Key.N) { e.Handled = true; NewFile(); }
             else if (e.Key == Key.O) { e.Handled = true; MenuOpen_Click(sender, e); }
@@ -785,19 +1178,20 @@ public partial class MainWindow : Window
             else if (e.Key == Key.Subtract || e.Key == Key.OemMinus) { e.Handled = true; ZoomOut(); }
             else if (e.Key == Key.D0 || e.Key == Key.NumPad0) { e.Handled = true; ZoomReset(); }
         }
-        else if (Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift))
-        {
-            if (e.Key == Key.S) { e.Handled = true; SaveAsFile(); }
-            else if (e.Key == Key.L) { e.Handled = true; MenuLineNumbers.IsChecked = !MenuLineNumbers.IsChecked; MenuLineNumbers_Click(sender, e); }
-            else if (e.Key == Key.K) { e.Handled = true; MenuDeleteLine_Click(sender, e); }
-            else if (e.Key == Key.J) { e.Handled = true; MenuFormatJson_Click(sender, e); }
-            else if (e.Key == Key.U) { e.Handled = true; MenuUpper_Click(sender, e); }
-        }
         else if (Keyboard.Modifiers == ModifierKeys.Alt)
         {
             if (e.Key == Key.Z) { e.Handled = true; MenuWordWrap.IsChecked = !MenuWordWrap.IsChecked; MenuWordWrap_Click(sender, e); }
             else if (e.Key == Key.Up) { e.Handled = true; MenuMoveLineUp_Click(sender, e); }
             else if (e.Key == Key.Down) { e.Handled = true; MenuMoveLineDown_Click(sender, e); }
+            else if (e.Key == Key.S) { e.Handled = true; ShowQuickSave(); }
+        }
+        else if (e.Key == Key.F2)
+        {
+            if (QuickSavePanel.Visibility != Visibility.Visible)
+            {
+                e.Handled = true;
+                ShowQuickSave();
+            }
         }
         else if (e.Key == Key.F3)
         {
@@ -809,6 +1203,24 @@ public partial class MainWindow : Window
         {
             e.Handled = true;
             MenuInsertDateTime_Click(sender, e);
+        }
+        else if (e.Key == Key.Escape)
+        {
+            if (QuickSavePanel.Visibility == Visibility.Visible)
+            {
+                e.Handled = true;
+                CloseQuickSave();
+            }
+            else if (SearchPanel.Visibility == Visibility.Visible)
+            {
+                e.Handled = true;
+                BtnCloseSearch_Click(sender, e);
+            }
+            else if (GoToLinePanel.Visibility == Visibility.Visible)
+            {
+                e.Handled = true;
+                BtnCloseGoToLine_Click(sender, e);
+            }
         }
     }
 
@@ -832,19 +1244,12 @@ public partial class MainWindow : Window
         string text = MainEditor.Document.Text;
         int lineCount = MainEditor.Document.LineCount;
         int charCount = text.Length;
-
-        int words = 0;
-        bool inWord = false;
-        for (int i = 0; i < text.Length; i++)
-        {
-            if (char.IsWhiteSpace(text[i])) inWord = false;
-            else if (!inWord) { inWord = true; words++; }
-        }
+        int words = ArabicTextService.CountWords(text);
 
         StatusDocStats.Text = $"{lineCount:N0} line{(lineCount == 1 ? "" : "s")}, {words:N0} words, {charCount:N0} chars";
 
         if (text.Contains("\r\n")) StatusEol.Text = "Windows (CRLF)";
-        else if (text.Contains("\n")) StatusEol.Text = "Unix (LF)";
+        else if (text.Contains('\n')) StatusEol.Text = "Unix (LF)";
         else StatusEol.Text = "Windows (CRLF)";
 
         BtnLanguageSelector.Content = _currentSyntaxName;
