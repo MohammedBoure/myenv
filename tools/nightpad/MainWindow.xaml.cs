@@ -1,5 +1,4 @@
 using System;
-using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -7,17 +6,13 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Threading;
 using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.Document;
 using ICSharpCode.AvalonEdit.Editing;
 using ICSharpCode.AvalonEdit.Highlighting;
-using ICSharpCode.AvalonEdit.Rendering;
 using Microsoft.Win32;
-using NightPad.Models;
 using NightPad.Services;
 
 namespace NightPad;
@@ -26,327 +21,47 @@ public partial class MainWindow : Window
 {
     private double _zoomFactor = 1.0;
     private const double BaseFontSize = 14.0;
-    private int _untitledCounter = 1;
-    private EditorDocument? _activeDocument;
-    private bool _isMarkdownPreviewActive = false;
-    private bool _isSidebarVisible = true;
-    private bool _isAutoSaveEnabled = true;
-    private string? _currentWorkspaceFolder;
-    private readonly DispatcherTimer _autoSaveTimer;
-
-    public ObservableCollection<EditorDocument> Documents { get; } = new();
-    public ObservableCollection<FileNode> RootNodes { get; } = new();
-
-    public EditorDocument? ActiveDocument
-    {
-        get => _activeDocument;
-        set
-        {
-            if (_activeDocument != value)
-            {
-                _activeDocument = value;
-                OnActiveDocumentChanged();
-            }
-        }
-    }
+    private string? _currentFilePath;
+    private bool _isModified;
+    private string _currentSyntaxName = "Plain Text";
 
     public MainWindow()
     {
         InitializeComponent();
-        DataContext = this;
+        ConfigureEditor();
         InitializeSyntaxMenu();
-
-        // Configure Auto-Save background timer (runs every 3 seconds)
-        _autoSaveTimer = new DispatcherTimer
-        {
-            Interval = TimeSpan.FromSeconds(3)
-        };
-        _autoSaveTimer.Tick += AutoSaveTimer_Tick;
-        _autoSaveTimer.Start();
-
-        // Create initial document
-        CreateNewTab();
-
-        // Open current working directory into Explorer sidebar
-        string currentDir = Environment.CurrentDirectory;
-        if (!string.IsNullOrEmpty(currentDir) && Directory.Exists(currentDir))
-        {
-            OpenFolder(currentDir);
-        }
+        UpdateTitle();
+        UpdateStatusBar();
     }
 
-    #region Workspace & File Tree Sidebar
-
-    public void OpenFolder(string folderPath)
+    private void ConfigureEditor()
     {
-        if (string.IsNullOrWhiteSpace(folderPath) || !Directory.Exists(folderPath))
-            return;
+        MainEditor.Options.ConvertTabsToSpaces = true;
+        MainEditor.Options.IndentationSize = 4;
+        MainEditor.Options.EnableHyperlinks = false;
+        MainEditor.Options.HighlightCurrentLine = true;
+        MainEditor.Options.EnableRectangularSelection = true;
+        MainEditor.Options.EnableTextDragDrop = true;
 
-        try
+        MainEditor.LineNumbersForeground = (SolidColorBrush)FindResource("TextSecondaryBrush");
+        MainEditor.TextArea.SelectionBrush = new SolidColorBrush(Color.FromArgb(90, 31, 111, 235));
+        MainEditor.TextArea.SelectionBorder = null;
+        MainEditor.TextArea.SelectionCornerRadius = 0;
+
+        MainEditor.TextChanged += (s, e) =>
         {
-            _currentWorkspaceFolder = Path.GetFullPath(folderPath);
-            LblWorkspaceName.Text = Path.GetFileName(_currentWorkspaceFolder).ToUpperInvariant();
-            if (string.IsNullOrEmpty(LblWorkspaceName.Text))
+            if (!_isModified)
             {
-                LblWorkspaceName.Text = _currentWorkspaceFolder;
+                _isModified = true;
+                UpdateTitle();
             }
-            LblWorkspaceName.ToolTip = _currentWorkspaceFolder;
-
-            RefreshFileTree();
-        }
-        catch (Exception ex)
-        {
-            MessageBox.Show($"Failed to open workspace folder:\n{ex.Message}", "Explorer Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-        }
-    }
-
-    public void RefreshFileTree()
-    {
-        if (string.IsNullOrEmpty(_currentWorkspaceFolder) || !Directory.Exists(_currentWorkspaceFolder))
-            return;
-
-        RootNodes.Clear();
-
-        try
-        {
-            var dirInfo = new DirectoryInfo(_currentWorkspaceFolder);
-
-            // Add subdirectories
-            foreach (var dir in dirInfo.GetDirectories())
-            {
-                if ((dir.Attributes & FileAttributes.Hidden) != 0 && dir.Name.StartsWith("."))
-                    continue;
-
-                var node = new FileNode(dir.FullName, true);
-                RootNodes.Add(node);
-            }
-
-            // Add files
-            foreach (var file in dirInfo.GetFiles())
-            {
-                if ((file.Attributes & FileAttributes.Hidden) != 0 && file.Name.StartsWith("."))
-                    continue;
-
-                var node = new FileNode(file.FullName, false);
-                RootNodes.Add(node);
-            }
-        }
-        catch
-        {
-            // Ignore directory enumeration issues
-        }
-    }
-
-    private void BtnRefreshTree_Click(object sender, RoutedEventArgs e) => RefreshFileTree();
-
-    private void MenuOpenFolderDialog_Click(object sender, RoutedEventArgs e)
-    {
-        var dialog = new OpenFolderDialog
-        {
-            Title = "Select Workspace / Project Folder",
-            InitialDirectory = _currentWorkspaceFolder ?? Environment.CurrentDirectory
-        };
-
-        if (dialog.ShowDialog(this) == true)
-        {
-            OpenFolder(dialog.FolderName);
-        }
-    }
-
-    private void FileTreeView_MouseDoubleClick(object sender, MouseButtonEventArgs e)
-    {
-        if (FileTreeView.SelectedItem is FileNode node && !node.IsDirectory)
-        {
-            if (File.Exists(node.FullPath))
-            {
-                OpenFile(node.FullPath);
-            }
-        }
-    }
-
-    private void FileTreeView_KeyDown(object sender, KeyEventArgs e)
-    {
-        if (e.Key == Key.Enter && FileTreeView.SelectedItem is FileNode node && !node.IsDirectory)
-        {
-            if (File.Exists(node.FullPath))
-            {
-                OpenFile(node.FullPath);
-            }
-        }
-    }
-
-    private void TreeContextOpen_Click(object sender, RoutedEventArgs e)
-    {
-        if (FileTreeView.SelectedItem is FileNode node && !node.IsDirectory && File.Exists(node.FullPath))
-        {
-            OpenFile(node.FullPath);
-        }
-    }
-
-    private void TreeContextOpenInExplorer_Click(object sender, RoutedEventArgs e)
-    {
-        if (FileTreeView.SelectedItem is FileNode node && !string.IsNullOrEmpty(node.FullPath))
-        {
-            Process.Start("explorer.exe", $"/select,\"{node.FullPath}\"");
-        }
-    }
-
-    private void TreeContextCopyPath_Click(object sender, RoutedEventArgs e)
-    {
-        if (FileTreeView.SelectedItem is FileNode node && !string.IsNullOrEmpty(node.FullPath))
-        {
-            Clipboard.SetText(node.FullPath);
-        }
-    }
-
-    private void ToggleSidebar()
-    {
-        _isSidebarVisible = !_isSidebarVisible;
-
-        if (_isSidebarVisible)
-        {
-            ColSidebar.Width = new GridLength(240);
-            ColSidebarSplitter.Width = new GridLength(4);
-            SidebarPanel.Visibility = Visibility.Visible;
-            SidebarSplitter.Visibility = Visibility.Visible;
-            MenuSidebarToggle.IsChecked = true;
-        }
-        else
-        {
-            ColSidebar.Width = new GridLength(0);
-            ColSidebarSplitter.Width = new GridLength(0);
-            SidebarPanel.Visibility = Visibility.Collapsed;
-            SidebarSplitter.Visibility = Visibility.Collapsed;
-            MenuSidebarToggle.IsChecked = false;
-        }
-    }
-
-    private void MenuToggleSidebar_Click(object sender, RoutedEventArgs e) => ToggleSidebar();
-
-    #endregion
-
-    #region Auto-Save
-
-    private void AutoSaveTimer_Tick(object? sender, EventArgs e)
-    {
-        if (!_isAutoSaveEnabled) return;
-
-        foreach (var doc in Documents)
-        {
-            if (doc.IsModified && !string.IsNullOrEmpty(doc.FilePath) && File.Exists(doc.FilePath))
-            {
-                try
-                {
-                    File.WriteAllText(doc.FilePath, doc.Document.Text, new UTF8Encoding(false));
-                    doc.IsModified = false;
-                    doc.UpdateTitle();
-                }
-                catch
-                {
-                    // Fail silently on auto-save
-                }
-            }
-        }
-    }
-
-    private void ToggleAutoSave()
-    {
-        _isAutoSaveEnabled = !_isAutoSaveEnabled;
-        MenuAutoSave.IsChecked = _isAutoSaveEnabled;
-
-        if (_isAutoSaveEnabled)
-        {
-            StatusAutoSave.Text = "💾 Auto-Save: ON";
-            StatusAutoSave.Foreground = (SolidColorBrush)FindResource("AccentGreenBrush");
-        }
-        else
-        {
-            StatusAutoSave.Text = "💾 Auto-Save: OFF";
-            StatusAutoSave.Foreground = (SolidColorBrush)FindResource("TextSecondaryBrush");
-        }
-    }
-
-    private void MenuAutoSave_Click(object sender, RoutedEventArgs e) => ToggleAutoSave();
-    private void StatusAutoSave_MouseLeftButtonDown(object sender, MouseButtonEventArgs e) => ToggleAutoSave();
-
-    #endregion
-
-    #region Tab & Document Management
-
-    public EditorDocument CreateNewTab(string? filePath = null, string? content = null, string? title = null)
-    {
-        string tabTitle = title ?? (string.IsNullOrEmpty(filePath) ? $"Untitled-{_untitledCounter++}" : Path.GetFileName(filePath));
-        var doc = new EditorDocument(filePath, content, tabTitle);
-
-        var editor = CreateConfiguredEditor(doc);
-        doc.Editor = editor;
-
-        if (!string.IsNullOrEmpty(filePath))
-        {
-            doc.SyntaxName = SyntaxService.GetLanguageByExtension(filePath);
-            ApplySyntax(editor, doc.SyntaxName);
-        }
-
-        Documents.Add(doc);
-        ActiveDocument = doc;
-        return doc;
-    }
-
-    private TextEditor CreateConfiguredEditor(EditorDocument doc)
-    {
-        var editor = new TextEditor
-        {
-            Document = doc.Document,
-            Background = (SolidColorBrush)FindResource("BgEditorBrush"),
-            Foreground = (SolidColorBrush)FindResource("TextPrimaryBrush"),
-            FontFamily = new FontFamily("Cascadia Code, JetBrains Mono, Consolas, Courier New"),
-            FontSize = BaseFontSize * _zoomFactor,
-            ShowLineNumbers = MenuLineNumbers?.IsChecked ?? true,
-            WordWrap = MenuWordWrap?.IsChecked ?? false,
-            HorizontalScrollBarVisibility = ScrollBarVisibility.Auto,
-            VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-            BorderThickness = new Thickness(0),
-            Padding = new Thickness(6, 4, 6, 4)
-        };
-
-        // Editor Options
-        editor.Options.ConvertTabsToSpaces = true;
-        editor.Options.IndentationSize = 4;
-        editor.Options.EnableHyperlinks = false;
-        editor.Options.HighlightCurrentLine = true;
-        editor.Options.EnableRectangularSelection = true;
-        editor.Options.EnableTextDragDrop = true;
-
-        // Custom Gutter & Styling
-        editor.LineNumbersForeground = (SolidColorBrush)FindResource("TextSecondaryBrush");
-        editor.TextArea.SelectionBrush = new SolidColorBrush(Color.FromArgb(90, 31, 111, 235));
-        editor.TextArea.SelectionBorder = null;
-        editor.TextArea.SelectionCornerRadius = 0;
-
-        // Event handlers
-        editor.TextChanged += (s, e) =>
-        {
-            doc.IsModified = true;
-            doc.UpdateStatistics();
-            UpdateStatusBar();
-            if (_isMarkdownPreviewActive) UpdateMarkdownPreview();
-        };
-
-        editor.TextArea.Caret.PositionChanged += (s, e) =>
-        {
-            doc.CaretLine = editor.TextArea.Caret.Line;
-            doc.CaretColumn = editor.TextArea.Caret.Column;
             UpdateStatusBar();
         };
 
-        editor.TextArea.SelectionChanged += (s, e) =>
-        {
-            doc.SelectionLength = editor.SelectionLength;
-            doc.SelectionLines = string.IsNullOrEmpty(editor.SelectedText) ? 0 : editor.SelectedText.Split('\n').Length;
-            UpdateStatusBar();
-        };
+        MainEditor.TextArea.Caret.PositionChanged += (s, e) => UpdateStatusBar();
+        MainEditor.TextArea.SelectionChanged += (s, e) => UpdateStatusBar();
 
-        editor.PreviewMouseWheel += (s, e) =>
+        MainEditor.PreviewMouseWheel += (s, e) =>
         {
             if (Keyboard.Modifiers == ModifierKeys.Control)
             {
@@ -356,22 +71,21 @@ public partial class MainWindow : Window
             }
         };
 
-        // Smart Indentation & Python colon indent handler
-        editor.TextArea.PreviewKeyDown += (s, e) =>
+        // Smart Python indentation & Enter handling
+        MainEditor.TextArea.PreviewKeyDown += (s, e) =>
         {
             if (e.Key == Key.Enter && Keyboard.Modifiers == ModifierKeys.None)
             {
-                var curLine = editor.Document.GetLineByNumber(editor.TextArea.Caret.Line);
-                string lineText = editor.Document.GetText(curLine.Offset, editor.CaretOffset - curLine.Offset);
-                
-                // Count leading spaces
+                var curLine = MainEditor.Document.GetLineByNumber(MainEditor.TextArea.Caret.Line);
+                string lineText = MainEditor.Document.GetText(curLine.Offset, MainEditor.CaretOffset - curLine.Offset);
+
                 int leadingSpaces = 0;
                 while (leadingSpaces < lineText.Length && lineText[leadingSpaces] == ' ')
                 {
                     leadingSpaces++;
                 }
 
-                // If line ends in colon (e.g. Python def, class, if, for), add 4 extra spaces
+                // If line ends in colon (Python block), indent extra 4 spaces
                 if (lineText.TrimEnd().EndsWith(":"))
                 {
                     leadingSpaces += 4;
@@ -381,263 +95,152 @@ public partial class MainWindow : Window
                 {
                     e.Handled = true;
                     string indent = Environment.NewLine + new string(' ', leadingSpaces);
-                    editor.Document.Insert(editor.CaretOffset, indent);
+                    MainEditor.Document.Insert(MainEditor.CaretOffset, indent);
                 }
             }
         };
-
-        return editor;
     }
 
-    private void OnActiveDocumentChanged()
+    private void UpdateTitle()
     {
-        if (ActiveDocument?.Editor != null)
-        {
-            EditorHost.Content = ActiveDocument.Editor;
-            ActiveDocument.Editor.Focus();
-            UpdateStatusBar();
-
-            if (_isMarkdownPreviewActive)
-            {
-                UpdateMarkdownPreview();
-            }
-        }
-        else
-        {
-            EditorHost.Content = null;
-        }
-
-        CommandManager.InvalidateRequerySuggested();
+        string fileName = string.IsNullOrEmpty(_currentFilePath) ? "Untitled" : Path.GetFileName(_currentFilePath);
+        string prefix = _isModified ? "*" : "";
+        string titleText = $"{prefix}{fileName} - Notepad";
+        Title = titleText;
+        TxtWindowTitle.Text = titleText;
     }
-
-    private void Tab_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-    {
-        if (sender is FrameworkElement elem && elem.DataContext is EditorDocument doc)
-        {
-            ActiveDocument = doc;
-        }
-    }
-
-    private void Tab_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
-    {
-        if (sender is FrameworkElement elem && elem.DataContext is EditorDocument doc)
-        {
-            ActiveDocument = doc;
-        }
-    }
-
-    private void TabCloseButton_Click(object sender, RoutedEventArgs e)
-    {
-        if (sender is FrameworkElement elem && elem.DataContext is EditorDocument doc)
-        {
-            CloseDocument(doc);
-        }
-    }
-
-    private void NewTabButton_Click(object sender, RoutedEventArgs e)
-    {
-        CreateNewTab();
-    }
-
-    public bool CloseDocument(EditorDocument doc)
-    {
-        if (doc.IsModified)
-        {
-            var result = MessageBox.Show(
-                $"Do you want to save changes to '{doc.FileName}'?",
-                "NightPad",
-                MessageBoxButton.YesNoCancel,
-                MessageBoxImage.Question);
-
-            if (result == MessageBoxResult.Cancel)
-                return false;
-
-            if (result == MessageBoxResult.Yes)
-            {
-                if (!SaveDocument(doc))
-                    return false;
-            }
-        }
-
-        int index = Documents.IndexOf(doc);
-        Documents.Remove(doc);
-
-        if (Documents.Count == 0)
-        {
-            CreateNewTab();
-        }
-        else if (ActiveDocument == doc)
-        {
-            int newIndex = Math.Min(index, Documents.Count - 1);
-            ActiveDocument = Documents[newIndex];
-        }
-
-        return true;
-    }
-
-    #endregion
 
     #region File Operations
 
     public void OpenFile(string filePath)
     {
-        // Check if already open
-        var existing = Documents.FirstOrDefault(d => string.Equals(d.FilePath, filePath, StringComparison.OrdinalIgnoreCase));
-        if (existing != null)
-        {
-            ActiveDocument = existing;
+        if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
             return;
-        }
+
+        if (_isModified && !PromptSaveBeforeAction())
+            return;
 
         try
         {
             string content = File.ReadAllText(filePath, Encoding.UTF8);
-            
-            // If current tab is single untouched Untitled-1, replace it
-            if (Documents.Count == 1 && Documents[0].FilePath == null && !Documents[0].IsModified && Documents[0].CharCount == 0)
-            {
-                var doc = Documents[0];
-                doc.FilePath = filePath;
-                doc.Document.Text = content;
-                doc.IsModified = false;
-                doc.SyntaxName = SyntaxService.GetLanguageByExtension(filePath);
-                ApplySyntax(doc.Editor, doc.SyntaxName);
-                doc.UpdateStatistics();
-                UpdateStatusBar();
-                ActiveDocument = doc;
-            }
-            else
-            {
-                CreateNewTab(filePath, content);
-            }
+            MainEditor.Document.Text = content;
+            _currentFilePath = Path.GetFullPath(filePath);
+            _isModified = false;
 
-            // Also ensure workspace folder is set if null
-            if (string.IsNullOrEmpty(_currentWorkspaceFolder))
-            {
-                string? dir = Path.GetDirectoryName(filePath);
-                if (!string.IsNullOrEmpty(dir))
-                {
-                    OpenFolder(dir);
-                }
-            }
+            _currentSyntaxName = SyntaxService.GetLanguageByExtension(_currentFilePath);
+            ApplySyntax(_currentSyntaxName);
+
+            UpdateTitle();
+            UpdateStatusBar();
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Failed to open file:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show($"Could not open file:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
-    private void MenuOpen_Click(object sender, RoutedEventArgs e)
+    private void NewFile()
     {
-        var dlg = new OpenFileDialog
-        {
-            Filter = "All Supported Files (*.*)|*.*|Python (*.py;*.pyw)|*.py;*.pyw|PowerShell (*.ps1;*.psm1)|*.ps1;*.psm1|Text Files (*.txt)|*.txt|JSON (*.json)|*.json|Markdown (*.md)|*.md|C# (*.cs)|*.cs|Web Files (*.html;*.css;*.js;*.ts)|*.html;*.css;*.js;*.ts",
-            Multiselect = true
-        };
+        if (_isModified && !PromptSaveBeforeAction())
+            return;
 
-        if (dlg.ShowDialog(this) == true)
-        {
-            foreach (string file in dlg.FileNames)
-            {
-                OpenFile(file);
-            }
-        }
+        MainEditor.Document.Text = string.Empty;
+        _currentFilePath = null;
+        _isModified = false;
+        _currentSyntaxName = "Plain Text";
+        ApplySyntax(_currentSyntaxName);
+
+        UpdateTitle();
+        UpdateStatusBar();
     }
 
-    private void MenuNew_Click(object sender, RoutedEventArgs e) => CreateNewTab();
-
-    public bool SaveDocument(EditorDocument? doc)
+    public bool SaveFile()
     {
-        if (doc == null) return false;
-
-        if (string.IsNullOrEmpty(doc.FilePath))
+        if (string.IsNullOrEmpty(_currentFilePath))
         {
-            return SaveAsDocument(doc);
+            return SaveAsFile();
         }
 
         try
         {
-            File.WriteAllText(doc.FilePath, doc.Document.Text, new UTF8Encoding(false));
-            doc.IsModified = false;
-            doc.UpdateTitle();
+            File.WriteAllText(_currentFilePath, MainEditor.Document.Text, new UTF8Encoding(false));
+            _isModified = false;
+            UpdateTitle();
             return true;
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Failed to save file:\n{ex.Message}", "Save Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show($"Could not save file:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             return false;
         }
     }
 
-    public bool SaveAsDocument(EditorDocument? doc)
+    public bool SaveAsFile()
     {
-        if (doc == null) return false;
-
         var dlg = new SaveFileDialog
         {
-            FileName = doc.FileName.Replace(" *", ""),
-            Filter = "All Files (*.*)|*.*|Python (*.py)|*.py|Text Files (*.txt)|*.txt|PowerShell (*.ps1)|*.ps1|JSON (*.json)|*.json|Markdown (*.md)|*.md|C# (*.cs)|*.cs"
+            FileName = string.IsNullOrEmpty(_currentFilePath) ? "Untitled" : Path.GetFileName(_currentFilePath),
+            Filter = "All Files (*.*)|*.*|Python (*.py)|*.py|Text Documents (*.txt)|*.txt|PowerShell (*.ps1)|*.ps1|JSON (*.json)|*.json|Markdown (*.md)|*.md|C# (*.cs)|*.cs"
         };
 
         if (dlg.ShowDialog(this) == true)
         {
             try
             {
-                File.WriteAllText(dlg.FileName, doc.Document.Text, new UTF8Encoding(false));
-                doc.FilePath = dlg.FileName;
-                doc.IsModified = false;
-                doc.SyntaxName = SyntaxService.GetLanguageByExtension(dlg.FileName);
-                ApplySyntax(doc.Editor, doc.SyntaxName);
-                doc.UpdateTitle();
+                File.WriteAllText(dlg.FileName, MainEditor.Document.Text, new UTF8Encoding(false));
+                _currentFilePath = dlg.FileName;
+                _isModified = false;
+
+                _currentSyntaxName = SyntaxService.GetLanguageByExtension(_currentFilePath);
+                ApplySyntax(_currentSyntaxName);
+
+                UpdateTitle();
                 UpdateStatusBar();
-                RefreshFileTree();
                 return true;
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Failed to save file:\n{ex.Message}", "Save Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Could not save file:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
             }
         }
         return false;
     }
 
-    private void MenuSave_Click(object sender, RoutedEventArgs e) => SaveDocument(ActiveDocument);
-
-    private void MenuSaveAs_Click(object sender, RoutedEventArgs e) => SaveAsDocument(ActiveDocument);
-
-    private void MenuSaveAll_Click(object sender, RoutedEventArgs e)
+    private bool PromptSaveBeforeAction()
     {
-        foreach (var doc in Documents.Where(d => d.IsModified))
+        string fileName = string.IsNullOrEmpty(_currentFilePath) ? "Untitled" : Path.GetFileName(_currentFilePath);
+        var result = MessageBox.Show(
+            $"Do you want to save changes to {fileName}?",
+            "Notepad",
+            MessageBoxButton.YesNoCancel,
+            MessageBoxImage.Question);
+
+        if (result == MessageBoxResult.Cancel)
+            return false;
+
+        if (result == MessageBoxResult.Yes)
+            return SaveFile();
+
+        return true;
+    }
+
+    private void MenuNew_Click(object sender, RoutedEventArgs e) => NewFile();
+    private void MenuOpen_Click(object sender, RoutedEventArgs e)
+    {
+        var dlg = new OpenFileDialog
         {
-            SaveDocument(doc);
+            Filter = "All Supported Files (*.*)|*.*|Python (*.py;*.pyw)|*.py;*.pyw|Text Documents (*.txt)|*.txt|PowerShell (*.ps1)|*.ps1|JSON (*.json)|*.json|Markdown (*.md)|*.md|C# (*.cs)|*.cs|Web Files (*.html;*.css;*.js;*.ts)|*.html;*.css;*.js;*.ts"
+        };
+
+        if (dlg.ShowDialog(this) == true)
+        {
+            OpenFile(dlg.FileName);
         }
     }
 
-    private void MenuCloseTab_Click(object sender, RoutedEventArgs e)
-    {
-        if (ActiveDocument != null) CloseDocument(ActiveDocument);
-    }
-
-    private void MenuCloseOthers_Click(object sender, RoutedEventArgs e)
-    {
-        if (ActiveDocument == null) return;
-        var others = Documents.Where(d => d != ActiveDocument).ToList();
-        foreach (var doc in others)
-        {
-            CloseDocument(doc);
-        }
-    }
-
-    private void MenuCloseAll_Click(object sender, RoutedEventArgs e)
-    {
-        var all = Documents.ToList();
-        foreach (var doc in all)
-        {
-            CloseDocument(doc);
-        }
-    }
-
+    private void MenuSave_Click(object sender, RoutedEventArgs e) => SaveFile();
+    private void MenuSaveAs_Click(object sender, RoutedEventArgs e) => SaveAsFile();
     private void MenuExit_Click(object sender, RoutedEventArgs e) => Close();
 
     #endregion
@@ -652,21 +255,17 @@ public partial class MainWindow : Window
             var item = new MenuItem { Header = lang };
             item.Click += (s, e) =>
             {
-                if (ActiveDocument != null)
-                {
-                    ActiveDocument.SyntaxName = lang;
-                    ApplySyntax(ActiveDocument.Editor, lang);
-                    UpdateStatusBar();
-                }
+                _currentSyntaxName = lang;
+                ApplySyntax(lang);
+                UpdateStatusBar();
             };
             MenuSyntaxParent.Items.Add(item);
         }
     }
 
-    private void ApplySyntax(TextEditor? editor, string syntaxName)
+    private void ApplySyntax(string syntaxName)
     {
-        if (editor == null) return;
-        editor.SyntaxHighlighting = SyntaxService.GetDefinition(syntaxName);
+        MainEditor.SyntaxHighlighting = SyntaxService.GetDefinition(syntaxName);
     }
 
     private void BtnLanguageSelector_Click(object sender, RoutedEventArgs e)
@@ -677,12 +276,9 @@ public partial class MainWindow : Window
             var item = new MenuItem { Header = lang };
             item.Click += (s, ev) =>
             {
-                if (ActiveDocument != null)
-                {
-                    ActiveDocument.SyntaxName = lang;
-                    ApplySyntax(ActiveDocument.Editor, lang);
-                    UpdateStatusBar();
-                }
+                _currentSyntaxName = lang;
+                ApplySyntax(lang);
+                UpdateStatusBar();
             };
             contextMenu.Items.Add(item);
         }
@@ -699,9 +295,9 @@ public partial class MainWindow : Window
         SearchPanel.Visibility = Visibility.Visible;
         ReplaceRow.Visibility = Visibility.Collapsed;
         TxtSearch.Focus();
-        if (ActiveDocument?.Editor != null && !string.IsNullOrEmpty(ActiveDocument.Editor.SelectedText))
+        if (!string.IsNullOrEmpty(MainEditor.SelectedText))
         {
-            TxtSearch.Text = ActiveDocument.Editor.SelectedText;
+            TxtSearch.Text = MainEditor.SelectedText;
             TxtSearch.SelectAll();
         }
         UpdateMatchCount();
@@ -712,9 +308,9 @@ public partial class MainWindow : Window
         SearchPanel.Visibility = Visibility.Visible;
         ReplaceRow.Visibility = Visibility.Visible;
         TxtSearch.Focus();
-        if (ActiveDocument?.Editor != null && !string.IsNullOrEmpty(ActiveDocument.Editor.SelectedText))
+        if (!string.IsNullOrEmpty(MainEditor.SelectedText))
         {
-            TxtSearch.Text = ActiveDocument.Editor.SelectedText;
+            TxtSearch.Text = MainEditor.SelectedText;
             TxtSearch.SelectAll();
         }
         UpdateMatchCount();
@@ -723,18 +319,11 @@ public partial class MainWindow : Window
     private void BtnCloseSearch_Click(object sender, RoutedEventArgs e)
     {
         SearchPanel.Visibility = Visibility.Collapsed;
-        ActiveDocument?.Editor?.Focus();
+        MainEditor.Focus();
     }
 
-    private void SearchOption_Click(object sender, RoutedEventArgs e)
-    {
-        UpdateMatchCount();
-    }
-
-    private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e)
-    {
-        UpdateMatchCount();
-    }
+    private void SearchOption_Click(object sender, RoutedEventArgs e) => UpdateMatchCount();
+    private void TxtSearch_TextChanged(object sender, TextChangedEventArgs e) => UpdateMatchCount();
 
     private void TxtSearch_KeyDown(object sender, KeyEventArgs e)
     {
@@ -768,25 +357,19 @@ public partial class MainWindow : Window
     }
 
     private void BtnFindNext_Click(object sender, RoutedEventArgs e) => FindNext();
-
     private void BtnFindPrev_Click(object sender, RoutedEventArgs e) => FindPrevious();
-
     private void MenuFindNext_Click(object sender, RoutedEventArgs e) => FindNext();
-
     private void MenuFindPrev_Click(object sender, RoutedEventArgs e) => FindPrevious();
-
     private void BtnReplace_Click(object sender, RoutedEventArgs e) => ReplaceCurrent();
-
     private void BtnReplaceAll_Click(object sender, RoutedEventArgs e) => ReplaceAll();
 
     private void FindNext()
     {
-        if (ActiveDocument?.Editor == null || string.IsNullOrEmpty(TxtSearch.Text)) return;
+        if (string.IsNullOrEmpty(TxtSearch.Text)) return;
 
-        var editor = ActiveDocument.Editor;
         string pattern = TxtSearch.Text;
-        string text = editor.Document.Text;
-        int startIndex = editor.CaretOffset;
+        string text = MainEditor.Document.Text;
+        int startIndex = MainEditor.CaretOffset;
 
         var regex = GetSearchRegex(pattern);
         if (regex == null) return;
@@ -794,26 +377,24 @@ public partial class MainWindow : Window
         var match = regex.Match(text, startIndex);
         if (!match.Success)
         {
-            // Wrap around from beginning
-            match = regex.Match(text, 0);
+            match = regex.Match(text, 0); // Wrap around
         }
 
         if (match.Success)
         {
-            editor.Select(match.Index, match.Length);
-            editor.ScrollTo(editor.TextArea.Caret.Line, editor.TextArea.Caret.Column);
+            MainEditor.Select(match.Index, match.Length);
+            MainEditor.ScrollTo(MainEditor.TextArea.Caret.Line, MainEditor.TextArea.Caret.Column);
         }
         UpdateMatchCount();
     }
 
     private void FindPrevious()
     {
-        if (ActiveDocument?.Editor == null || string.IsNullOrEmpty(TxtSearch.Text)) return;
+        if (string.IsNullOrEmpty(TxtSearch.Text)) return;
 
-        var editor = ActiveDocument.Editor;
         string pattern = TxtSearch.Text;
-        string text = editor.Document.Text;
-        int selectionStart = editor.SelectionStart;
+        string text = MainEditor.Document.Text;
+        int selectionStart = MainEditor.SelectionStart;
 
         var regex = GetSearchRegex(pattern);
         if (regex == null) return;
@@ -832,45 +413,43 @@ public partial class MainWindow : Window
 
         if (targetMatch == null && matches.Count > 0)
         {
-            targetMatch = matches[matches.Count - 1]; // Wrap around to end
+            targetMatch = matches[matches.Count - 1]; // Wrap around
         }
 
         if (targetMatch != null)
         {
-            editor.Select(targetMatch.Index, targetMatch.Length);
-            editor.ScrollTo(editor.TextArea.Caret.Line, editor.TextArea.Caret.Column);
+            MainEditor.Select(targetMatch.Index, targetMatch.Length);
+            MainEditor.ScrollTo(MainEditor.TextArea.Caret.Line, MainEditor.TextArea.Caret.Column);
         }
         UpdateMatchCount();
     }
 
     private void ReplaceCurrent()
     {
-        if (ActiveDocument?.Editor == null || string.IsNullOrEmpty(TxtSearch.Text)) return;
+        if (string.IsNullOrEmpty(TxtSearch.Text)) return;
 
-        var editor = ActiveDocument.Editor;
-        if (editor.SelectionLength > 0)
+        if (MainEditor.SelectionLength > 0)
         {
-            editor.Document.Replace(editor.SelectionStart, editor.SelectionLength, TxtReplace.Text);
+            MainEditor.Document.Replace(MainEditor.SelectionStart, MainEditor.SelectionLength, TxtReplace.Text);
         }
         FindNext();
     }
 
     private void ReplaceAll()
     {
-        if (ActiveDocument?.Editor == null || string.IsNullOrEmpty(TxtSearch.Text)) return;
+        if (string.IsNullOrEmpty(TxtSearch.Text)) return;
 
-        var editor = ActiveDocument.Editor;
         var regex = GetSearchRegex(TxtSearch.Text);
         if (regex == null) return;
 
-        string original = editor.Document.Text;
+        string original = MainEditor.Document.Text;
         string replaced = regex.Replace(original, TxtReplace.Text);
         int count = regex.Matches(original).Count;
 
         if (count > 0)
         {
-            editor.Document.Text = replaced;
-            MessageBox.Show($"Replaced {count} occurrence(s).", "Replace All", MessageBoxButton.OK, MessageBoxImage.Information);
+            MainEditor.Document.Text = replaced;
+            MessageBox.Show($"Replaced {count} occurrence(s).", "Replace", MessageBoxButton.OK, MessageBoxImage.Information);
         }
         UpdateMatchCount();
     }
@@ -897,7 +476,7 @@ public partial class MainWindow : Window
 
     private void UpdateMatchCount()
     {
-        if (ActiveDocument?.Editor == null || string.IsNullOrEmpty(TxtSearch.Text))
+        if (string.IsNullOrEmpty(TxtSearch.Text))
         {
             LblMatchCount.Text = "0 matches";
             return;
@@ -910,7 +489,7 @@ public partial class MainWindow : Window
             return;
         }
 
-        int count = regex.Matches(ActiveDocument.Editor.Document.Text).Count;
+        int count = regex.Matches(MainEditor.Document.Text).Count;
         LblMatchCount.Text = $"{count} match{(count == 1 ? "" : "es")}";
     }
 
@@ -921,7 +500,7 @@ public partial class MainWindow : Window
     private void MenuGoToLine_Click(object sender, RoutedEventArgs e)
     {
         GoToLinePanel.Visibility = Visibility.Visible;
-        TxtGoToLine.Text = ActiveDocument?.CaretLine.ToString() ?? "1";
+        TxtGoToLine.Text = MainEditor.TextArea.Caret.Line.ToString();
         TxtGoToLine.SelectAll();
         TxtGoToLine.Focus();
     }
@@ -929,7 +508,7 @@ public partial class MainWindow : Window
     private void BtnCloseGoToLine_Click(object sender, RoutedEventArgs e)
     {
         GoToLinePanel.Visibility = Visibility.Collapsed;
-        ActiveDocument?.Editor?.Focus();
+        MainEditor.Focus();
     }
 
     private void BtnGoToLine_Click(object sender, RoutedEventArgs e) => ExecuteGoToLine();
@@ -950,146 +529,127 @@ public partial class MainWindow : Window
 
     private void ExecuteGoToLine()
     {
-        if (ActiveDocument?.Editor == null) return;
-
         if (int.TryParse(TxtGoToLine.Text.Trim(), out int targetLine))
         {
-            int clamped = Math.Clamp(targetLine, 1, ActiveDocument.Document.LineCount);
-            ActiveDocument.Editor.ScrollToLine(clamped);
-            ActiveDocument.Editor.TextArea.Caret.Line = clamped;
-            ActiveDocument.Editor.TextArea.Caret.Column = 1;
+            int clamped = Math.Clamp(targetLine, 1, MainEditor.Document.LineCount);
+            MainEditor.ScrollToLine(clamped);
+            MainEditor.TextArea.Caret.Line = clamped;
+            MainEditor.TextArea.Caret.Column = 1;
             GoToLinePanel.Visibility = Visibility.Collapsed;
-            ActiveDocument.Editor.Focus();
+            MainEditor.Focus();
         }
     }
 
     #endregion
 
-    #region Edit Actions & Keyboard Manipulations
+    #region Edit Actions & Shortcuts
 
-    private void MenuUndo_Click(object sender, RoutedEventArgs e) => ActiveDocument?.Editor?.Undo();
-    private void MenuRedo_Click(object sender, RoutedEventArgs e) => ActiveDocument?.Editor?.Redo();
-    private void MenuCut_Click(object sender, RoutedEventArgs e) => ActiveDocument?.Editor?.Cut();
-    private void MenuCopy_Click(object sender, RoutedEventArgs e) => ActiveDocument?.Editor?.Copy();
-    private void MenuPaste_Click(object sender, RoutedEventArgs e) => ActiveDocument?.Editor?.Paste();
-    private void MenuSelectAll_Click(object sender, RoutedEventArgs e) => ActiveDocument?.Editor?.SelectAll();
+    private void MenuUndo_Click(object sender, RoutedEventArgs e) => MainEditor.Undo();
+    private void MenuRedo_Click(object sender, RoutedEventArgs e) => MainEditor.Redo();
+    private void MenuCut_Click(object sender, RoutedEventArgs e) => MainEditor.Cut();
+    private void MenuCopy_Click(object sender, RoutedEventArgs e) => MainEditor.Copy();
+    private void MenuPaste_Click(object sender, RoutedEventArgs e) => MainEditor.Paste();
+    private void MenuDelete_Click(object sender, RoutedEventArgs e) => MainEditor.Delete();
+    private void MenuSelectAll_Click(object sender, RoutedEventArgs e) => MainEditor.SelectAll();
 
     private void MenuDuplicateLine_Click(object sender, RoutedEventArgs e)
     {
-        var editor = ActiveDocument?.Editor;
-        if (editor == null) return;
-
-        var line = editor.Document.GetLineByNumber(editor.TextArea.Caret.Line);
-        string text = editor.Document.GetText(line.Offset, line.Length);
-        editor.Document.Insert(line.EndOffset, Environment.NewLine + text);
+        var line = MainEditor.Document.GetLineByNumber(MainEditor.TextArea.Caret.Line);
+        string text = MainEditor.Document.GetText(line.Offset, line.Length);
+        MainEditor.Document.Insert(line.EndOffset, Environment.NewLine + text);
     }
 
     private void MenuDeleteLine_Click(object sender, RoutedEventArgs e)
     {
-        var editor = ActiveDocument?.Editor;
-        if (editor == null) return;
-
-        var line = editor.Document.GetLineByNumber(editor.TextArea.Caret.Line);
-        int offset = line.Offset;
-        int length = line.TotalLength;
-        editor.Document.Remove(offset, length);
+        var line = MainEditor.Document.GetLineByNumber(MainEditor.TextArea.Caret.Line);
+        MainEditor.Document.Remove(line.Offset, line.TotalLength);
     }
 
     private void MenuMoveLineUp_Click(object sender, RoutedEventArgs e)
     {
-        var editor = ActiveDocument?.Editor;
-        if (editor == null || editor.TextArea.Caret.Line <= 1) return;
+        if (MainEditor.TextArea.Caret.Line <= 1) return;
 
-        int curNum = editor.TextArea.Caret.Line;
-        var curLine = editor.Document.GetLineByNumber(curNum);
-        var prevLine = editor.Document.GetLineByNumber(curNum - 1);
+        int curNum = MainEditor.TextArea.Caret.Line;
+        var curLine = MainEditor.Document.GetLineByNumber(curNum);
+        var prevLine = MainEditor.Document.GetLineByNumber(curNum - 1);
 
-        string curText = editor.Document.GetText(curLine.Offset, curLine.Length);
-        string prevText = editor.Document.GetText(prevLine.Offset, prevLine.Length);
+        string curText = MainEditor.Document.GetText(curLine.Offset, curLine.Length);
+        string prevText = MainEditor.Document.GetText(prevLine.Offset, prevLine.Length);
 
-        using (editor.Document.RunUpdate())
+        using (MainEditor.Document.RunUpdate())
         {
-            editor.Document.Replace(curLine.Offset, curLine.Length, prevText);
-            editor.Document.Replace(prevLine.Offset, prevLine.Length, curText);
+            MainEditor.Document.Replace(curLine.Offset, curLine.Length, prevText);
+            MainEditor.Document.Replace(prevLine.Offset, prevLine.Length, curText);
         }
-        editor.TextArea.Caret.Line = curNum - 1;
+        MainEditor.TextArea.Caret.Line = curNum - 1;
     }
 
     private void MenuMoveLineDown_Click(object sender, RoutedEventArgs e)
     {
-        var editor = ActiveDocument?.Editor;
-        if (editor == null || editor.TextArea.Caret.Line >= editor.Document.LineCount) return;
+        if (MainEditor.TextArea.Caret.Line >= MainEditor.Document.LineCount) return;
 
-        int curNum = editor.TextArea.Caret.Line;
-        var curLine = editor.Document.GetLineByNumber(curNum);
-        var nextLine = editor.Document.GetLineByNumber(curNum + 1);
+        int curNum = MainEditor.TextArea.Caret.Line;
+        var curLine = MainEditor.Document.GetLineByNumber(curNum);
+        var nextLine = MainEditor.Document.GetLineByNumber(curNum + 1);
 
-        string curText = editor.Document.GetText(curLine.Offset, curLine.Length);
-        string nextText = editor.Document.GetText(nextLine.Offset, nextLine.Length);
+        string curText = MainEditor.Document.GetText(curLine.Offset, curLine.Length);
+        string nextText = MainEditor.Document.GetText(nextLine.Offset, nextLine.Length);
 
-        using (editor.Document.RunUpdate())
+        using (MainEditor.Document.RunUpdate())
         {
-            editor.Document.Replace(nextLine.Offset, nextLine.Length, curText);
-            editor.Document.Replace(curLine.Offset, curLine.Length, nextText);
+            MainEditor.Document.Replace(nextLine.Offset, nextLine.Length, curText);
+            MainEditor.Document.Replace(curLine.Offset, curLine.Length, nextText);
         }
-        editor.TextArea.Caret.Line = curNum + 1;
+        MainEditor.TextArea.Caret.Line = curNum + 1;
     }
 
     private void MenuToggleComment_Click(object sender, RoutedEventArgs e)
     {
-        var editor = ActiveDocument?.Editor;
-        if (editor == null) return;
-
-        string commentPrefix = (ActiveDocument?.SyntaxName) switch
+        string commentPrefix = _currentSyntaxName switch
         {
-            "PowerShell" or "Python" or "YAML" or "INI / Config" => "# ",
+            "Python" or "PowerShell" or "YAML" or "INI / Config" => "# ",
             "SQL" => "-- ",
             "Batch" => ":: ",
             _ => "// "
         };
 
-        var line = editor.Document.GetLineByNumber(editor.TextArea.Caret.Line);
-        string text = editor.Document.GetText(line.Offset, line.Length);
+        var line = MainEditor.Document.GetLineByNumber(MainEditor.TextArea.Caret.Line);
+        string text = MainEditor.Document.GetText(line.Offset, line.Length);
 
         if (text.TrimStart().StartsWith(commentPrefix.Trim()))
         {
             int index = text.IndexOf(commentPrefix.Trim());
-            editor.Document.Remove(line.Offset + index, commentPrefix.Length);
+            MainEditor.Document.Remove(line.Offset + index, commentPrefix.Length);
         }
         else
         {
-            editor.Document.Insert(line.Offset, commentPrefix);
+            MainEditor.Document.Insert(line.Offset, commentPrefix);
         }
     }
 
     private void MenuInsertDateTime_Click(object sender, RoutedEventArgs e)
     {
-        var editor = ActiveDocument?.Editor;
-        if (editor == null) return;
         string stamp = TextTransformService.GetCurrentTimestamp();
-        editor.Document.Insert(editor.CaretOffset, stamp);
+        MainEditor.Document.Insert(MainEditor.CaretOffset, stamp);
     }
 
     #endregion
 
-    #region View & Formatting
+    #region View & Zoom
 
     private void MenuWordWrap_Click(object sender, RoutedEventArgs e)
     {
-        bool wrap = MenuWordWrap.IsChecked;
-        foreach (var doc in Documents)
-        {
-            if (doc.Editor != null) doc.Editor.WordWrap = wrap;
-        }
+        MainEditor.WordWrap = MenuWordWrap.IsChecked;
     }
 
     private void MenuLineNumbers_Click(object sender, RoutedEventArgs e)
     {
-        bool show = MenuLineNumbers.IsChecked;
-        foreach (var doc in Documents)
-        {
-            if (doc.Editor != null) doc.Editor.ShowLineNumbers = show;
-        }
+        MainEditor.ShowLineNumbers = MenuLineNumbers.IsChecked;
+    }
+
+    private void MenuStatusBarToggle_Click(object sender, RoutedEventArgs e)
+    {
+        StatusBarBorder.Visibility = MenuStatusBarToggle.IsChecked ? Visibility.Visible : Visibility.Collapsed;
     }
 
     private void ZoomIn()
@@ -1112,13 +672,9 @@ public partial class MainWindow : Window
 
     private void ApplyZoom()
     {
-        foreach (var doc in Documents)
-        {
-            if (doc.Editor != null) doc.Editor.FontSize = BaseFontSize * _zoomFactor;
-        }
+        MainEditor.FontSize = BaseFontSize * _zoomFactor;
         int percent = (int)(_zoomFactor * 100);
         StatusZoom.Text = $"{percent}%";
-        BtnZoomLabel.Content = $"{percent}%";
     }
 
     private void MenuZoomIn_Click(object sender, RoutedEventArgs e) => ZoomIn();
@@ -1132,182 +688,39 @@ public partial class MainWindow : Window
 
     private void TransformSelectionOrAll(Func<string, string> transformFunc)
     {
-        var editor = ActiveDocument?.Editor;
-        if (editor == null) return;
-
         try
         {
-            if (editor.SelectionLength > 0)
+            if (MainEditor.SelectionLength > 0)
             {
-                string transformed = transformFunc(editor.SelectedText);
-                editor.Document.Replace(editor.SelectionStart, editor.SelectionLength, transformed);
+                string transformed = transformFunc(MainEditor.SelectedText);
+                MainEditor.Document.Replace(MainEditor.SelectionStart, MainEditor.SelectionLength, transformed);
             }
             else
             {
-                string transformed = transformFunc(editor.Document.Text);
-                editor.Document.Text = transformed;
+                string transformed = transformFunc(MainEditor.Document.Text);
+                MainEditor.Document.Text = transformed;
             }
         }
         catch (Exception ex)
         {
-            MessageBox.Show(ex.Message, "Transform Notice", MessageBoxButton.OK, MessageBoxImage.Warning);
+            MessageBox.Show(ex.Message, "Notice", MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
 
     private void MenuUpper_Click(object sender, RoutedEventArgs e) => TransformSelectionOrAll(TextTransformService.ToUpperCase);
     private void MenuLower_Click(object sender, RoutedEventArgs e) => TransformSelectionOrAll(TextTransformService.ToLowerCase);
     private void MenuTitleCase_Click(object sender, RoutedEventArgs e) => TransformSelectionOrAll(TextTransformService.ToTitleCase);
-    private void MenuInvertCase_Click(object sender, RoutedEventArgs e) => TransformSelectionOrAll(TextTransformService.ToInvertCase);
+    private void MenuFormatJson_Click(object sender, RoutedEventArgs e) => TransformSelectionOrAll(TextTransformService.FormatJson);
+    private void MenuMinifyJson_Click(object sender, RoutedEventArgs e) => TransformSelectionOrAll(TextTransformService.MinifyJson);
     private void MenuSortAsc_Click(object sender, RoutedEventArgs e) => TransformSelectionOrAll(s => TextTransformService.SortLines(s, false));
     private void MenuSortDesc_Click(object sender, RoutedEventArgs e) => TransformSelectionOrAll(s => TextTransformService.SortLines(s, true));
     private void MenuRemoveDuplicates_Click(object sender, RoutedEventArgs e) => TransformSelectionOrAll(TextTransformService.RemoveDuplicateLines);
     private void MenuRemoveEmptyLines_Click(object sender, RoutedEventArgs e) => TransformSelectionOrAll(TextTransformService.RemoveEmptyLines);
     private void MenuTrimWhitespace_Click(object sender, RoutedEventArgs e) => TransformSelectionOrAll(TextTransformService.TrimTrailingWhitespace);
-    private void MenuFormatJson_Click(object sender, RoutedEventArgs e) => TransformSelectionOrAll(TextTransformService.FormatJson);
-    private void MenuMinifyJson_Click(object sender, RoutedEventArgs e) => TransformSelectionOrAll(TextTransformService.MinifyJson);
     private void MenuBase64Encode_Click(object sender, RoutedEventArgs e) => TransformSelectionOrAll(TextTransformService.ToBase64);
     private void MenuBase64Decode_Click(object sender, RoutedEventArgs e) => TransformSelectionOrAll(TextTransformService.FromBase64);
     private void MenuUrlEncode_Click(object sender, RoutedEventArgs e) => TransformSelectionOrAll(TextTransformService.ToUrlEncoded);
     private void MenuUrlDecode_Click(object sender, RoutedEventArgs e) => TransformSelectionOrAll(TextTransformService.FromUrlEncoded);
-
-    private void MenuCopyPath_Click(object sender, RoutedEventArgs e)
-    {
-        if (!string.IsNullOrEmpty(ActiveDocument?.FilePath))
-        {
-            Clipboard.SetText(ActiveDocument.FilePath);
-        }
-    }
-
-    private void MenuOpenFolder_Click(object sender, RoutedEventArgs e)
-    {
-        if (!string.IsNullOrEmpty(ActiveDocument?.FilePath))
-        {
-            Process.Start("explorer.exe", $"/select,\"{ActiveDocument.FilePath}\"");
-        }
-    }
-
-    #endregion
-
-    #region Markdown Live Preview
-
-    private void MenuMarkdownPreview_Click(object sender, RoutedEventArgs e)
-    {
-        _isMarkdownPreviewActive = !_isMarkdownPreviewActive;
-
-        if (_isMarkdownPreviewActive)
-        {
-            ColSplitter.Width = new GridLength(4);
-            ColPreview.Width = new GridLength(1, GridUnitType.Star);
-            MarkdownSplitter.Visibility = Visibility.Visible;
-            MarkdownPreviewPane.Visibility = Visibility.Visible;
-            BtnMarkdownPreview.Foreground = (SolidColorBrush)FindResource("AccentBlueBrush");
-            UpdateMarkdownPreview();
-        }
-        else
-        {
-            ColSplitter.Width = new GridLength(0);
-            ColPreview.Width = new GridLength(0);
-            MarkdownSplitter.Visibility = Visibility.Collapsed;
-            MarkdownPreviewPane.Visibility = Visibility.Collapsed;
-            BtnMarkdownPreview.Foreground = (SolidColorBrush)FindResource("TextPrimaryBrush");
-        }
-    }
-
-    private void UpdateMarkdownPreview()
-    {
-        if (!_isMarkdownPreviewActive || ActiveDocument?.Editor == null) return;
-
-        var flowDoc = new FlowDocument
-        {
-            Background = (SolidColorBrush)FindResource("BgDarkBrush"),
-            Foreground = (SolidColorBrush)FindResource("TextPrimaryBrush"),
-            FontFamily = new FontFamily("Segoe UI, Arial"),
-            FontSize = 13,
-            PagePadding = new Thickness(16)
-        };
-
-        string[] lines = ActiveDocument.Document.Text.Split(new[] { "\r\n", "\r", "\n" }, StringSplitOptions.None);
-        bool inCodeBlock = false;
-        StringBuilder codeContent = new();
-
-        foreach (string line in lines)
-        {
-            if (line.TrimStart().StartsWith("```"))
-            {
-                if (inCodeBlock)
-                {
-                    // Finish code block
-                    var codeP = new Paragraph(new Run(codeContent.ToString()))
-                    {
-                        FontFamily = new FontFamily("Cascadia Code, Consolas"),
-                        Background = (SolidColorBrush)FindResource("BgSurfaceBrush"),
-                        Foreground = (SolidColorBrush)FindResource("AccentBlueBrush"),
-                        Padding = new Thickness(10),
-                        Margin = new Thickness(0, 4, 0, 8)
-                    };
-                    flowDoc.Blocks.Add(codeP);
-                    codeContent.Clear();
-                    inCodeBlock = false;
-                }
-                else
-                {
-                    inCodeBlock = true;
-                }
-                continue;
-            }
-
-            if (inCodeBlock)
-            {
-                codeContent.AppendLine(line);
-                continue;
-            }
-
-            if (line.StartsWith("# "))
-            {
-                var p = new Paragraph(new Bold(new Run(line[2..])))
-                {
-                    FontSize = 20,
-                    Foreground = (SolidColorBrush)FindResource("AccentBlueBrush"),
-                    Margin = new Thickness(0, 12, 0, 4)
-                };
-                flowDoc.Blocks.Add(p);
-            }
-            else if (line.StartsWith("## "))
-            {
-                var p = new Paragraph(new Bold(new Run(line[3..])))
-                {
-                    FontSize = 16,
-                    Foreground = (SolidColorBrush)FindResource("AccentBlueBrush"),
-                    Margin = new Thickness(0, 10, 0, 4)
-                };
-                flowDoc.Blocks.Add(p);
-            }
-            else if (line.StartsWith("### "))
-            {
-                var p = new Paragraph(new Bold(new Run(line[4..])))
-                {
-                    FontSize = 14,
-                    Foreground = (SolidColorBrush)FindResource("TextPrimaryBrush"),
-                    Margin = new Thickness(0, 8, 0, 2)
-                };
-                flowDoc.Blocks.Add(p);
-            }
-            else if (line.StartsWith("- ") || line.StartsWith("* "))
-            {
-                var p = new Paragraph(new Run("• " + line[2..]))
-                {
-                    Margin = new Thickness(16, 2, 0, 2)
-                };
-                flowDoc.Blocks.Add(p);
-            }
-            else if (!string.IsNullOrWhiteSpace(line))
-            {
-                flowDoc.Blocks.Add(new Paragraph(new Run(line)) { Margin = new Thickness(0, 2, 0, 4) });
-            }
-        }
-
-        MarkdownViewer.Document = flowDoc;
-    }
 
     #endregion
 
@@ -1326,7 +739,6 @@ public partial class MainWindow : Window
     }
 
     private void BtnMinimize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
-
     private void BtnMaximize_Click(object sender, RoutedEventArgs e) => ToggleMaximize();
 
     private void ToggleMaximize()
@@ -1350,30 +762,20 @@ public partial class MainWindow : Window
         if (e.Data.GetDataPresent(DataFormats.FileDrop))
         {
             string[] files = (string[])e.Data.GetData(DataFormats.FileDrop);
-            foreach (string file in files)
+            if (files.Length > 0 && File.Exists(files[0]))
             {
-                if (Directory.Exists(file))
-                {
-                    OpenFolder(file);
-                }
-                else if (File.Exists(file))
-                {
-                    OpenFile(file);
-                }
+                OpenFile(files[0]);
             }
         }
     }
 
     private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
     {
-        // Global Hotkeys
         if (Keyboard.Modifiers == ModifierKeys.Control)
         {
-            if (e.Key == Key.N) { e.Handled = true; CreateNewTab(); }
+            if (e.Key == Key.N) { e.Handled = true; NewFile(); }
             else if (e.Key == Key.O) { e.Handled = true; MenuOpen_Click(sender, e); }
-            else if (e.Key == Key.S) { e.Handled = true; SaveDocument(ActiveDocument); }
-            else if (e.Key == Key.W) { e.Handled = true; if (ActiveDocument != null) CloseDocument(ActiveDocument); }
-            else if (e.Key == Key.B) { e.Handled = true; ToggleSidebar(); }
+            else if (e.Key == Key.S) { e.Handled = true; SaveFile(); }
             else if (e.Key == Key.F) { e.Handled = true; MenuFind_Click(sender, e); }
             else if (e.Key == Key.H) { e.Handled = true; MenuReplace_Click(sender, e); }
             else if (e.Key == Key.G) { e.Handled = true; MenuGoToLine_Click(sender, e); }
@@ -1385,10 +787,7 @@ public partial class MainWindow : Window
         }
         else if (Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift))
         {
-            if (e.Key == Key.S) { e.Handled = true; SaveAsDocument(ActiveDocument); }
-            else if (e.Key == Key.O) { e.Handled = true; MenuOpenFolderDialog_Click(sender, e); }
-            else if (e.Key == Key.A) { e.Handled = true; ToggleAutoSave(); }
-            else if (e.Key == Key.M) { e.Handled = true; MenuMarkdownPreview_Click(sender, e); }
+            if (e.Key == Key.S) { e.Handled = true; SaveAsFile(); }
             else if (e.Key == Key.L) { e.Handled = true; MenuLineNumbers.IsChecked = !MenuLineNumbers.IsChecked; MenuLineNumbers_Click(sender, e); }
             else if (e.Key == Key.K) { e.Handled = true; MenuDeleteLine_Click(sender, e); }
             else if (e.Key == Key.J) { e.Handled = true; MenuFormatJson_Click(sender, e); }
@@ -1411,22 +810,18 @@ public partial class MainWindow : Window
             e.Handled = true;
             MenuInsertDateTime_Click(sender, e);
         }
-        else if (e.Key == Key.F1)
-        {
-            e.Handled = true;
-            MenuShortcuts_Click(sender, e);
-        }
     }
 
     private void UpdateStatusBar()
     {
-        if (ActiveDocument == null) return;
+        int line = MainEditor.TextArea.Caret.Line;
+        int col = MainEditor.TextArea.Caret.Column;
+        StatusCaretPos.Text = $"Ln {line}, Col {col}";
 
-        StatusCaretPos.Text = $"Ln {ActiveDocument.CaretLine}, Col {ActiveDocument.CaretColumn}";
-
-        if (ActiveDocument.SelectionLength > 0)
+        if (MainEditor.SelectionLength > 0)
         {
-            StatusSelection.Text = $"Sel: {ActiveDocument.SelectionLength} chars ({ActiveDocument.SelectionLines} lines)";
+            int selLines = string.IsNullOrEmpty(MainEditor.SelectedText) ? 0 : MainEditor.SelectedText.Split('\n').Length;
+            StatusSelection.Text = $"Sel: {MainEditor.SelectionLength} chars ({selLines} lines)";
             StatusSelection.Visibility = Visibility.Visible;
         }
         else
@@ -1434,97 +829,33 @@ public partial class MainWindow : Window
             StatusSelection.Visibility = Visibility.Collapsed;
         }
 
-        StatusDocStats.Text = $"{ActiveDocument.CharCount:N0} chars, {ActiveDocument.WordCount:N0} words, {ActiveDocument.LineCount:N0} lines";
-        StatusEncoding.Text = ActiveDocument.EncodingName;
-        StatusEol.Text = ActiveDocument.EolName;
-        BtnLanguageSelector.Content = $"Language: {ActiveDocument.SyntaxName} ▼";
-    }
+        string text = MainEditor.Document.Text;
+        int lineCount = MainEditor.Document.LineCount;
+        int charCount = text.Length;
 
-    private void MenuShortcuts_Click(object sender, RoutedEventArgs e)
-    {
-        string shortcuts =
-            "🌙 NightPad Keyboard Shortcuts:\n\n" +
-            "File & Workspace:\n" +
-            "  Ctrl + N : New Tab\n" +
-            "  Ctrl + O : Open File\n" +
-            "  Ctrl + Shift + O : Open Workspace Folder\n" +
-            "  Ctrl + S : Save File\n" +
-            "  Ctrl + Shift + S : Save As\n" +
-            "  Ctrl + Shift + A : Toggle Auto-Save\n" +
-            "  Ctrl + W : Close Tab\n\n" +
-            "Explorer & View:\n" +
-            "  Ctrl + B : Toggle Sidebar Explorer\n" +
-            "  Alt + Z : Toggle Word Wrap\n" +
-            "  Ctrl + Shift + M : Markdown Live Preview\n" +
-            "  Ctrl + Shift + L : Toggle Line Numbers\n" +
-            "  Ctrl + Plus/Minus/0 : Zoom In/Out/Reset\n\n" +
-            "Editing:\n" +
-            "  Ctrl + D : Duplicate Line\n" +
-            "  Ctrl + Shift + K : Delete Line\n" +
-            "  Alt + Up/Down : Move Line Up/Down\n" +
-            "  Ctrl + / : Toggle Comment\n" +
-            "  Ctrl + Shift + J : Format JSON\n" +
-            "  F5 : Insert Date/Time\n\n" +
-            "Search & Navigation:\n" +
-            "  Ctrl + F : Find\n" +
-            "  Ctrl + H : Replace\n" +
-            "  F3 / Shift + F3 : Find Next / Prev\n" +
-            "  Ctrl + G : Go to Line";
+        int words = 0;
+        bool inWord = false;
+        for (int i = 0; i < text.Length; i++)
+        {
+            if (char.IsWhiteSpace(text[i])) inWord = false;
+            else if (!inWord) { inWord = true; words++; }
+        }
 
-        MessageBox.Show(shortcuts, "NightPad Shortcuts", MessageBoxButton.OK, MessageBoxImage.Information);
-    }
+        StatusDocStats.Text = $"{lineCount:N0} line{(lineCount == 1 ? "" : "s")}, {words:N0} words, {charCount:N0} chars";
 
-    private void MenuAbout_Click(object sender, RoutedEventArgs e)
-    {
-        MessageBox.Show(
-            "🌙 NightPad - Professional Night Mode Text Editor\n" +
-            "Version 1.2.0 (x64 Native)\n\n" +
-            "Featuring Workspace File Explorer, Auto-Save, and Multi-Language Syntax Highlighting (Python, C#, JS/TS, HTML/CSS, SQL, PowerShell, YAML, JSON, Rust, Go).\n" +
-            "Designed exclusively for the MyEnv Windows Desktop Environment.",
-            "About NightPad",
-            MessageBoxButton.OK,
-            MessageBoxImage.Information);
+        if (text.Contains("\r\n")) StatusEol.Text = "Windows (CRLF)";
+        else if (text.Contains("\n")) StatusEol.Text = "Unix (LF)";
+        else StatusEol.Text = "Windows (CRLF)";
+
+        BtnLanguageSelector.Content = _currentSyntaxName;
     }
 
     protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
     {
-        _autoSaveTimer.Stop();
-
-        // Perform a final auto-save of any valid files
-        if (_isAutoSaveEnabled)
+        if (_isModified && !PromptSaveBeforeAction())
         {
-            foreach (var doc in Documents.Where(d => d.IsModified && !string.IsNullOrEmpty(d.FilePath)))
-            {
-                SaveDocument(doc);
-            }
-        }
-
-        var modified = Documents.Where(d => d.IsModified).ToList();
-        if (modified.Count > 0)
-        {
-            var result = MessageBox.Show(
-                $"You have {modified.Count} unsaved document(s). Do you want to review and save before exiting?",
-                "NightPad",
-                MessageBoxButton.YesNoCancel,
-                MessageBoxImage.Warning);
-
-            if (result == MessageBoxResult.Cancel)
-            {
-                e.Cancel = true;
-                return;
-            }
-
-            if (result == MessageBoxResult.Yes)
-            {
-                foreach (var doc in modified)
-                {
-                    if (!SaveDocument(doc))
-                    {
-                        e.Cancel = true;
-                        return;
-                    }
-                }
-            }
+            e.Cancel = true;
+            return;
         }
 
         base.OnClosing(e);

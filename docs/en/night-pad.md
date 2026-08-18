@@ -1,95 +1,82 @@
-# 🌙 NightPad: Professional Night Mode Text Editor
+# Notepad: Lightweight Professional Text Editor
 
-A lightweight, ultra-responsive, keyboard-driven text and code editor built natively for the **MyEnv** Windows desktop environment. Designed with an Obsidian Night Dark theme, 0px sharp rectangular aesthetics, a built-in workspace file explorer sidebar, auto-save engine, and instant startup latency.
+A fast, lightweight, and clean text and code editor built natively for the **MyEnv** Windows desktop environment. Designed with a dark interface, 0px sharp rectangular aesthetics, classic uncluttered menu bar (`File`, `Edit`, `View`, `Tools`), bottom taskbar/status bar, and accurate multi-language syntax support.
 
 ---
 
 ## 🚀 Overview & Key Highlights
 
-- **Obsidian Dark Aesthetic**: Deep obsidian background (`#0d1117`), surface panels (`#161b22`), high-contrast text (`#f0f6fc`), electric cyan accents (`#58a6ff`), and 0px rectangular sharp edges.
-- **Workspace File Explorer Sidebar (`Ctrl + B`)**: Full recursive, lazy-loaded tree view of project files and directories. Double-click or press Enter on any file to open it in a tab.
-- **Automatic Auto-Save (`Ctrl + Shift + A`)**: Background auto-save engine (runs every 3 seconds) silently saving dirty files without interrupting your workflow, with a live status indicator (`💾 Auto-Save: ON/OFF`).
-- **Multi-Document Tab System**: Seamless tab management, drag-and-drop file opening, dirty-state indicators (`*`), and instant middle-click closing.
-- **Rich Python 3 & Multi-Language Support**:
-  - **Python**: Full coloring for keywords, built-ins (`print`, `len`, `range`, etc.), magic methods (`__init__`, `__str__`), decorators (`@decorator`), f-strings, docstrings, and smart indentation (pressing Enter after `:` auto-indents 4 spaces).
-  - **20+ Languages**: PowerShell, JavaScript, TypeScript, JSON, YAML, Markdown, C#, C/C++, HTML, XML, CSS, PHP, SQL, Batch/CMD, INI/Config, Java, Rust, and Go.
-- **Live Markdown Preview (`Ctrl + Shift + M`)**: Split-panel real-time rendering of headers, code blocks, bold/italics, and list items.
-- **Advanced Find & Replace (`Ctrl + F` / `Ctrl + H`)**: Regex support, case sensitivity, whole word matching, and live match counters.
-- **Developer Productivity Toolkit**: JSON formatter & minifier (`Ctrl + Shift + J`), Base64/URL encoding, case conversion, line deduplication, line sorting, and date/time stamping (`F5`).
-- **Deep Desktop Integration**: Native GlazeWM keybinding (`Alt + N`), PowerShell & CMD CLI aliases (`np`, `nightpad`, `notepad`), and automatic tiling rules.
+- **Clean & Uncluttered**: Zero distraction, instant launch in <20ms, clean layout without sidebars, bloated tabs, or decorative badges.
+- **Classic Menu Bar**: Clean and responsive menus for `File`, `Edit`, `View`, and `Tools`.
+- **Accurate Python 3 & Language Syntax Highlighting**:
+  - **Python**: Full coloring for keywords, built-ins (`print`, `len`, `range`, `isinstance`, `enumerate`, `dict`, `list`...), magic methods (`__init__`, `__str__`...), decorators (`@decorator`), type annotations, `self`, `cls`, f-strings, docstrings, and smart auto-indentation after `:` colons.
+  - **20+ Supported Languages**: Python, PowerShell, JavaScript, TypeScript, JSON, YAML, Markdown, C#, C/C++, HTML, XML, CSS, PHP, SQL, Batch/CMD, INI/Config, Java, Rust, and Go.
+- **Search & Replace (`Ctrl + F` / `Ctrl + H`)**: Sleek search panel supporting Match Case, Whole Word, Regular Expressions, and instant match counter.
+- **Developer Tools**: JSON formatter & minifier (`Ctrl + Shift + J`), Base64 and URL encoding/decoding, case transformation (`Ctrl + Shift + U` / `Ctrl + U`), line sorting, duplicate line removal, and timestamp insertion (`F5`).
+- **Clean Taskbar / Status Bar**: Real-time cursor location (`Ln`, `Col`), character/word/line counters, encoding (`UTF-8`), line ending (`Windows CRLF` / `Unix LF`), and language selector.
+- **Desktop & CLI Integration**: Bound to `Alt + N` in GlazeWM and runnable via `np [file]` or `nightpad` from CMD and PowerShell.
 
 ---
 
-## ⚡ Launching NightPad
+## ⚡ Launching Notepad
 
 | Launch Method | Command / Shortcut | Description |
 |---|---|---|
 | **GlazeWM Hotkey** | `Alt + N` | Instant launch from anywhere on any workspace |
-| **PowerShell CLI** | `np [file or folder]` / `nightpad` | Opens specified file/folder or active directory in sidebar |
-| **Command Prompt (CMD)** | `np [file or folder]` / `nightpad` | Opens specified file/folder or active directory in sidebar |
+| **PowerShell CLI** | `np [file]` / `nightpad [file]` | Opens specified file or blank editor from PowerShell |
+| **Command Prompt (CMD)** | `np [file]` / `nightpad [file]` | Opens specified file or blank editor from CMD |
 | **Windows App Launcher** | `Alt + Shift + Q` -> Type `NightPad` | Searchable via MyEnv WPF application launcher |
-| **File Explorer Drag & Drop** | Drag file(s) or folder into NightPad window | Automatically opens files in new tabs or sets workspace |
+| **File Explorer Drag & Drop** | Drag any file into Notepad window | Instantly opens the file |
 
 ---
 
 ## ⌨️ Keyboard Shortcuts Reference
 
-### File & Workspace Management
+### File Management
 | Shortcut | Action |
 |---|---|
-| `Ctrl + N` | Open a new blank document tab |
+| `Ctrl + N` | Create new document |
 | `Ctrl + O` | Open file dialog |
-| `Ctrl + Shift + O` | Open Workspace Folder dialog |
 | `Ctrl + S` | Save current document |
 | `Ctrl + Shift + S` | Save As dialog |
-| `Ctrl + Alt + S` | Save all open dirty documents |
-| `Ctrl + Shift + A` | Toggle Auto-Save On / Off |
-| `Ctrl + W` | Close active document tab |
-| `Alt + F4` | Exit NightPad (prompts to save unsaved files) |
+| `Alt + F4` | Exit Notepad (prompts to save if modified) |
 
-### Sidebar Explorer & View
-| Shortcut | Action |
-|---|---|
-| `Ctrl + B` | Toggle File Explorer Sidebar |
-| `Alt + Z` | Toggle Word Wrap |
-| `Ctrl + Shift + M` | Toggle Markdown Live Preview split pane |
-| `Ctrl + Shift + L` | Toggle line number gutter |
-| `Ctrl + +` / `Ctrl + -` | Zoom In / Zoom Out |
-| `Ctrl + MouseWheel` | Zoom In / Zoom Out with mouse wheel |
-| `Ctrl + 0` | Reset Zoom to 100% |
-
-### Text Editing & Navigation
+### Text Editing & Formatting
 | Shortcut | Action |
 |---|---|
 | `Ctrl + Z` / `Ctrl + Y` | Undo / Redo |
+| `Ctrl + X` / `Ctrl + C` / `Ctrl + V` | Cut / Copy / Paste |
+| `Ctrl + A` | Select All |
 | `Ctrl + D` | Duplicate current line |
 | `Ctrl + Shift + K` | Delete current line |
 | `Alt + ↑` / `Alt + ↓` | Move active line Up / Down |
-| `Ctrl + /` | Toggle single-line comment (language-aware) |
+| `Ctrl + /` | Toggle single-line comment |
 | `Ctrl + Shift + J` | Format / Beautify JSON |
 | `Ctrl + Shift + U` / `Ctrl + U` | Transform selection to UPPERCASE / lowercase |
-| `F5` | Insert current timestamp (`YYYY-MM-DD HH:MM:SS`) |
-| `Ctrl + G` | Open "Go to Line" navigation bar |
+| `F5` | Insert current timestamp |
 
-### Search & Replace
+### Search & Navigation
 | Shortcut | Action |
 |---|---|
 | `Ctrl + F` | Open Find panel |
 | `Ctrl + H` | Open Find & Replace panel |
-| `F3` / `Enter` | Jump to next match |
-| `Shift + F3` | Jump to previous match |
-| `Alt + R` | Replace current match |
-| `Alt + A` | Replace all matches |
-| `Esc` | Close search / navigation panel |
+| `F3` / `Enter` | Find Next match |
+| `Shift + F3` | Find Previous match |
+| `Ctrl + G` | Go to line |
+| `Esc` | Close search / Go-To bar |
+
+### View & Zoom
+| Shortcut | Action |
+|---|---|
+| `Alt + Z` | Toggle Word Wrap |
+| `Ctrl + Shift + L` | Toggle line numbers |
+| `Ctrl + +` / `Ctrl + -` | Zoom In / Zoom Out |
+| `Ctrl + MouseWheel` | Zoom In / Zoom Out with mouse wheel |
+| `Ctrl + 0` | Restore Default Zoom (100%) |
 
 ---
 
-## 🛠️ Architecture & Source Code
+## 🛠️ Source & Executable
 
-- **Source Code**: [`tools/nightpad/`](file:///%USERPROFILE%/Documents/myenv/tools/nightpad)
-  - `MainWindow.xaml` & `MainWindow.xaml.cs`: Core UI, Sidebar Explorer, AvalonEdit host, and event dispatching.
-  - `Models/FileNode.cs`: Recursive file & directory tree node model for sidebar navigation.
-  - `Models/EditorDocument.cs`: Document state management, encoding, and statistics.
-  - `Services/SyntaxService.cs`: Embedded XSHD syntax definitions with Python 3 keywords, docstrings, and language recognition.
-  - `Services/TextTransformService.cs`: Text formatting, JSON parsing, and encoding tools.
-- **Published Binary**: [`scripts/nightpad/NightPad.exe`](file:///%USERPROFILE%/Documents/myenv/scripts/nightpad/NightPad.exe)
+- **Source Directory**: [`tools/nightpad/`](file:///%USERPROFILE%/Documents/myenv/tools/nightpad)
+- **Executable**: [`scripts/nightpad/NightPad.exe`](file:///%USERPROFILE%/Documents/myenv/scripts/nightpad/NightPad.exe)

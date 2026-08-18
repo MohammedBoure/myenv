@@ -77,13 +77,12 @@ A high-performance, keyboard-driven tiling desktop environment for Windows devel
 - **Instant Arabic Translation**: Translates extracted text to Arabic using Google Translate API with Catppuccin dark mode floating window and one-click copy.
 - **GlazeWM Integration**: Bound to `Win + Shift + Q` and `Alt + Shift + T` with automatic floating window rules.
 
-### 9. NightPad - Professional Obsidian Night Mode Text Editor (`Alt + N` / `np`)
-- **Obsidian Dark Aesthetic**: Deep obsidian background (`#0d1117`), high-contrast text (`#f0f6fc`), electric cyan accents (`#58a6ff`), and sharp 0px rectangular edges.
-- **Multi-Document Tabs**: Tabbed interface with dirty state markers (`*`), drag-and-drop file opening, and middle-click tab closure.
-- **20+ Languages Syntax Highlighting**: Real-time syntax coloring for PowerShell, Python, JSON, YAML, Markdown, C#, C/C++, JavaScript, TypeScript, HTML, XML, CSS, PHP, SQL, Batch/CMD, INI/Config, Java, Rust, and Go.
-- **Live Markdown Preview (`Ctrl + Shift + M`)**: Split-panel instant markdown rendering for headers, lists, code blocks, bold, and italic text.
-- **Advanced Find & Replace (`Ctrl + F` / `Ctrl + H`)**: Regular expressions, match case, whole word search, and live match counters.
-- **Developer Productivity Tools**: JSON formatting & minifying, Base64/URL encoding and decoding, line sorting, line deduplication, and timestamp insertion.
+### 9. Notepad - Lightweight Professional Text Editor (`Alt + N` / `np`)
+- **Minimalist & Clean Interface**: Clean dark styling, zero clutter, instant launch (<20ms), and sharp 0px rectangular edges.
+- **Classic Menu Bar**: Intuitive and direct access to `File`, `Edit`, `View`, and `Tools`.
+- **20+ Languages Syntax Highlighting**: Comprehensive coloring for Python 3 (with smart indentation on `:`), PowerShell, JavaScript, TypeScript, JSON, YAML, Markdown, C#, C/C++, HTML, XML, CSS, PHP, SQL, Batch/CMD, INI/Config, Java, Rust, and Go.
+- **Search & Replace (`Ctrl + F` / `Ctrl + H`)**: Fast search panel with match case, whole word, regular expressions, and match counters.
+- **Developer Utilities**: JSON formatting & minifying, Base64/URL encoding and decoding, line sorting, and case conversion.
 - **GlazeWM & Shell Integration**: GlazeWM hotkey (`Alt + N`), automatic tiling rule, and terminal commands (`np`, `nightpad`, `notepad`).
 
 ---

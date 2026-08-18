@@ -102,23 +102,16 @@ function sudo {
     }
 }
 
-# NightPad - Professional Night Mode Notepad
+# Notepad - Lightweight Professional Text Editor
 function np {
     $nightpadExe = Join-Path $myenvDir "scripts\nightpad\NightPad.exe"
-    $currentDir = (Get-Location).ProviderPath
     if (Test-Path -LiteralPath $nightpadExe) {
         if ($args.Count -eq 0) {
-            Start-Process -FilePath $nightpadExe -ArgumentList "`"$currentDir`"" -WorkingDirectory $currentDir
+            Start-Process -FilePath $nightpadExe
         } else {
-            $resolvedArgs = @()
-            foreach ($a in $args) {
-                if (Test-Path -LiteralPath $a) {
-                    $resolvedArgs += "`"$((Resolve-Path -LiteralPath $a).Path)`""
-                } else {
-                    $resolvedArgs += "`"$([System.IO.Path]::GetFullPath($a))`""
-                }
-            }
-            Start-Process -FilePath $nightpadExe -ArgumentList ($resolvedArgs -join ' ') -WorkingDirectory $currentDir
+            $target = $args[0]
+            $resolved = if (Test-Path -LiteralPath $target) { (Resolve-Path -LiteralPath $target).Path } else { [System.IO.Path]::GetFullPath($target) }
+            Start-Process -FilePath $nightpadExe -ArgumentList "`"$resolved`""
         }
     } else {
         notepad.exe @args

@@ -3,8 +3,8 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              Startup="App_Startup">
     <Application.Resources>
-        <!-- Colors -->
-        <Color x:Key="BgDark">#090D13</Color>
+        <!-- Clean Professional Dark Palette -->
+        <Color x:Key="BgDark">#101216</Color>
         <Color x:Key="BgEditor">#0D1117</Color>
         <Color x:Key="BgSurface">#161B22</Color>
         <Color x:Key="BgSurfaceHover">#21262D</Color>
@@ -14,7 +14,6 @@
         <Color x:Key="TextPrimary">#F0F6FC</Color>
         <Color x:Key="TextSecondary">#8B949E</Color>
         <Color x:Key="AccentBlue">#58A6FF</Color>
-        <Color x:Key="AccentGreen">#3FB950</Color>
         <Color x:Key="AccentRed">#F85149</Color>
         <Color x:Key="SelectionBlue">#1F6FEB</Color>
 
@@ -29,7 +28,6 @@
         <SolidColorBrush x:Key="TextPrimaryBrush" Color="{StaticResource TextPrimary}" />
         <SolidColorBrush x:Key="TextSecondaryBrush" Color="{StaticResource TextSecondary}" />
         <SolidColorBrush x:Key="AccentBlueBrush" Color="{StaticResource AccentBlue}" />
-        <SolidColorBrush x:Key="AccentGreenBrush" Color="{StaticResource AccentGreen}" />
         <SolidColorBrush x:Key="AccentRedBrush" Color="{StaticResource AccentRed}" />
         <SolidColorBrush x:Key="SelectionBlueBrush" Color="{StaticResource SelectionBlue}" />
 
@@ -63,7 +61,7 @@
             <Setter Property="Background" Value="{StaticResource BgSurfaceBrush}" />
             <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
             <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Padding" Value="8,5" />
+            <Setter Property="Padding" Value="10,5" />
             <Setter Property="FontSize" Value="12" />
             <Setter Property="Template">
                 <Setter.Value>
@@ -71,15 +69,13 @@
                         <Border x:Name="ItemBorder" Background="{TemplateBinding Background}" BorderThickness="0" Padding="{TemplateBinding Padding}">
                             <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" SharedSizeGroup="IconGroup" />
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" SharedSizeGroup="ShortcutGroup" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <ContentPresenter Grid.Column="0" ContentSource="Icon" Margin="0,0,8,0" VerticalAlignment="Center" />
-                                <ContentPresenter Grid.Column="1" ContentSource="Header" RecognizesAccessKey="True" VerticalAlignment="Center" />
-                                <TextBlock Grid.Column="2" Text="{TemplateBinding InputGestureText}" Foreground="{StaticResource TextSecondaryBrush}" Margin="16,0,0,0" VerticalAlignment="Center" />
-                                <Path x:Name="SubMenuArrow" Grid.Column="3" Data="M 0 0 L 4 4 L 0 8 Z" Fill="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" VerticalAlignment="Center" Visibility="Collapsed" />
+                                <ContentPresenter Grid.Column="0" ContentSource="Header" RecognizesAccessKey="True" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="1" Text="{TemplateBinding InputGestureText}" Foreground="{StaticResource TextSecondaryBrush}" Margin="24,0,0,0" VerticalAlignment="Center" />
+                                <Path x:Name="SubMenuArrow" Grid.Column="2" Data="M 0 0 L 4 4 L 0 8 Z" Fill="{StaticResource TextSecondaryBrush}" Margin="8,0,0,0" VerticalAlignment="Center" Visibility="Collapsed" />
                                 <Popup x:Name="PART_Popup" AllowsTransparency="True" Focusable="False" IsOpen="{Binding IsSubmenuOpen, RelativeSource={RelativeSource TemplatedParent}}" Placement="Right" VerticalOffset="-3">
                                     <Border Background="{StaticResource BgSurfaceBrush}" BorderBrush="{StaticResource BorderDarkBrush}" BorderThickness="1" Padding="2">
                                         <StackPanel IsItemsHost="True" KeyboardNavigation.DirectionalNavigation="Cycle" />
@@ -102,6 +98,11 @@
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>
+        </Style>
+
+        <!-- Clean Menu Header Item Style -->
+        <Style x:Key="TopMenuItemStyle" TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+            <Setter Property="Padding" Value="10,4" />
         </Style>
 
         <!-- Dark ScrollBar Style -->
@@ -165,13 +166,13 @@
             </Style.Triggers>
         </Style>
 
-        <!-- Dark Button Style -->
+        <!-- Clean Dark Button Style -->
         <Style x:Key="NightButton" TargetType="Button">
             <Setter Property="Background" Value="{StaticResource BgSurfaceBrush}" />
             <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
             <Setter Property="BorderBrush" Value="{StaticResource BorderDarkBrush}" />
             <Setter Property="BorderThickness" Value="1" />
-            <Setter Property="Padding" Value="8,4" />
+            <Setter Property="Padding" Value="8,3" />
             <Setter Property="FontSize" Value="12" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Template">
@@ -197,12 +198,40 @@
             </Setter>
         </Style>
 
-        <!-- Icon / Toolbar Button Style -->
-        <Style x:Key="ToolbarButton" TargetType="Button">
+        <!-- Clean Window Control Button Style -->
+        <Style x:Key="WindowControlButton" TargetType="Button">
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
             <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Padding" Value="6,4" />
+            <Setter Property="Width" Value="44" />
+            <Setter Property="Height" Value="32" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="BtnBorder" Background="{TemplateBinding Background}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="BtnBorder" Property="Background" Value="{StaticResource BgSurfaceHoverBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="BtnBorder" Property="Background" Value="{StaticResource BgSurfaceActiveBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Status Button Style -->
+        <Style x:Key="StatusButton" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="6,2" />
             <Setter Property="FontSize" Value="11" />
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Template">
@@ -214,9 +243,7 @@
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="BtnBorder" Property="Background" Value="{StaticResource BgSurfaceHoverBrush}" />
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="BtnBorder" Property="Background" Value="{StaticResource BgSurfaceActiveBrush}" />
+                                <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -234,92 +261,6 @@
             <Setter Property="SelectionBrush" Value="{StaticResource SelectionBlueBrush}" />
             <Setter Property="Padding" Value="6,3" />
             <Setter Property="FontSize" Value="12" />
-        </Style>
-
-        <!-- TreeView Expander Toggle Arrow Style -->
-        <Style x:Key="ExpanderToggleStyle" TargetType="ToggleButton">
-            <Setter Property="Width" Value="14" />
-            <Setter Property="Height" Value="14" />
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="ToggleButton">
-                        <Border Background="Transparent" Width="14" Height="14">
-                            <Path x:Name="ExpandPath" Data="M 3 2 L 8 7 L 3 12 Z" Fill="{StaticResource TextSecondaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" RenderTransformOrigin="0.5,0.5">
-                                <Path.RenderTransform>
-                                    <RotateTransform Angle="0" />
-                                </Path.RenderTransform>
-                            </Path>
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="ExpandPath" Property="RenderTransform">
-                                    <Setter.Value>
-                                        <RotateTransform Angle="90" />
-                                    </Setter.Value>
-                                </Setter>
-                                <Setter TargetName="ExpandPath" Property="Fill" Value="{StaticResource AccentBlueBrush}" />
-                            </Trigger>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="ExpandPath" Property="Fill" Value="{StaticResource TextPrimaryBrush}" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
-        </Style>
-
-        <!-- Sharp Dark TreeView & TreeViewItem Styles -->
-        <Style TargetType="TreeView">
-            <Setter Property="Background" Value="{StaticResource BgSurfaceBrush}" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
-            <Setter Property="Padding" Value="4" />
-        </Style>
-
-        <Style TargetType="TreeViewItem">
-            <Setter Property="Foreground" Value="{StaticResource TextPrimaryBrush}" />
-            <Setter Property="FontSize" Value="12" />
-            <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="TreeViewItem">
-                        <Grid>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition />
-                            </Grid.RowDefinitions>
-                            <Border x:Name="ItemBorder" Background="Transparent" Padding="4,3" Cursor="Hand">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto" />
-                                        <ColumnDefinition Width="*" />
-                                    </Grid.ColumnDefinitions>
-                                    <ToggleButton x:Name="Expander" Style="{StaticResource ExpanderToggleStyle}" IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}}" ClickMode="Press" Margin="0,0,4,0" VerticalAlignment="Center" />
-                                    <ContentPresenter Grid.Column="1" ContentSource="Header" VerticalAlignment="Center" />
-                                </Grid>
-                            </Border>
-                            <ItemsPresenter Grid.Row="1" x:Name="ItemsHost" Margin="14,0,0,0" />
-                        </Grid>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="HasItems" Value="False">
-                                <Setter TargetName="Expander" Property="Visibility" Value="Hidden" />
-                            </Trigger>
-                            <Trigger Property="IsExpanded" Value="False">
-                                <Setter TargetName="ItemsHost" Property="Visibility" Value="Collapsed" />
-                            </Trigger>
-                            <Trigger Property="IsMouseOver" Value="True" SourceName="ItemBorder">
-                                <Setter TargetName="ItemBorder" Property="Background" Value="{StaticResource BgSurfaceHoverBrush}" />
-                            </Trigger>
-                            <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="ItemBorder" Property="Background" Value="{StaticResource BgSurfaceActiveBrush}" />
-                                <Setter TargetName="ItemBorder" Property="BorderBrush" Value="{StaticResource AccentBlueBrush}" />
-                                <Setter TargetName="ItemBorder" Property="BorderThickness" Value="1,0,0,0" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
         </Style>
     </Application.Resources>
 </Application>

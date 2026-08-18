@@ -12,38 +12,20 @@ public partial class App : Application
     private void App_Startup(object sender, StartupEventArgs e)
     {
         var mainWindow = new MainWindow();
-        
-        if (e.Args.Length > 0)
+
+        if (e.Args.Length > 0 && !string.IsNullOrWhiteSpace(e.Args[0]))
         {
-            foreach (var arg in e.Args)
+            try
             {
-                if (!string.IsNullOrWhiteSpace(arg))
+                string fullPath = Path.GetFullPath(e.Args[0]);
+                if (File.Exists(fullPath))
                 {
-                    try
-                    {
-                        string fullPath = Path.GetFullPath(arg);
-                        if (Directory.Exists(fullPath))
-                        {
-                            mainWindow.OpenFolder(fullPath);
-                        }
-                        else
-                        {
-                            mainWindow.OpenFile(fullPath);
-                        }
-                    }
-                    catch
-                    {
-                        // Ignore invalid paths
-                    }
+                    mainWindow.OpenFile(fullPath);
                 }
             }
-        }
-        else
-        {
-            string currentDir = Environment.CurrentDirectory;
-            if (!string.IsNullOrEmpty(currentDir) && Directory.Exists(currentDir))
+            catch
             {
-                mainWindow.OpenFolder(currentDir);
+                // Ignore invalid paths
             }
         }
 

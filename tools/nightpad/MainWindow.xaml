@@ -4,10 +4,8 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:avalonEdit="http://icsharpcode.net/sharpdevelop/avalonedit"
-        xmlns:local="clr-namespace:NightPad"
-        xmlns:models="clr-namespace:NightPad.Models"
         mc:Ignorable="d"
-        Title="NightPad" Height="720" Width="1100"
+        Title="Notepad" Height="650" Width="900"
         WindowStartupLocation="CenterScreen"
         WindowStyle="None"
         AllowsTransparency="False"
@@ -25,87 +23,40 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <!-- Row 0: Titlebar & Tabs -->
-            <RowDefinition Height="38" />
-            <!-- Row 1: Menu Bar & Quick Actions Toolbar -->
-            <RowDefinition Height="30" />
-            <!-- Row 2: Search & Replace Panel -->
+            <!-- Row 0: Clean Window TitleBar -->
+            <RowDefinition Height="32" />
+            <!-- Row 1: Classic Menu Bar (File, Edit, View, Tools) -->
+            <RowDefinition Height="28" />
+            <!-- Row 2: Search & Replace Panel (Collapsible) -->
             <RowDefinition Height="Auto" />
-            <!-- Row 3: Go To Line Bar -->
+            <!-- Row 3: Go To Line Panel (Collapsible) -->
             <RowDefinition Height="Auto" />
-            <!-- Row 4: Main Content / Sidebar + Editor Host -->
+            <!-- Row 4: Main Text Editor Area -->
             <RowDefinition Height="*" />
-            <!-- Row 5: Status Bar -->
-            <RowDefinition Height="26" />
+            <!-- Row 5: Clean Bottom Status Bar -->
+            <RowDefinition Height="24" />
         </Grid.RowDefinitions>
 
-        <!-- ROW 0: CUSTOM TITLEBAR & TAB BAR -->
+        <!-- ROW 0: CLEAN WINDOW TITLEBAR -->
         <Border Grid.Row="0" Background="{StaticResource BgDarkBrush}" BorderBrush="{StaticResource BorderLightBrush}" BorderThickness="0,0,0,1" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <!-- Logo & App Name -->
-                    <ColumnDefinition Width="Auto" />
-                    <!-- Tabs ScrollViewer -->
+                    <!-- Window Title -->
                     <ColumnDefinition Width="*" />
                     <!-- Window Controls (Min, Max, Close) -->
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <!-- Logo & Brand -->
-                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,16,0">
-                    <TextBlock Text="🌙" FontSize="14" VerticalAlignment="Center" Margin="0,0,6,0" />
-                    <TextBlock Text="NightPad" FontWeight="Bold" FontSize="13" Foreground="{StaticResource AccentBlueBrush}" VerticalAlignment="Center" />
-                </StackPanel>
+                <!-- Document Title -->
+                <TextBlock x:Name="TxtWindowTitle" Grid.Column="0" Text="Untitled - Notepad" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="12,0,0,0" />
 
-                <!-- Document Tabs List -->
-                <ScrollViewer Grid.Column="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled" Focusable="False">
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Bottom">
-                        <ItemsControl x:Name="TabsItemsControl" ItemsSource="{Binding Documents, RelativeSource={RelativeSource AncestorType=local:MainWindow}}">
-                            <ItemsControl.ItemsPanel>
-                                <ItemsPanelTemplate>
-                                    <StackPanel Orientation="Horizontal" />
-                                </ItemsPanelTemplate>
-                            </ItemsControl.ItemsPanel>
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Border x:Name="TabBorder" Height="34" Margin="0,0,2,0" Padding="12,0,8,0" Background="{StaticResource BgSurfaceBrush}" BorderBrush="{StaticResource BorderLightBrush}" BorderThickness="1,1,1,0" Cursor="Hand" MouseLeftButtonDown="Tab_MouseLeftButtonDown" MouseRightButtonDown="Tab_MouseRightButtonDown">
-                                        <Border.ContextMenu>
-                                            <ContextMenu>
-                                                <MenuItem Header="Close" Click="MenuCloseTab_Click" InputGestureText="Ctrl+W" />
-                                                <MenuItem Header="Close Others" Click="MenuCloseOthers_Click" />
-                                                <MenuItem Header="Close All" Click="MenuCloseAll_Click" />
-                                                <Separator Background="{StaticResource BorderDarkBrush}" />
-                                                <MenuItem Header="Copy Full Path" Click="MenuCopyPath_Click" />
-                                                <MenuItem Header="Open Containing Folder" Click="MenuOpenFolder_Click" />
-                                            </ContextMenu>
-                                        </Border.ContextMenu>
-                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                            <TextBlock Text="{Binding DisplayTitle}" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="0,0,8,0" MaxWidth="200" TextTrimming="CharacterEllipsis" />
-                                            <Button Style="{StaticResource ToolbarButton}" Content="✕" FontSize="10" Foreground="{StaticResource TextSecondaryBrush}" Padding="4,2" Click="TabCloseButton_Click" ToolTip="Close tab (Ctrl+W)" />
-                                        </StackPanel>
-                                    </Border>
-                                    <DataTemplate.Triggers>
-                                        <DataTrigger Binding="{Binding IsSelected, RelativeSource={RelativeSource AncestorType=ContentPresenter}}" Value="True">
-                                            <Setter TargetName="TabBorder" Property="Background" Value="{StaticResource BgEditorBrush}" />
-                                            <Setter TargetName="TabBorder" Property="BorderBrush" Value="{StaticResource AccentBlueBrush}" />
-                                        </DataTrigger>
-                                    </DataTemplate.Triggers>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-
-                        <!-- Add Tab Button -->
-                        <Button Style="{StaticResource ToolbarButton}" Content="＋" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Height="30" Width="30" Margin="4,0,0,2" VerticalAlignment="Bottom" Click="NewTabButton_Click" ToolTip="New Tab (Ctrl+N)" />
-                    </StackPanel>
-                </ScrollViewer>
-
-                <!-- Window Control Buttons (Min, Max, Close) -->
-                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Top" HorizontalAlignment="Right">
-                    <Button Style="{StaticResource ToolbarButton}" Content="─" Width="44" Height="36" FontSize="10" Click="BtnMinimize_Click" ToolTip="Minimize" />
-                    <Button x:Name="BtnMaximize" Style="{StaticResource ToolbarButton}" Content="□" Width="44" Height="36" FontSize="12" Click="BtnMaximize_Click" ToolTip="Maximize / Restore" />
-                    <Button Content="✕" Width="44" Height="36" FontSize="12" Click="BtnClose_Click" ToolTip="Close (Alt+F4)">
+                <!-- Window Controls -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Style="{StaticResource WindowControlButton}" Content="─" Click="BtnMinimize_Click" ToolTip="Minimize" />
+                    <Button x:Name="BtnMaximize" Style="{StaticResource WindowControlButton}" Content="□" Click="BtnMaximize_Click" ToolTip="Maximize" />
+                    <Button Content="✕" Click="BtnClose_Click" ToolTip="Close (Alt+F4)">
                         <Button.Style>
-                            <Style TargetType="Button" BasedOn="{StaticResource ToolbarButton}">
+                            <Style TargetType="Button" BasedOn="{StaticResource WindowControlButton}">
                                 <Style.Triggers>
                                     <Trigger Property="IsMouseOver" Value="True">
                                         <Setter Property="Background" Value="{StaticResource AccentRedBrush}" />
@@ -119,127 +70,79 @@
             </Grid>
         </Border>
 
-        <!-- ROW 1: MENU BAR & QUICK TOOLBAR -->
+        <!-- ROW 1: CLEAN MENU BAR (File, Edit, View, Tools) -->
         <Border Grid.Row="1" Background="{StaticResource BgSurfaceBrush}" BorderBrush="{StaticResource BorderLightBrush}" BorderThickness="0,0,0,1">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+            <Menu Background="Transparent" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="4,0">
+                <MenuItem Header="_File" Style="{StaticResource TopMenuItemStyle}">
+                    <MenuItem Header="_New" InputGestureText="Ctrl+N" Click="MenuNew_Click" />
+                    <MenuItem Header="_Open..." InputGestureText="Ctrl+O" Click="MenuOpen_Click" />
+                    <MenuItem Header="_Save" InputGestureText="Ctrl+S" Click="MenuSave_Click" />
+                    <MenuItem Header="Save _As..." InputGestureText="Ctrl+Shift+S" Click="MenuSaveAs_Click" />
+                    <Separator Background="{StaticResource BorderDarkBrush}" />
+                    <MenuItem Header="E_xit" InputGestureText="Alt+F4" Click="MenuExit_Click" />
+                </MenuItem>
 
-                <!-- Menu Bar -->
-                <Menu Grid.Column="0" Background="Transparent" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center">
-                    <MenuItem Header="_File">
-                        <MenuItem Header="_New Tab" InputGestureText="Ctrl+N" Click="MenuNew_Click" />
-                        <MenuItem Header="_Open File..." InputGestureText="Ctrl+O" Click="MenuOpen_Click" />
-                        <MenuItem Header="Open _Folder / Workspace..." InputGestureText="Ctrl+Shift+O" Click="MenuOpenFolderDialog_Click" />
-                        <Separator Background="{StaticResource BorderDarkBrush}" />
-                        <MenuItem Header="_Save" InputGestureText="Ctrl+S" Click="MenuSave_Click" />
-                        <MenuItem Header="Save _As..." InputGestureText="Ctrl+Shift+S" Click="MenuSaveAs_Click" />
-                        <MenuItem Header="Save A_ll" InputGestureText="Ctrl+Alt+S" Click="MenuSaveAll_Click" />
-                        <MenuItem x:Name="MenuAutoSave" Header="_Auto Save" InputGestureText="Ctrl+Shift+A" IsCheckable="True" IsChecked="True" Click="MenuAutoSave_Click" />
-                        <Separator Background="{StaticResource BorderDarkBrush}" />
-                        <MenuItem Header="_Close Tab" InputGestureText="Ctrl+W" Click="MenuCloseTab_Click" />
-                        <MenuItem Header="Close _All Tabs" Click="MenuCloseAll_Click" />
-                        <Separator Background="{StaticResource BorderDarkBrush}" />
-                        <MenuItem Header="E_xit" InputGestureText="Alt+F4" Click="MenuExit_Click" />
-                    </MenuItem>
+                <MenuItem Header="_Edit" Style="{StaticResource TopMenuItemStyle}">
+                    <MenuItem Header="_Undo" InputGestureText="Ctrl+Z" Click="MenuUndo_Click" />
+                    <MenuItem Header="_Redo" InputGestureText="Ctrl+Y" Click="MenuRedo_Click" />
+                    <Separator Background="{StaticResource BorderDarkBrush}" />
+                    <MenuItem Header="Cu_t" InputGestureText="Ctrl+X" Click="MenuCut_Click" />
+                    <MenuItem Header="_Copy" InputGestureText="Ctrl+C" Click="MenuCopy_Click" />
+                    <MenuItem Header="_Paste" InputGestureText="Ctrl+V" Click="MenuPaste_Click" />
+                    <MenuItem Header="Delete" InputGestureText="Del" Click="MenuDelete_Click" />
+                    <MenuItem Header="Select _All" InputGestureText="Ctrl+A" Click="MenuSelectAll_Click" />
+                    <Separator Background="{StaticResource BorderDarkBrush}" />
+                    <MenuItem Header="_Find..." InputGestureText="Ctrl+F" Click="MenuFind_Click" />
+                    <MenuItem Header="Find _Next" InputGestureText="F3" Click="MenuFindNext_Click" />
+                    <MenuItem Header="Find _Previous" InputGestureText="Shift+F3" Click="MenuFindPrev_Click" />
+                    <MenuItem Header="_Replace..." InputGestureText="Ctrl+H" Click="MenuReplace_Click" />
+                    <MenuItem Header="_Go to Line..." InputGestureText="Ctrl+G" Click="MenuGoToLine_Click" />
+                    <Separator Background="{StaticResource BorderDarkBrush}" />
+                    <MenuItem Header="_Duplicate Line" InputGestureText="Ctrl+D" Click="MenuDuplicateLine_Click" />
+                    <MenuItem Header="Delete Line" InputGestureText="Ctrl+Shift+K" Click="MenuDeleteLine_Click" />
+                    <MenuItem Header="Move Line Up" InputGestureText="Alt+Up" Click="MenuMoveLineUp_Click" />
+                    <MenuItem Header="Move Line Down" InputGestureText="Alt+Down" Click="MenuMoveLineDown_Click" />
+                    <MenuItem Header="Toggle Comment" InputGestureText="Ctrl+/" Click="MenuToggleComment_Click" />
+                    <Separator Background="{StaticResource BorderDarkBrush}" />
+                    <MenuItem Header="Time / _Date" InputGestureText="F5" Click="MenuInsertDateTime_Click" />
+                </MenuItem>
 
-                    <MenuItem Header="_Edit">
-                        <MenuItem Header="_Undo" InputGestureText="Ctrl+Z" Click="MenuUndo_Click" />
-                        <MenuItem Header="_Redo" InputGestureText="Ctrl+Y" Click="MenuRedo_Click" />
-                        <Separator Background="{StaticResource BorderDarkBrush}" />
-                        <MenuItem Header="Cu_t" InputGestureText="Ctrl+X" Click="MenuCut_Click" />
-                        <MenuItem Header="_Copy" InputGestureText="Ctrl+C" Click="MenuCopy_Click" />
-                        <MenuItem Header="_Paste" InputGestureText="Ctrl+V" Click="MenuPaste_Click" />
-                        <MenuItem Header="Select _All" InputGestureText="Ctrl+A" Click="MenuSelectAll_Click" />
-                        <Separator Background="{StaticResource BorderDarkBrush}" />
-                        <MenuItem Header="_Duplicate Line" InputGestureText="Ctrl+D" Click="MenuDuplicateLine_Click" />
-                        <MenuItem Header="Delete _Line" InputGestureText="Ctrl+Shift+K" Click="MenuDeleteLine_Click" />
-                        <MenuItem Header="Move Line _Up" InputGestureText="Alt+Up" Click="MenuMoveLineUp_Click" />
-                        <MenuItem Header="Move Line _Down" InputGestureText="Alt+Down" Click="MenuMoveLineDown_Click" />
-                        <MenuItem Header="Toggle _Comment" InputGestureText="Ctrl+/" Click="MenuToggleComment_Click" />
-                        <Separator Background="{StaticResource BorderDarkBrush}" />
-                        <MenuItem Header="Insert Date / _Time" InputGestureText="F5" Click="MenuInsertDateTime_Click" />
-                    </MenuItem>
+                <MenuItem Header="_View" Style="{StaticResource TopMenuItemStyle}">
+                    <MenuItem x:Name="MenuWordWrap" Header="_Word Wrap" InputGestureText="Alt+Z" IsCheckable="True" Click="MenuWordWrap_Click" />
+                    <MenuItem x:Name="MenuLineNumbers" Header="Show _Line Numbers" InputGestureText="Ctrl+Shift+L" IsCheckable="True" IsChecked="True" Click="MenuLineNumbers_Click" />
+                    <MenuItem x:Name="MenuStatusBarToggle" Header="_Status Bar" IsCheckable="True" IsChecked="True" Click="MenuStatusBarToggle_Click" />
+                    <Separator Background="{StaticResource BorderDarkBrush}" />
+                    <MenuItem Header="Zoom _In" InputGestureText="Ctrl++" Click="MenuZoomIn_Click" />
+                    <MenuItem Header="Zoom _Out" InputGestureText="Ctrl+-" Click="MenuZoomOut_Click" />
+                    <MenuItem Header="_Restore Default Zoom" InputGestureText="Ctrl+0" Click="MenuZoomReset_Click" />
+                    <Separator Background="{StaticResource BorderDarkBrush}" />
+                    <MenuItem x:Name="MenuSyntaxParent" Header="_Syntax Highlighting" />
+                </MenuItem>
 
-                    <MenuItem Header="_Search">
-                        <MenuItem Header="_Find..." InputGestureText="Ctrl+F" Click="MenuFind_Click" />
-                        <MenuItem Header="_Replace..." InputGestureText="Ctrl+H" Click="MenuReplace_Click" />
-                        <MenuItem Header="Find _Next" InputGestureText="F3" Click="MenuFindNext_Click" />
-                        <MenuItem Header="Find _Previous" InputGestureText="Shift+F3" Click="MenuFindPrev_Click" />
-                        <Separator Background="{StaticResource BorderDarkBrush}" />
-                        <MenuItem Header="_Go to Line..." InputGestureText="Ctrl+G" Click="MenuGoToLine_Click" />
-                    </MenuItem>
-
-                    <MenuItem Header="_View">
-                        <MenuItem x:Name="MenuSidebarToggle" Header="Toggle _Sidebar (Explorer)" InputGestureText="Ctrl+B" IsCheckable="True" IsChecked="True" Click="MenuToggleSidebar_Click" />
-                        <MenuItem x:Name="MenuWordWrap" Header="Word _Wrap" InputGestureText="Alt+Z" IsCheckable="True" Click="MenuWordWrap_Click" />
-                        <MenuItem x:Name="MenuLineNumbers" Header="Show _Line Numbers" InputGestureText="Ctrl+Shift+L" IsCheckable="True" IsChecked="True" Click="MenuLineNumbers_Click" />
-                        <Separator Background="{StaticResource BorderDarkBrush}" />
-                        <MenuItem Header="Zoom _In" InputGestureText="Ctrl++" Click="MenuZoomIn_Click" />
-                        <MenuItem Header="Zoom _Out" InputGestureText="Ctrl+-" Click="MenuZoomOut_Click" />
-                        <MenuItem Header="_Reset Zoom (100%)" InputGestureText="Ctrl+0" Click="MenuZoomReset_Click" />
-                        <Separator Background="{StaticResource BorderDarkBrush}" />
-                        <MenuItem x:Name="MenuSyntaxParent" Header="_Syntax Highlighting" />
-                    </MenuItem>
-
-                    <MenuItem Header="_Tools">
-                        <MenuItem Header="Transform Case">
-                            <MenuItem Header="UPPERCASE" InputGestureText="Ctrl+Shift+U" Click="MenuUpper_Click" />
-                            <MenuItem Header="lowercase" InputGestureText="Ctrl+U" Click="MenuLower_Click" />
-                            <MenuItem Header="Title Case" Click="MenuTitleCase_Click" />
-                            <MenuItem Header="iNVERT cASE" Click="MenuInvertCase_Click" />
-                        </MenuItem>
-                        <MenuItem Header="Line Operations">
-                            <MenuItem Header="Sort Lines Ascending (A-Z)" Click="MenuSortAsc_Click" />
-                            <MenuItem Header="Sort Lines Descending (Z-A)" Click="MenuSortDesc_Click" />
-                            <MenuItem Header="Remove Duplicate Lines" Click="MenuRemoveDuplicates_Click" />
-                            <MenuItem Header="Remove Empty Lines" Click="MenuRemoveEmptyLines_Click" />
-                            <MenuItem Header="Trim Trailing Whitespace" Click="MenuTrimWhitespace_Click" />
-                        </MenuItem>
-                        <MenuItem Header="JSON">
-                            <MenuItem Header="Format / Beautify JSON" InputGestureText="Ctrl+Shift+J" Click="MenuFormatJson_Click" />
-                            <MenuItem Header="Minify JSON" Click="MenuMinifyJson_Click" />
-                        </MenuItem>
-                        <MenuItem Header="Encode / Decode">
-                            <MenuItem Header="Base64 Encode" Click="MenuBase64Encode_Click" />
-                            <MenuItem Header="Base64 Decode" Click="MenuBase64Decode_Click" />
-                            <MenuItem Header="URL Encode" Click="MenuUrlEncode_Click" />
-                            <MenuItem Header="URL Decode" Click="MenuUrlDecode_Click" />
-                        </MenuItem>
-                        <Separator Background="{StaticResource BorderDarkBrush}" />
-                        <MenuItem Header="Copy File Path" Click="MenuCopyPath_Click" />
-                        <MenuItem Header="Open in File Explorer" Click="MenuOpenFolder_Click" />
-                    </MenuItem>
-
-                    <MenuItem Header="_Help">
-                        <MenuItem Header="_Keyboard Shortcuts" InputGestureText="F1" Click="MenuShortcuts_Click" />
-                        <Separator Background="{StaticResource BorderDarkBrush}" />
-                        <MenuItem Header="_About NightPad" Click="MenuAbout_Click" />
-                    </MenuItem>
-                </Menu>
-
-                <!-- Quick Action Icons Toolbar -->
-                <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="0,0,8,0">
-                    <Button x:Name="BtnSidebarToggle" Style="{StaticResource ToolbarButton}" Content="📁" ToolTip="Toggle Explorer Sidebar (Ctrl+B)" Click="MenuToggleSidebar_Click" />
-                    <Button Style="{StaticResource ToolbarButton}" Content="📂" ToolTip="Open File (Ctrl+O)" Click="MenuOpen_Click" />
-                    <Button Style="{StaticResource ToolbarButton}" Content="💾" ToolTip="Save (Ctrl+S)" Click="MenuSave_Click" />
-                    <Rectangle Width="1" Height="14" Fill="{StaticResource BorderDarkBrush}" Margin="4,0" VerticalAlignment="Center" />
-                    <Button Style="{StaticResource ToolbarButton}" Content="🔍" ToolTip="Find &amp; Replace (Ctrl+F)" Click="MenuFind_Click" />
-                    <Button Style="{StaticResource ToolbarButton}" Content="↩" ToolTip="Toggle Word Wrap (Alt+Z)" Click="MenuWordWrap_Click" />
-                    <Button x:Name="BtnMarkdownPreview" Style="{StaticResource ToolbarButton}" Content="👁️" ToolTip="Toggle Markdown Live View (Ctrl+Shift+M)" Click="MenuMarkdownPreview_Click" />
-                    <Rectangle Width="1" Height="14" Fill="{StaticResource BorderDarkBrush}" Margin="4,0" VerticalAlignment="Center" />
-                    <Button Style="{StaticResource ToolbarButton}" Content="➖" ToolTip="Zoom Out (Ctrl+-)" Click="MenuZoomOut_Click" />
-                    <Button x:Name="BtnZoomLabel" Style="{StaticResource ToolbarButton}" Content="100%" ToolTip="Reset Zoom (Ctrl+0)" Click="MenuZoomReset_Click" />
-                    <Button Style="{StaticResource ToolbarButton}" Content="➕" ToolTip="Zoom In (Ctrl++)" Click="MenuZoomIn_Click" />
-                </StackPanel>
-            </Grid>
+                <MenuItem Header="_Tools" Style="{StaticResource TopMenuItemStyle}">
+                    <MenuItem Header="UPPERCASE" InputGestureText="Ctrl+Shift+U" Click="MenuUpper_Click" />
+                    <MenuItem Header="lowercase" InputGestureText="Ctrl+U" Click="MenuLower_Click" />
+                    <MenuItem Header="Title Case" Click="MenuTitleCase_Click" />
+                    <Separator Background="{StaticResource BorderDarkBrush}" />
+                    <MenuItem Header="Format JSON" InputGestureText="Ctrl+Shift+J" Click="MenuFormatJson_Click" />
+                    <MenuItem Header="Minify JSON" Click="MenuMinifyJson_Click" />
+                    <Separator Background="{StaticResource BorderDarkBrush}" />
+                    <MenuItem Header="Sort Lines Ascending" Click="MenuSortAsc_Click" />
+                    <MenuItem Header="Sort Lines Descending" Click="MenuSortDesc_Click" />
+                    <MenuItem Header="Remove Duplicate Lines" Click="MenuRemoveDuplicates_Click" />
+                    <MenuItem Header="Remove Empty Lines" Click="MenuRemoveEmptyLines_Click" />
+                    <MenuItem Header="Trim Trailing Whitespace" Click="MenuTrimWhitespace_Click" />
+                    <Separator Background="{StaticResource BorderDarkBrush}" />
+                    <MenuItem Header="Base64 Encode" Click="MenuBase64Encode_Click" />
+                    <MenuItem Header="Base64 Decode" Click="MenuBase64Decode_Click" />
+                    <MenuItem Header="URL Encode" Click="MenuUrlEncode_Click" />
+                    <MenuItem Header="URL Decode" Click="MenuUrlDecode_Click" />
+                </MenuItem>
+            </Menu>
         </Border>
 
         <!-- ROW 2: SEARCH & REPLACE PANEL (Collapsible) -->
-        <Border x:Name="SearchPanel" Grid.Row="2" Background="{StaticResource BgSurfaceBrush}" BorderBrush="{StaticResource BorderDarkBrush}" BorderThickness="0,0,0,1" Padding="8,6" Visibility="Collapsed">
+        <Border x:Name="SearchPanel" Grid.Row="2" Background="{StaticResource BgSurfaceBrush}" BorderBrush="{StaticResource BorderDarkBrush}" BorderThickness="0,0,0,1" Padding="8,5" Visibility="Collapsed">
             <StackPanel Orientation="Vertical">
                 <!-- Find Row -->
                 <Grid Margin="0,0,0,4">
@@ -253,19 +156,19 @@
                     <TextBlock Text="Find:" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="{StaticResource TextSecondaryBrush}" />
                     <TextBox x:Name="TxtSearch" Grid.Column="1" Height="24" TextChanged="TxtSearch_TextChanged" KeyDown="TxtSearch_KeyDown" />
 
-                    <!-- Search Options -->
+                    <!-- Search Controls -->
                     <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="8,0">
-                        <ToggleButton x:Name="ChkMatchCase" Content="Aa" ToolTip="Match Case" Padding="6,2" Margin="0,0,4,0" Click="SearchOption_Click" Background="{StaticResource BgDarkBrush}" Foreground="{StaticResource TextPrimaryBrush}" BorderBrush="{StaticResource BorderDarkBrush}" />
-                        <ToggleButton x:Name="ChkWholeWord" Content="\b" ToolTip="Whole Word" Padding="6,2" Margin="0,0,4,0" Click="SearchOption_Click" Background="{StaticResource BgDarkBrush}" Foreground="{StaticResource TextPrimaryBrush}" BorderBrush="{StaticResource BorderDarkBrush}" />
-                        <ToggleButton x:Name="ChkRegex" Content=".*" ToolTip="Regular Expression" Padding="6,2" Margin="0,0,8,0" Click="SearchOption_Click" Background="{StaticResource BgDarkBrush}" Foreground="{StaticResource TextPrimaryBrush}" BorderBrush="{StaticResource BorderDarkBrush}" />
+                        <ToggleButton x:Name="ChkMatchCase" Content="Match Case" Padding="6,2" Margin="0,0,4,0" Click="SearchOption_Click" Background="{StaticResource BgDarkBrush}" Foreground="{StaticResource TextPrimaryBrush}" BorderBrush="{StaticResource BorderDarkBrush}" />
+                        <ToggleButton x:Name="ChkWholeWord" Content="Whole Word" Padding="6,2" Margin="0,0,4,0" Click="SearchOption_Click" Background="{StaticResource BgDarkBrush}" Foreground="{StaticResource TextPrimaryBrush}" BorderBrush="{StaticResource BorderDarkBrush}" />
+                        <ToggleButton x:Name="ChkRegex" Content="Regex" Padding="6,2" Margin="0,0,8,0" Click="SearchOption_Click" Background="{StaticResource BgDarkBrush}" Foreground="{StaticResource TextPrimaryBrush}" BorderBrush="{StaticResource BorderDarkBrush}" />
                         
-                        <Button Style="{StaticResource NightButton}" Content="▲ Prev" ToolTip="Find Previous (Shift+F3)" Padding="8,2" Margin="0,0,4,0" Click="BtnFindPrev_Click" />
-                        <Button Style="{StaticResource NightButton}" Content="▼ Next" ToolTip="Find Next (F3 / Enter)" Padding="8,2" Margin="0,0,8,0" Click="BtnFindNext_Click" />
+                        <Button Style="{StaticResource NightButton}" Content="Previous" ToolTip="Find Previous (Shift+F3)" Margin="0,0,4,0" Click="BtnFindPrev_Click" />
+                        <Button Style="{StaticResource NightButton}" Content="Next" ToolTip="Find Next (F3 / Enter)" Margin="0,0,8,0" Click="BtnFindNext_Click" />
                         <TextBlock x:Name="LblMatchCount" Text="0 matches" VerticalAlignment="Center" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,8,0" />
                     </StackPanel>
 
                     <!-- Close Search -->
-                    <Button Grid.Column="3" Style="{StaticResource ToolbarButton}" Content="✕" ToolTip="Close (Esc)" Padding="6,2" Click="BtnCloseSearch_Click" />
+                    <Button Grid.Column="3" Style="{StaticResource StatusButton}" Content="Close" Padding="6,2" Click="BtnCloseSearch_Click" />
                 </Grid>
 
                 <!-- Replace Row -->
@@ -280,19 +183,19 @@
                     <TextBox x:Name="TxtReplace" Grid.Column="1" Height="24" KeyDown="TxtReplace_KeyDown" />
 
                     <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="8,0,0,0">
-                        <Button Style="{StaticResource NightButton}" Content="Replace" ToolTip="Replace current match (Alt+R)" Padding="8,2" Margin="0,0,4,0" Click="BtnReplace_Click" />
-                        <Button Style="{StaticResource NightButton}" Content="Replace All" ToolTip="Replace all matches (Alt+A)" Padding="8,2" Click="BtnReplaceAll_Click" />
+                        <Button Style="{StaticResource NightButton}" Content="Replace" Margin="0,0,4,0" Click="BtnReplace_Click" />
+                        <Button Style="{StaticResource NightButton}" Content="Replace All" Click="BtnReplaceAll_Click" />
                     </StackPanel>
                 </Grid>
             </StackPanel>
         </Border>
 
-        <!-- ROW 3: GO TO LINE BAR (Collapsible) -->
+        <!-- ROW 3: GO TO LINE PANEL (Collapsible) -->
         <Border x:Name="GoToLinePanel" Grid.Row="3" Background="{StaticResource BgSurfaceBrush}" BorderBrush="{StaticResource BorderDarkBrush}" BorderThickness="0,0,0,1" Padding="8,4" Visibility="Collapsed">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="150" />
+                    <ColumnDefinition Width="140" />
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
@@ -301,141 +204,56 @@
                 <TextBlock Text="Go to Line:" VerticalAlignment="Center" Margin="0,0,8,0" Foreground="{StaticResource TextSecondaryBrush}" />
                 <TextBox x:Name="TxtGoToLine" Grid.Column="1" Height="24" KeyDown="TxtGoToLine_KeyDown" />
                 <Button Grid.Column="2" Style="{StaticResource NightButton}" Content="Go" Padding="12,2" Margin="8,0,0,0" Click="BtnGoToLine_Click" />
-                <Button Grid.Column="4" Style="{StaticResource ToolbarButton}" Content="✕" ToolTip="Cancel (Esc)" Padding="6,2" Click="BtnCloseGoToLine_Click" />
+                <Button Grid.Column="4" Style="{StaticResource StatusButton}" Content="Close" Click="BtnCloseGoToLine_Click" />
             </Grid>
         </Border>
 
-        <!-- ROW 4: MAIN EDITOR & SIDEBAR AREA -->
+        <!-- ROW 4: MAIN TEXT EDITOR AREA -->
         <Grid Grid.Row="4" Background="{StaticResource BgEditorBrush}">
-            <Grid.ColumnDefinitions>
-                <!-- Column 0: Sidebar File Explorer -->
-                <ColumnDefinition x:Name="ColSidebar" Width="240" MinWidth="150" MaxWidth="500" />
-                <!-- Column 1: Sidebar GridSplitter -->
-                <ColumnDefinition x:Name="ColSidebarSplitter" Width="4" />
-                <!-- Column 2: Editor Column -->
-                <ColumnDefinition Width="*" />
-                <!-- Column 3: Markdown Splitter -->
-                <ColumnDefinition x:Name="ColSplitter" Width="Auto" />
-                <!-- Column 4: Markdown Preview Pane -->
-                <ColumnDefinition x:Name="ColPreview" Width="0" />
-            </Grid.ColumnDefinitions>
-
-            <!-- SIDEBAR FILE EXPLORER (Column 0) -->
-            <Border x:Name="SidebarPanel" Grid.Column="0" Background="{StaticResource BgSurfaceBrush}" BorderBrush="{StaticResource BorderLightBrush}" BorderThickness="0,0,1,0">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <!-- Sidebar Header -->
-                        <RowDefinition Height="32" />
-                        <!-- TreeView Explorer -->
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
-
-                    <!-- Sidebar Header with Actions -->
-                    <Border Grid.Row="0" Background="{StaticResource BgDarkBrush}" BorderBrush="{StaticResource BorderDarkBrush}" BorderThickness="0,0,0,1" Padding="8,4">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
-
-                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="📁 " FontSize="12" />
-                                <TextBlock x:Name="LblWorkspaceName" Text="EXPLORER" FontWeight="Bold" FontSize="11" Foreground="{StaticResource AccentBlueBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" MaxWidth="140" ToolTip="Current Workspace" />
-                            </StackPanel>
-
-                            <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                <Button Style="{StaticResource ToolbarButton}" Content="📂" ToolTip="Open Folder... (Ctrl+Shift+O)" Padding="3,1" Click="MenuOpenFolderDialog_Click" />
-                                <Button Style="{StaticResource ToolbarButton}" Content="🔄" ToolTip="Refresh File Tree" Padding="3,1" Click="BtnRefreshTree_Click" />
-                                <Button Style="{StaticResource ToolbarButton}" Content="◀" ToolTip="Hide Sidebar (Ctrl+B)" Padding="3,1" Click="MenuToggleSidebar_Click" />
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-
-                    <!-- File & Folder TreeView -->
-                    <TreeView x:Name="FileTreeView" Grid.Row="1" ItemsSource="{Binding RootNodes, RelativeSource={RelativeSource AncestorType=local:MainWindow}}" MouseDoubleClick="FileTreeView_MouseDoubleClick" KeyDown="FileTreeView_KeyDown">
-                        <TreeView.ItemTemplate>
-                            <HierarchicalDataTemplate DataType="{x:Type models:FileNode}" ItemsSource="{Binding Children}">
-                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="2,1">
-                                    <TextBlock Text="{Binding Icon}" Margin="0,0,6,0" FontSize="12" VerticalAlignment="Center" />
-                                    <TextBlock Text="{Binding Name}" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                                </StackPanel>
-                            </HierarchicalDataTemplate>
-                        </TreeView.ItemTemplate>
-                        <TreeView.ContextMenu>
-                            <ContextMenu>
-                                <MenuItem Header="Open File in Tab" Click="TreeContextOpen_Click" />
-                                <MenuItem Header="Open in File Explorer" Click="TreeContextOpenInExplorer_Click" />
-                                <MenuItem Header="Copy Full Path" Click="TreeContextCopyPath_Click" />
-                                <Separator Background="{StaticResource BorderDarkBrush}" />
-                                <MenuItem Header="Refresh Tree" Click="BtnRefreshTree_Click" />
-                            </ContextMenu>
-                        </TreeView.ContextMenu>
-                    </TreeView>
-                </Grid>
-            </Border>
-
-            <!-- Grid Splitter for Sidebar (Column 1) -->
-            <GridSplitter x:Name="SidebarSplitter" Grid.Column="1" Width="4" Background="{StaticResource BorderDarkBrush}" HorizontalAlignment="Center" VerticalAlignment="Stretch" Cursor="SizeWE" />
-
-            <!-- AvalonEdit Host Container (Column 2) -->
-            <ContentControl x:Name="EditorHost" Grid.Column="2" />
-
-            <!-- Grid Splitter for Markdown live view (Column 3) -->
-            <GridSplitter x:Name="MarkdownSplitter" Grid.Column="3" Width="4" Background="{StaticResource BorderDarkBrush}" HorizontalAlignment="Center" VerticalAlignment="Stretch" Visibility="Collapsed" />
-
-            <!-- Markdown Preview Pane (Column 4) -->
-            <Border x:Name="MarkdownPreviewPane" Grid.Column="4" Background="{StaticResource BgDarkBrush}" BorderBrush="{StaticResource BorderDarkBrush}" BorderThickness="1,0,0,0" Visibility="Collapsed">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="28" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
-
-                    <Border Grid.Row="0" Background="{StaticResource BgSurfaceBrush}" Padding="8,4">
-                        <TextBlock Text="📖 Markdown Preview" FontWeight="SemiBold" Foreground="{StaticResource AccentBlueBrush}" FontSize="11" />
-                    </Border>
-
-                    <FlowDocumentScrollViewer Grid.Row="1" x:Name="MarkdownViewer" Background="{StaticResource BgDarkBrush}" Foreground="{StaticResource TextPrimaryBrush}" Margin="8" />
-                </Grid>
-            </Border>
+            <avalonEdit:TextEditor x:Name="MainEditor"
+                                   Background="{StaticResource BgEditorBrush}"
+                                   Foreground="{StaticResource TextPrimaryBrush}"
+                                   FontFamily="Cascadia Code, JetBrains Mono, Consolas, Courier New"
+                                   FontSize="14"
+                                   ShowLineNumbers="True"
+                                   WordWrap="False"
+                                   HorizontalScrollBarVisibility="Auto"
+                                   VerticalScrollBarVisibility="Auto"
+                                   BorderThickness="0"
+                                   Padding="6,4,6,4" />
         </Grid>
 
-        <!-- ROW 5: PROFESSIONAL STATUS BAR -->
-        <Border Grid.Row="5" Background="{StaticResource BgSurfaceBrush}" BorderBrush="{StaticResource BorderLightBrush}" BorderThickness="0,1,0,0" Padding="8,0">
+        <!-- ROW 5: CLEAN BOTTOM STATUS BAR -->
+        <Border x:Name="StatusBarBorder" Grid.Row="5" Background="{StaticResource BgSurfaceBrush}" BorderBrush="{StaticResource BorderLightBrush}" BorderThickness="0,1,0,0" Padding="8,0">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <!-- Left: Caret & Selection Stats -->
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
-                    <!-- Right: Auto-Save, Encoding, EOL, Language, Zoom -->
+                    <!-- Right: Encoding, EOL, Language, Zoom -->
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
                 <!-- Left Stats -->
                 <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock x:Name="StatusCaretPos" Text="Ln 1, Col 1" Margin="0,0,12,0" Foreground="{StaticResource TextPrimaryBrush}" />
-                    <TextBlock x:Name="StatusSelection" Text="" Margin="0,0,12,0" Foreground="{StaticResource TextSecondaryBrush}" />
-                    <TextBlock x:Name="StatusDocStats" Text="0 lines, 0 words, 0 chars" Foreground="{StaticResource TextSecondaryBrush}" />
+                    <TextBlock x:Name="StatusCaretPos" Text="Ln 1, Col 1" Margin="0,0,16,0" Foreground="{StaticResource TextPrimaryBrush}" />
+                    <TextBlock x:Name="StatusSelection" Text="" Margin="0,0,16,0" Foreground="{StaticResource TextSecondaryBrush}" />
+                    <TextBlock x:Name="StatusDocStats" Text="1 line, 0 words, 0 chars" Foreground="{StaticResource TextSecondaryBrush}" />
                 </StackPanel>
 
                 <!-- Right Stats -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                    <!-- Auto Save Toggle Button -->
-                    <TextBlock x:Name="StatusAutoSave" Text="💾 Auto-Save: ON" Foreground="{StaticResource AccentGreenBrush}" Margin="0,0,12,0" Cursor="Hand" MouseLeftButtonDown="StatusAutoSave_MouseLeftButtonDown" ToolTip="Click to toggle Auto-Save On/Off" />
+                    <!-- Zoom Level -->
+                    <TextBlock x:Name="StatusZoom" Text="100%" Margin="0,0,16,0" Foreground="{StaticResource TextSecondaryBrush}" Cursor="Hand" MouseLeftButtonDown="StatusZoom_MouseLeftButtonDown" ToolTip="Click to reset zoom" />
 
-                    <TextBlock x:Name="StatusEncoding" Text="UTF-8" Margin="0,0,12,0" Foreground="{StaticResource TextSecondaryBrush}" />
-                    <TextBlock x:Name="StatusEol" Text="CRLF" Margin="0,0,12,0" Foreground="{StaticResource TextSecondaryBrush}" />
+                    <!-- Line Ending -->
+                    <TextBlock x:Name="StatusEol" Text="Windows (CRLF)" Margin="0,0,16,0" Foreground="{StaticResource TextSecondaryBrush}" />
+
+                    <!-- Encoding -->
+                    <TextBlock x:Name="StatusEncoding" Text="UTF-8" Margin="0,0,16,0" Foreground="{StaticResource TextSecondaryBrush}" />
 
                     <!-- Language Syntax Selector -->
-                    <Button x:Name="BtnLanguageSelector" Style="{StaticResource ToolbarButton}" Content="Language: Plain Text ▼" Foreground="{StaticResource AccentBlueBrush}" Margin="0,0,12,0" Padding="4,2" Click="BtnLanguageSelector_Click" />
-
-                    <!-- Zoom Level -->
-                    <TextBlock x:Name="StatusZoom" Text="100%" Margin="0,0,12,0" Foreground="{StaticResource TextSecondaryBrush}" Cursor="Hand" MouseLeftButtonDown="StatusZoom_MouseLeftButtonDown" ToolTip="Click to reset zoom" />
-
-                    <!-- Night Mode Badge -->
-                    <Border Background="{StaticResource BgDarkBrush}" BorderBrush="{StaticResource BorderDarkBrush}" BorderThickness="1" Padding="6,1" Margin="0,0,0,0">
-                        <TextBlock Text="🌙 Night Mode" FontSize="11" Foreground="{StaticResource AccentBlueBrush}" />
-                    </Border>
+                    <Button x:Name="BtnLanguageSelector" Style="{StaticResource StatusButton}" Content="Plain Text" Foreground="{StaticResource AccentBlueBrush}" Padding="4,1" Click="BtnLanguageSelector_Click" />
                 </StackPanel>
             </Grid>
         </Border>
