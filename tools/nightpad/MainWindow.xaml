@@ -35,7 +35,7 @@
             <RowDefinition Height="Auto" />
             <!-- Row 4: Go To Line Panel (Collapsible) -->
             <RowDefinition Height="Auto" />
-            <!-- Row 5: Main Text Editor Area -->
+            <!-- Row 5: Main Text Editor Area & Split Markdown Preview -->
             <RowDefinition Height="*" />
             <!-- Row 6: Clean Bottom Status Bar -->
             <RowDefinition Height="24" />
@@ -47,15 +47,19 @@
                 <Grid.ColumnDefinitions>
                     <!-- Window Title -->
                     <ColumnDefinition Width="*" />
-                    <!-- Window Controls (Min, Max, Close) -->
+                    <!-- Right Actions & Controls -->
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
                 <!-- Document Title -->
                 <TextBlock x:Name="TxtWindowTitle" Grid.Column="0" Text="Untitled - Notepad" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="12,0,0,0" />
 
-                <!-- Window Controls -->
+                <!-- Header Actions & Window Controls -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- Prominent Markdown Review / Live Preview Toggle Button -->
+                    <Button x:Name="BtnHeaderMarkdownPreview" Style="{StaticResource StatusButton}" Content="👁️ Markdown Preview" ToolTip="Toggle Side-by-Side Markdown Live Preview (Ctrl+Shift+M / Alt+M)" Padding="8,3" Margin="0,0,12,0" Foreground="{StaticResource AccentBlueBrush}" Click="BtnToggleMarkdownPreview_Click" />
+
+                    <!-- Window Control Buttons -->
                     <Button Style="{StaticResource WindowControlButton}" Content="─" Click="BtnMinimize_Click" ToolTip="Minimize" />
                     <Button x:Name="BtnMaximize" Style="{StaticResource WindowControlButton}" Content="□" Click="BtnMaximize_Click" ToolTip="Maximize" />
                     <Button Content="✕" Click="BtnClose_Click" ToolTip="Close (Alt+F4)">
@@ -113,6 +117,8 @@
                 </MenuItem>
 
                 <MenuItem Header="_View" Style="{StaticResource TopMenuItemStyle}">
+                    <MenuItem x:Name="MenuMarkdownPreview" Header="Markdown Live _Preview" InputGestureText="Ctrl+Shift+M" IsCheckable="True" Click="MenuMarkdownPreview_Click" />
+                    <Separator Background="{StaticResource BorderDarkBrush}" />
                     <MenuItem x:Name="MenuWordWrap" Header="_Word Wrap" InputGestureText="Alt+Z" IsCheckable="True" Click="MenuWordWrap_Click" />
                     <MenuItem x:Name="MenuLineNumbers" Header="Show _Line Numbers" InputGestureText="Ctrl+Shift+L" IsCheckable="True" IsChecked="True" Click="MenuLineNumbers_Click" />
                     <MenuItem x:Name="MenuStatusBarToggle" Header="_Status Bar" IsCheckable="True" IsChecked="True" Click="MenuStatusBarToggle_Click" />
@@ -266,9 +272,20 @@
             </Grid>
         </Border>
 
-        <!-- ROW 5: MAIN TEXT EDITOR AREA -->
+        <!-- ROW 5: MAIN TEXT EDITOR AREA & SIDE-BY-SIDE MARKDOWN PREVIEW -->
         <Grid Grid.Row="5" Background="{StaticResource BgEditorBrush}">
+            <Grid.ColumnDefinitions>
+                <!-- Editor Column (Left) -->
+                <ColumnDefinition x:Name="ColEditor" Width="*" MinWidth="200" />
+                <!-- Splitter Column -->
+                <ColumnDefinition x:Name="ColSplitter" Width="Auto" />
+                <!-- Markdown Preview Column (Right) -->
+                <ColumnDefinition x:Name="ColPreview" Width="0" MinWidth="0" />
+            </Grid.ColumnDefinitions>
+
+            <!-- AvalonEdit Text Editor -->
             <avalonEdit:TextEditor x:Name="MainEditor"
+                                   Grid.Column="0"
                                    Background="{StaticResource BgEditorBrush}"
                                    Foreground="{StaticResource TextPrimaryBrush}"
                                    FontFamily="Cascadia Code, Segoe UI, Cairo, Tahoma, Consolas, Arial"
@@ -280,6 +297,60 @@
                                    BorderThickness="0"
                                    Padding="6,4,6,4"
                                    Loaded="MainEditor_Loaded" />
+
+            <!-- Grid Splitter for Resizable Preview -->
+            <GridSplitter x:Name="PreviewSplitter"
+                          Grid.Column="1"
+                          Width="4"
+                          HorizontalAlignment="Center"
+                          VerticalAlignment="Stretch"
+                          Background="{StaticResource BorderDarkBrush}"
+                          ShowsPreview="True"
+                          Visibility="Collapsed" />
+
+            <!-- Markdown Live Preview Container -->
+            <Border x:Name="PreviewContainer"
+                    Grid.Column="2"
+                    Background="{StaticResource BgSurfaceBrush}"
+                    BorderBrush="{StaticResource BorderDarkBrush}"
+                    BorderThickness="1,0,0,0"
+                    Visibility="Collapsed">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="28" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <!-- Preview Header Bar -->
+                    <Border Grid.Row="0" Background="{StaticResource BgDarkBrush}" BorderBrush="{StaticResource BorderDarkBrush}" BorderThickness="0,0,0,1" Padding="8,0">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                <TextBlock Text="👁️" FontSize="11" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                <TextBlock Text="Markdown Live Preview" FontSize="11" FontWeight="SemiBold" Foreground="{StaticResource AccentBlueBrush}" VerticalAlignment="Center" />
+                            </StackPanel>
+
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Button Style="{StaticResource StatusButton}" Content="✕" ToolTip="Close Preview (Ctrl+Shift+M / Alt+M)" Padding="6,2" Click="BtnClosePreview_Click" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
+                    <!-- FlowDocument ScrollViewer for Rendered Markdown -->
+                    <FlowDocumentScrollViewer x:Name="MarkdownViewer"
+                                              Grid.Row="1"
+                                              Background="{StaticResource BgSurfaceBrush}"
+                                              Foreground="{StaticResource TextPrimaryBrush}"
+                                              HorizontalScrollBarVisibility="Disabled"
+                                              VerticalScrollBarVisibility="Auto"
+                                              IsToolBarVisible="False"
+                                              Padding="8,6" />
+                </Grid>
+            </Border>
         </Grid>
 
         <!-- ROW 6: CLEAN BOTTOM STATUS BAR -->
@@ -289,7 +360,7 @@
                     <!-- Left: Caret & Selection Stats -->
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
-                    <!-- Right: Direction, Encoding, EOL, Language, Zoom -->
+                    <!-- Right: MD Toggle, Direction, Encoding, EOL, Language, Zoom -->
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
@@ -302,6 +373,9 @@
 
                 <!-- Right Stats -->
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <!-- Markdown Preview Toggle Button in Status Bar -->
+                    <Button x:Name="BtnStatusMarkdownPreview" Style="{StaticResource StatusButton}" Content="👁️ MD Preview" ToolTip="Toggle Markdown Live Preview (Ctrl+Shift+M / Alt+M)" Margin="0,0,12,0" Foreground="{StaticResource AccentBlueBrush}" Click="BtnToggleMarkdownPreview_Click" />
+
                     <!-- Text Direction Toggle Button (LTR / RTL) -->
                     <Button x:Name="BtnDirectionToggle" Style="{StaticResource StatusButton}" Content="LTR" ToolTip="Text Direction: Left-To-Right (Click or press Ctrl+Shift+R to toggle RTL / عربي)" Margin="0,0,12,0" Foreground="{StaticResource AccentBlueBrush}" Click="BtnToggleDirection_Click" />
 

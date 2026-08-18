@@ -100,6 +100,11 @@ public partial class MainWindow : Window
 
             CheckAutoArabicDetection();
             UpdateStatusBar();
+
+            if (PreviewContainer.Visibility == Visibility.Visible)
+            {
+                UpdateMarkdownPreview();
+            }
         };
 
         MainEditor.TextArea.Caret.PositionChanged += (s, e) => UpdateStatusBar();
@@ -118,7 +123,8 @@ public partial class MainWindow : Window
         // Smart Python indentation & Enter handling
         MainEditor.TextArea.PreviewKeyDown += (s, e) =>
         {
-            if (e.Key == Key.Enter && Keyboard.Modifiers == ModifierKeys.None)
+            var key = e.Key == Key.System ? e.SystemKey : e.Key;
+            if (key == Key.Enter && Keyboard.Modifiers == ModifierKeys.None)
             {
                 var curLine = MainEditor.Document.GetLineByNumber(MainEditor.TextArea.Caret.Line);
                 string lineText = MainEditor.Document.GetText(curLine.Offset, MainEditor.CaretOffset - curLine.Offset);
@@ -177,6 +183,12 @@ public partial class MainWindow : Window
             CheckAutoArabicDetection();
             UpdateTitle();
             UpdateStatusBar();
+
+            if (PreviewContainer.Visibility == Visibility.Visible)
+            {
+                UpdateMarkdownPreview();
+            }
+
             FocusEditor();
         }
         catch (Exception ex)
@@ -199,6 +211,12 @@ public partial class MainWindow : Window
         SetTextDirection(FlowDirection.LeftToRight);
         UpdateTitle();
         UpdateStatusBar();
+
+        if (PreviewContainer.Visibility == Visibility.Visible)
+        {
+            UpdateMarkdownPreview();
+        }
+
         FocusEditor();
     }
 
@@ -303,42 +321,43 @@ public partial class MainWindow : Window
 
     private void TxtQuickSavePath_PreviewKeyDown(object sender, KeyEventArgs e)
     {
-        if (e.Key == Key.Tab)
+        var key = e.Key == Key.System ? e.SystemKey : e.Key;
+        if (key == Key.Tab)
         {
             e.Handled = true;
             HandlePathTabCompletion();
         }
-        else if (e.Key == Key.Escape)
+        else if (key == Key.Escape)
         {
             e.Handled = true;
             CloseQuickSave();
         }
-        else if (e.Key == Key.Enter)
+        else if (key == Key.Enter)
         {
             e.Handled = true;
             ConfirmQuickSave();
         }
-        else if (e.Key == Key.F1)
+        else if (key == Key.F1)
         {
             e.Handled = true;
             ApplyPresetDirectory(Environment.CurrentDirectory);
         }
-        else if (e.Key == Key.F2)
+        else if (key == Key.F2)
         {
             e.Handled = true;
             ApplyPresetDirectory(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments));
         }
-        else if (e.Key == Key.F3)
+        else if (key == Key.F3)
         {
             e.Handled = true;
             ApplyPresetDirectory(Environment.GetFolderPath(Environment.SpecialFolder.Desktop));
         }
-        else if (e.Key == Key.F4)
+        else if (key == Key.F4)
         {
             e.Handled = true;
             ApplyPresetDirectory(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "myenv"));
         }
-        else if (e.Key != Key.LeftShift && e.Key != Key.RightShift && e.Key != Key.LeftCtrl && e.Key != Key.RightCtrl)
+        else if (key != Key.LeftShift && key != Key.RightShift && key != Key.LeftCtrl && key != Key.RightCtrl)
         {
             ResetCompletion();
         }
@@ -424,11 +443,11 @@ public partial class MainWindow : Window
         }
         else if (Directory.Exists(dir))
         {
-            LblQuickSaveStatus.Text = $"Directory exists ✓ | Press Enter to save";
+            LblQuickSaveStatus.Text = "Directory exists ✓ | Press Enter to save";
         }
         else
         {
-            LblQuickSaveStatus.Text = $"📁 New directory: will create on save | Press Enter to save";
+            LblQuickSaveStatus.Text = "📁 New directory: will create on save | Press Enter to save";
         }
     }
 
@@ -558,6 +577,45 @@ public partial class MainWindow : Window
 
     #endregion
 
+    #region Markdown Live Preview
+
+    public void ToggleMarkdownPreview()
+    {
+        bool isCurrentlyVisible = PreviewContainer.Visibility == Visibility.Visible;
+        if (isCurrentlyVisible)
+        {
+            PreviewContainer.Visibility = Visibility.Collapsed;
+            PreviewSplitter.Visibility = Visibility.Collapsed;
+            ColPreview.Width = new GridLength(0);
+            MenuMarkdownPreview.IsChecked = false;
+            BtnHeaderMarkdownPreview.Content = "👁️ Markdown Preview";
+            BtnStatusMarkdownPreview.Foreground = (SolidColorBrush)FindResource("AccentBlueBrush");
+            FocusEditor();
+        }
+        else
+        {
+            PreviewContainer.Visibility = Visibility.Visible;
+            PreviewSplitter.Visibility = Visibility.Visible;
+            ColPreview.Width = new GridLength(1, GridUnitType.Star);
+            MenuMarkdownPreview.IsChecked = true;
+            BtnHeaderMarkdownPreview.Content = "✕ Close Preview";
+            BtnStatusMarkdownPreview.Foreground = (SolidColorBrush)FindResource("AccentRedBrush");
+            UpdateMarkdownPreview();
+        }
+    }
+
+    private void UpdateMarkdownPreview()
+    {
+        bool isRtl = MainEditor.FlowDirection == FlowDirection.RightToLeft;
+        MarkdownViewer.Document = MarkdownRenderService.Render(MainEditor.Document.Text, isRtl);
+    }
+
+    private void BtnToggleMarkdownPreview_Click(object sender, RoutedEventArgs e) => ToggleMarkdownPreview();
+    private void MenuMarkdownPreview_Click(object sender, RoutedEventArgs e) => ToggleMarkdownPreview();
+    private void BtnClosePreview_Click(object sender, RoutedEventArgs e) => ToggleMarkdownPreview();
+
+    #endregion
+
     #region Arabic & Text Direction Support
 
     private void SetTextDirection(FlowDirection direction)
@@ -574,6 +632,11 @@ public partial class MainWindow : Window
         BtnDirectionToggle.ToolTip = isRtl
             ? "Text Direction: Right-To-Left (عربي) - Click or Ctrl+Shift+R to toggle LTR"
             : "Text Direction: Left-To-Right - Click or Ctrl+Shift+R to toggle RTL / عربي";
+
+        if (PreviewContainer.Visibility == Visibility.Visible)
+        {
+            UpdateMarkdownPreview();
+        }
     }
 
     public void ToggleTextDirection()
@@ -705,7 +768,8 @@ public partial class MainWindow : Window
 
     private void TxtSearch_KeyDown(object sender, KeyEventArgs e)
     {
-        if (e.Key == Key.Enter)
+        var key = e.Key == Key.System ? e.SystemKey : e.Key;
+        if (key == Key.Enter)
         {
             e.Handled = true;
             if (Keyboard.Modifiers == ModifierKeys.Shift)
@@ -713,7 +777,7 @@ public partial class MainWindow : Window
             else
                 FindNext();
         }
-        else if (e.Key == Key.Escape)
+        else if (key == Key.Escape)
         {
             e.Handled = true;
             BtnCloseSearch_Click(sender, e);
@@ -722,12 +786,13 @@ public partial class MainWindow : Window
 
     private void TxtReplace_KeyDown(object sender, KeyEventArgs e)
     {
-        if (e.Key == Key.Enter)
+        var key = e.Key == Key.System ? e.SystemKey : e.Key;
+        if (key == Key.Enter)
         {
             e.Handled = true;
             ReplaceCurrent();
         }
-        else if (e.Key == Key.Escape)
+        else if (key == Key.Escape)
         {
             e.Handled = true;
             BtnCloseSearch_Click(sender, e);
@@ -895,12 +960,13 @@ public partial class MainWindow : Window
 
     private void TxtGoToLine_KeyDown(object sender, KeyEventArgs e)
     {
-        if (e.Key == Key.Enter)
+        var key = e.Key == Key.System ? e.SystemKey : e.Key;
+        if (key == Key.Enter)
         {
             e.Handled = true;
             ExecuteGoToLine();
         }
-        else if (e.Key == Key.Escape)
+        else if (key == Key.Escape)
         {
             e.Handled = true;
             BtnCloseGoToLine_Click(sender, e);
@@ -1151,76 +1217,110 @@ public partial class MainWindow : Window
 
     private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
     {
-        if (Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Alt))
+        var key = e.Key == Key.System ? e.SystemKey : e.Key;
+        var modifiers = Keyboard.Modifiers;
+
+        // Check Control + Alt combinations
+        if (modifiers.HasFlag(ModifierKeys.Control) && modifiers.HasFlag(ModifierKeys.Alt))
         {
-            if (e.Key == Key.S) { e.Handled = true; SaveAsDialog(); }
+            if (key == Key.S) { e.Handled = true; SaveAsDialog(); return; }
         }
-        else if (Keyboard.Modifiers == (ModifierKeys.Control | ModifierKeys.Shift))
+
+        // Check Control + Shift combinations
+        if (modifiers.HasFlag(ModifierKeys.Control) && modifiers.HasFlag(ModifierKeys.Shift))
         {
-            if (e.Key == Key.S) { e.Handled = true; ShowQuickSave(); }
-            else if (e.Key == Key.R) { e.Handled = true; ToggleTextDirection(); }
-            else if (e.Key == Key.L) { e.Handled = true; MenuLineNumbers.IsChecked = !MenuLineNumbers.IsChecked; MenuLineNumbers_Click(sender, e); }
-            else if (e.Key == Key.K) { e.Handled = true; MenuDeleteLine_Click(sender, e); }
-            else if (e.Key == Key.J) { e.Handled = true; MenuFormatJson_Click(sender, e); }
-            else if (e.Key == Key.U) { e.Handled = true; MenuUpper_Click(sender, e); }
+            if (key == Key.S) { e.Handled = true; ShowQuickSave(); return; }
+            if (key == Key.M) { e.Handled = true; ToggleMarkdownPreview(); return; }
+            if (key == Key.R) { e.Handled = true; ToggleTextDirection(); return; }
+            if (key == Key.L) { e.Handled = true; MenuLineNumbers.IsChecked = !MenuLineNumbers.IsChecked; MenuLineNumbers_Click(sender, e); return; }
+            if (key == Key.K) { e.Handled = true; MenuDeleteLine_Click(sender, e); return; }
+            if (key == Key.J) { e.Handled = true; MenuFormatJson_Click(sender, e); return; }
+            if (key == Key.U) { e.Handled = true; MenuUpper_Click(sender, e); return; }
         }
-        else if (Keyboard.Modifiers == ModifierKeys.Control)
+
+        // Check Control combinations
+        if (modifiers.HasFlag(ModifierKeys.Control) && !modifiers.HasFlag(ModifierKeys.Shift) && !modifiers.HasFlag(ModifierKeys.Alt))
         {
-            if (e.Key == Key.N) { e.Handled = true; NewFile(); }
-            else if (e.Key == Key.O) { e.Handled = true; MenuOpen_Click(sender, e); }
-            else if (e.Key == Key.S) { e.Handled = true; SaveFile(); }
-            else if (e.Key == Key.F) { e.Handled = true; MenuFind_Click(sender, e); }
-            else if (e.Key == Key.H) { e.Handled = true; MenuReplace_Click(sender, e); }
-            else if (e.Key == Key.G) { e.Handled = true; MenuGoToLine_Click(sender, e); }
-            else if (e.Key == Key.D) { e.Handled = true; MenuDuplicateLine_Click(sender, e); }
-            else if (e.Key == Key.OemQuestion) { e.Handled = true; MenuToggleComment_Click(sender, e); }
-            else if (e.Key == Key.Add || e.Key == Key.OemPlus) { e.Handled = true; ZoomIn(); }
-            else if (e.Key == Key.Subtract || e.Key == Key.OemMinus) { e.Handled = true; ZoomOut(); }
-            else if (e.Key == Key.D0 || e.Key == Key.NumPad0) { e.Handled = true; ZoomReset(); }
+            if (key == Key.N) { e.Handled = true; NewFile(); return; }
+            if (key == Key.O) { e.Handled = true; MenuOpen_Click(sender, e); return; }
+            if (key == Key.S) { e.Handled = true; SaveFile(); return; }
+            if (key == Key.F) { e.Handled = true; MenuFind_Click(sender, e); return; }
+            if (key == Key.H) { e.Handled = true; MenuReplace_Click(sender, e); return; }
+            if (key == Key.G) { e.Handled = true; MenuGoToLine_Click(sender, e); return; }
+            if (key == Key.D) { e.Handled = true; MenuDuplicateLine_Click(sender, e); return; }
+            if (key is Key.OemQuestion or Key.Divide) { e.Handled = true; MenuToggleComment_Click(sender, e); return; }
+            if (key is Key.Add or Key.OemPlus) { e.Handled = true; ZoomIn(); return; }
+            if (key is Key.Subtract or Key.OemMinus) { e.Handled = true; ZoomOut(); return; }
+            if (key is Key.D0 or Key.NumPad0) { e.Handled = true; ZoomReset(); return; }
         }
-        else if (Keyboard.Modifiers == ModifierKeys.Alt)
+
+        // Check Alt combinations (using resolved key)
+        if (modifiers.HasFlag(ModifierKeys.Alt) && !modifiers.HasFlag(ModifierKeys.Control) && !modifiers.HasFlag(ModifierKeys.Shift))
         {
-            if (e.Key == Key.Z) { e.Handled = true; MenuWordWrap.IsChecked = !MenuWordWrap.IsChecked; MenuWordWrap_Click(sender, e); }
-            else if (e.Key == Key.Up) { e.Handled = true; MenuMoveLineUp_Click(sender, e); }
-            else if (e.Key == Key.Down) { e.Handled = true; MenuMoveLineDown_Click(sender, e); }
-            else if (e.Key == Key.S) { e.Handled = true; ShowQuickSave(); }
+            if (key == Key.Z) { e.Handled = true; MenuWordWrap.IsChecked = !MenuWordWrap.IsChecked; MenuWordWrap_Click(sender, e); return; }
+            if (key == Key.M) { e.Handled = true; ToggleMarkdownPreview(); return; }
+            if (key == Key.Up) { e.Handled = true; MenuMoveLineUp_Click(sender, e); return; }
+            if (key == Key.Down) { e.Handled = true; MenuMoveLineDown_Click(sender, e); return; }
+            if (key == Key.S) { e.Handled = true; ShowQuickSave(); return; }
         }
-        else if (e.Key == Key.F2)
+
+        // Single key shortcuts
+        if (modifiers == ModifierKeys.None)
         {
-            if (QuickSavePanel.Visibility != Visibility.Visible)
+            if (key == Key.F2)
+            {
+                if (QuickSavePanel.Visibility != Visibility.Visible)
+                {
+                    e.Handled = true;
+                    ShowQuickSave();
+                    return;
+                }
+            }
+            else if (key == Key.F3)
             {
                 e.Handled = true;
-                ShowQuickSave();
+                FindNext();
+                return;
+            }
+            else if (key == Key.F5)
+            {
+                e.Handled = true;
+                MenuInsertDateTime_Click(sender, e);
+                return;
+            }
+            else if (key == Key.Escape)
+            {
+                if (QuickSavePanel.Visibility == Visibility.Visible)
+                {
+                    e.Handled = true;
+                    CloseQuickSave();
+                    return;
+                }
+                if (SearchPanel.Visibility == Visibility.Visible)
+                {
+                    e.Handled = true;
+                    BtnCloseSearch_Click(sender, e);
+                    return;
+                }
+                if (GoToLinePanel.Visibility == Visibility.Visible)
+                {
+                    e.Handled = true;
+                    BtnCloseGoToLine_Click(sender, e);
+                    return;
+                }
+                if (PreviewContainer.Visibility == Visibility.Visible)
+                {
+                    e.Handled = true;
+                    ToggleMarkdownPreview();
+                    return;
+                }
             }
         }
-        else if (e.Key == Key.F3)
+        else if (modifiers == ModifierKeys.Shift && key == Key.F3)
         {
             e.Handled = true;
-            if (Keyboard.Modifiers == ModifierKeys.Shift) FindPrevious();
-            else FindNext();
-        }
-        else if (e.Key == Key.F5)
-        {
-            e.Handled = true;
-            MenuInsertDateTime_Click(sender, e);
-        }
-        else if (e.Key == Key.Escape)
-        {
-            if (QuickSavePanel.Visibility == Visibility.Visible)
-            {
-                e.Handled = true;
-                CloseQuickSave();
-            }
-            else if (SearchPanel.Visibility == Visibility.Visible)
-            {
-                e.Handled = true;
-                BtnCloseSearch_Click(sender, e);
-            }
-            else if (GoToLinePanel.Visibility == Visibility.Visible)
-            {
-                e.Handled = true;
-                BtnCloseGoToLine_Click(sender, e);
-            }
+            FindPrevious();
+            return;
         }
     }
 
