@@ -460,6 +460,7 @@ function cpf {
     # VS CODE STYLE IN-PLACE INTERACTIVE TREE EXPLORER (Default)
     # =========================================================================
     $expandedFolders = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    $lastTargetRel = ''
 
     function Build-TreeRows($targetDir, $depth, $baseRel) {
         $rows = [System.Collections.Generic.List[string]]::new()
@@ -507,6 +508,18 @@ function cpf {
             return
         }
 
+        # Calculate exact cursor position to preserve motion location
+        $posIndex = 1
+        if (-not [string]::IsNullOrWhiteSpace($lastTargetRel)) {
+            for ($i = 0; $i -lt $treeList.Count; $i++) {
+                $entryRel = $treeList[$i].Split("`t")[0]
+                if ($entryRel -ieq $lastTargetRel) {
+                    $posIndex = $i + 1
+                    break
+                }
+            }
+        }
+
         # Prompt & Header
         $baseLen = $currentLocation.TrimEnd('\', '/').Length
         $relDisplay = if ($searchTarget.StartsWith($currentLocation, [System.StringComparison]::OrdinalIgnoreCase)) {
@@ -527,7 +540,8 @@ function cpf {
             --delimiter="`t" `
             --with-nth=2 `
             --expect=right,left,alt-enter,ctrl-y `
-            --bind="ctrl-a:select-all,ctrl-d:deselect-all,left:accept,right:accept"
+            --sync `
+            --bind="start:pos($posIndex),ctrl-a:select-all,ctrl-d:deselect-all,left:accept,right:accept"
 
         # User pressed Esc or cancelled
         if ($null -eq $fzfOutput) {
@@ -621,6 +635,9 @@ function cpf {
         $display = if ($parts.Count -gt 1) { $parts[1] } else { '' }
         $isFolder = $display.Trim().EndsWith('/') -or (Test-Path -LiteralPath (Join-Path $searchTarget $targetRel) -PathType Container)
 
+        # Record position so cursor stays exactly on this item
+        $lastTargetRel = $targetRel
+
         # Handle Left Arrow Key (Collapse folder or collapse parent)
         if ($key -eq 'left') {
             if ($isFolder -and $expandedFolders.Contains($targetRel)) {
@@ -630,11 +647,13 @@ function cpf {
                 $subPrefix = "$targetRel/"
                 $toRemove = @($expandedFolders | Where-Object { $_.StartsWith($subPrefix, [System.StringComparison]::OrdinalIgnoreCase) })
                 foreach ($tr in $toRemove) { [void]$expandedFolders.Remove($tr) }
+                $lastTargetRel = $targetRel
             } elseif ($targetRel.Contains('/')) {
                 # Collapse parent folder
                 $parentRel = [System.IO.Path]::GetDirectoryName($targetRel.Replace('/', '\')).Replace('\', '/')
                 if (-not [string]::IsNullOrWhiteSpace($parentRel)) {
                     [void]$expandedFolders.Remove($parentRel)
+                    $lastTargetRel = $parentRel
                 }
             }
             continue
@@ -643,6 +662,7 @@ function cpf {
         # Handle Right Arrow Key on a Folder (Expand in-place)
         if ($key -eq 'right' -and $isFolder) {
             [void]$expandedFolders.Add($targetRel)
+            $lastTargetRel = $targetRel
             continue
         }
 
@@ -656,6 +676,7 @@ function cpf {
             } else {
                 [void]$expandedFolders.Add($targetRel)
             }
+            $lastTargetRel = $targetRel
             continue
         }
 
