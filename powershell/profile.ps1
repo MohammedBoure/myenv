@@ -1,6 +1,4 @@
 # myenv - single source of truth for Windows PowerShell
-if ($global:MyEnvPowerShellProfileLoaded) { return }
-$global:MyEnvPowerShellProfileLoaded = $true
 
 $utf8 = New-Object System.Text.UTF8Encoding($false)
 try {

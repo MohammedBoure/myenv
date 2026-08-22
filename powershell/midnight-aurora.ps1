@@ -479,8 +479,10 @@ function cpf {
                 $rows.Add("$rel`t$indent$icon$($d.Name)/")
 
                 if ($isExp) {
-                    $childRows = Build-TreeRows $d.FullName ($depth + 1) $rel
-                    foreach ($cr in $childRows) { $rows.Add($cr) }
+                    $childRows = @(Build-TreeRows $d.FullName ($depth + 1) $rel)
+                    foreach ($cr in $childRows) {
+                        if (-not [string]::IsNullOrWhiteSpace($cr)) { $rows.Add("$cr") }
+                    }
                 }
             }
         } catch {}
@@ -497,11 +499,11 @@ function cpf {
             }
         } catch {}
 
-        return $rows
+        return ,$rows.ToArray()
     }
 
     while ($true) {
-        $treeList = Build-TreeRows $searchTarget 0 ''
+        [string[]]$treeList = @(Build-TreeRows $searchTarget 0 '')
 
         if ($treeList.Count -eq 0) {
             Write-Host "Folder is empty: $searchTarget" -ForegroundColor Yellow
@@ -512,10 +514,13 @@ function cpf {
         $posIndex = 1
         if (-not [string]::IsNullOrWhiteSpace($lastTargetRel)) {
             for ($i = 0; $i -lt $treeList.Count; $i++) {
-                $entryRel = $treeList[$i].Split("`t")[0]
-                if ($entryRel -ieq $lastTargetRel) {
-                    $posIndex = $i + 1
-                    break
+                $rowStr = "$($treeList[$i])"
+                if ($rowStr.Contains("`t")) {
+                    $entryRel = $rowStr.Split("`t")[0]
+                    if ($entryRel -ieq $lastTargetRel) {
+                        $posIndex = $i + 1
+                        break
+                    }
                 }
             }
         }
