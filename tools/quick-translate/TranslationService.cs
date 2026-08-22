@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Concurrent;
+using System.Net;
 using System.Net.Http;
 using System.Text.Json;
 using System.Text.RegularExpressions;
@@ -16,13 +17,21 @@ namespace QuickTranslate {
     }
 
     public static class TranslationService {
-        private static readonly HttpClient client = new HttpClient {
-            Timeout = TimeSpan.FromSeconds(5)
-        };
+        private static readonly HttpClient client;
 
         // Fast in-memory cache to make typing/backspacing instant and avoid redundant network calls
         private static readonly ConcurrentDictionary<string, TranslationResult> cache = new(StringComparer.OrdinalIgnoreCase);
-        private const int MaxCacheSize = 250;
+        private const int MaxCacheSize = 300;
+
+        static TranslationService() {
+            var handler = new HttpClientHandler {
+                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
+            };
+            client = new HttpClient(handler) {
+                Timeout = TimeSpan.FromSeconds(4)
+            };
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
+        }
 
         public static bool ContainsArabic(string text) {
             if (string.IsNullOrEmpty(text)) return false;
@@ -56,25 +65,75 @@ namespace QuickTranslate {
                 };
             }
 
+            // -----------------------------------------------------------------
+            // Tier 1: Google Dict Chrome Extension API (Fastest & Most Reliable)
+            // -----------------------------------------------------------------
             try {
-                // Free Google Translate single endpoint
-                string url = $"https://translate.googleapis.com/translate_a/single?client=gtx&sl={Uri.EscapeDataString(sourceLang)}&tl={Uri.EscapeDataString(targetLang)}&dt=t&q={Uri.EscapeDataString(text)}";
-                
-                client.DefaultRequestHeaders.UserAgent.Clear();
-                client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
-                
-                HttpResponseMessage response = await client.GetAsync(url);
-                response.EnsureSuccessStatusCode();
-
-                string jsonString = await response.Content.ReadAsStringAsync();
-                using (JsonDocument doc = JsonDocument.Parse(jsonString)) {
+                string url = $"https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl={Uri.EscapeDataString(sourceLang)}&tl={Uri.EscapeDataString(targetLang)}&q={Uri.EscapeDataString(text)}";
+                using var response = await client.GetAsync(url);
+                if (response.IsSuccessStatusCode) {
+                    string jsonString = await response.Content.ReadAsStringAsync();
+                    using var doc = JsonDocument.Parse(jsonString);
                     var root = doc.RootElement;
-                    
-                    // Parse translation sentences from json array root[0]
+                    if (root.ValueKind == JsonValueKind.Array && root.GetArrayLength() > 0) {
+                        string? translated = root[0].GetString();
+                        if (!string.IsNullOrWhiteSpace(translated)) {
+                            result.TranslatedText = WebUtility.HtmlDecode(translated.Trim());
+                            if (root.GetArrayLength() > 1) {
+                                string? detected = root[1].GetString();
+                                if (!string.IsNullOrEmpty(detected)) {
+                                    result.SourceLanguage = detected.ToUpperInvariant();
+                                }
+                            }
+                            result.IsSuccess = true;
+                            SaveToCache(cacheKey, result);
+                            return result;
+                        }
+                    }
+                }
+            } catch {
+                // Failover to next engine
+            }
+
+            // -----------------------------------------------------------------
+            // Tier 2: MyMemory Translation API (Independent High-Availability Fallback)
+            // -----------------------------------------------------------------
+            try {
+                string src = sourceLang == "auto" ? (ContainsArabic(text) ? "ar" : "en") : sourceLang;
+                string url = $"https://api.mymemory.translated.net/get?q={Uri.EscapeDataString(text)}&langpair={Uri.EscapeDataString(src)}|{Uri.EscapeDataString(targetLang)}";
+                using var response = await client.GetAsync(url);
+                if (response.IsSuccessStatusCode) {
+                    string jsonString = await response.Content.ReadAsStringAsync();
+                    using var doc = JsonDocument.Parse(jsonString);
+                    if (doc.RootElement.TryGetProperty("responseData", out var respData) &&
+                        respData.TryGetProperty("translatedText", out var transProp)) {
+                        string? translated = transProp.GetString();
+                        if (!string.IsNullOrWhiteSpace(translated) && !translated.StartsWith("MYMEMORY WARNING")) {
+                            result.TranslatedText = WebUtility.HtmlDecode(translated.Trim());
+                            result.SourceLanguage = src.ToUpperInvariant();
+                            result.IsSuccess = true;
+                            SaveToCache(cacheKey, result);
+                            return result;
+                        }
+                    }
+                }
+            } catch {
+                // Failover to next engine
+            }
+
+            // -----------------------------------------------------------------
+            // Tier 3: Google Single GTX API
+            // -----------------------------------------------------------------
+            try {
+                string url = $"https://translate.googleapis.com/translate_a/single?client=gtx&sl={Uri.EscapeDataString(sourceLang)}&tl={Uri.EscapeDataString(targetLang)}&dt=t&q={Uri.EscapeDataString(text)}";
+                using var response = await client.GetAsync(url);
+                if (response.IsSuccessStatusCode) {
+                    string jsonString = await response.Content.ReadAsStringAsync();
+                    using var doc = JsonDocument.Parse(jsonString);
+                    var root = doc.RootElement;
                     if (root.ValueKind == JsonValueKind.Array && root.GetArrayLength() > 0) {
                         var sentences = root[0];
                         string fullTranslation = "";
-                        
                         if (sentences.ValueKind == JsonValueKind.Array) {
                             foreach (var item in sentences.EnumerateArray()) {
                                 if (item.ValueKind == JsonValueKind.Array && item.GetArrayLength() > 0) {
@@ -83,34 +142,34 @@ namespace QuickTranslate {
                             }
                         }
 
-                        // Read detected source language from root[2]
-                        if (root.GetArrayLength() > 2) {
-                            string? detectedLang = root[2].GetString();
-                            if (!string.IsNullOrEmpty(detectedLang)) {
-                                result.SourceLanguage = detectedLang.ToUpperInvariant();
+                        if (!string.IsNullOrWhiteSpace(fullTranslation)) {
+                            result.TranslatedText = WebUtility.HtmlDecode(fullTranslation.Trim());
+                            if (root.GetArrayLength() > 2) {
+                                string? detectedLang = root[2].GetString();
+                                if (!string.IsNullOrEmpty(detectedLang)) {
+                                    result.SourceLanguage = detectedLang.ToUpperInvariant();
+                                }
                             }
+                            result.IsSuccess = true;
+                            SaveToCache(cacheKey, result);
+                            return result;
                         }
-
-                        result.TranslatedText = fullTranslation.Trim();
-                        result.IsSuccess = true;
-
-                        // Cache result
-                        if (cache.Count >= MaxCacheSize) {
-                            cache.Clear();
-                        }
-                        cache[cacheKey] = result;
-
-                        return result;
                     }
                 }
-
-                result.ErrorMessage = "فشل في فك تشفير استجابة الترجمة.";
-            } catch (Exception ex) {
-                result.ErrorMessage = $"خطأ في الاتصال بالترجمة: {ex.Message}";
-                result.TranslatedText = text; // fallback to original text
+            } catch {
+                // All engines failed
             }
 
+            result.ErrorMessage = "تعذر الاتصال بخدمات الترجمة. يرجى التحقق من اتصال الإنترنت.";
+            result.TranslatedText = text; // fallback to original
             return result;
+        }
+
+        private static void SaveToCache(string key, TranslationResult result) {
+            if (cache.Count >= MaxCacheSize) {
+                cache.Clear();
+            }
+            cache[key] = result;
         }
     }
 }
