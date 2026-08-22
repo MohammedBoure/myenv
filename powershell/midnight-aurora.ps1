@@ -166,21 +166,23 @@ function cb {
 }
 Set-Alias -Name c -Value cb -Option ReadOnly, AllScope -ErrorAction SilentlyContinue
 
-# Copy Path via fzf - Interactively select a file or folder and copy its normalized relative path
-# Copy Path via fzf - Interactively select single or multiple files/folders and copy normalized relative/absolute paths
+# Copy Path via fzf - Hierarchical Directory Navigator & Multi-Path Selector
 function cpf {
     <#
     .SYNOPSIS
-        Interactively search and select file(s)/folder(s) with fzf, then copy normalized paths to the clipboard.
+        Interactively browse directory hierarchy, select files/folders with arrow keys & Tab, and copy paths to clipboard.
     .DESCRIPTION
-        Launches fzf with multi-selection enabled to search and select files or folders starting from the working directory.
-        Supports Tab multi-selection, Select All (Alt+A), Deselect All (Alt+D), and interactive Preview (Ctrl+P).
-        Formats paths as relative (default), absolute (-abs), filename only (-n), or Markdown links (-md),
-        and copies them to the clipboard separated by newlines (default), spaces (-s), or commas (-c).
+        Interactive folder tree navigator:
+        - Folders start closed. Navigate with Up/Down (arrow keys).
+        - Open/drill into folders with Right Arrow (->) or Enter.
+        - Go back up with Left Arrow (<-) or selecting '[DIR] ../'.
+        - Multi-select files and folders with Tab.
+        - Copy paths to clipboard on Enter (for files) or Alt+Enter / Ctrl+Y (for folders/selections).
+        - Automatically respects .gitignore and powershell/cpf-ignore.txt.
     .PARAMETER Path
-        Optional root folder to search from. Supports Tab completion. Defaults to current directory ('.').
-    .PARAMETER Directory
-        Search and select folders/directories only.
+        Optional initial directory to start browsing from. Defaults to current directory ('.').
+    .PARAMETER Recurse
+        Perform recursive flat search instead of hierarchical drill-down navigation.
     .PARAMETER Absolute
         Copy full absolute paths (e.g. C:/Users/...).
     .PARAMETER Name
@@ -199,8 +201,8 @@ function cpf {
         [Parameter(Position = 0, Mandatory = $false)]
         [string]$Path = '.',
 
-        [Alias('d', 'FoldersOnly')]
-        [switch]$Directory,
+        [Alias('r', 'Flat')]
+        [switch]$Recurse,
 
         [Alias('abs', 'Full')]
         [switch]$Absolute,
@@ -224,34 +226,36 @@ function cpf {
     # Display Help & Shortcuts Guide if requested
     if ($Help -or ($Path -in @('-h', '--help', '-?', 'help', '/?', '/h'))) {
         Write-Host ''
-        Write-Host '==========================================================' -ForegroundColor DarkGray
-        Write-Host ' [*] cpf (Copy Path via fzf) - Multi-Path Selector Guide  ' -ForegroundColor Cyan
-        Write-Host '==========================================================' -ForegroundColor DarkGray
+        Write-Host '=====================================================================' -ForegroundColor DarkGray
+        Write-Host ' [*] cpf (Copy Path) - Interactive Tree Navigator & Selector Guide   ' -ForegroundColor Cyan
+        Write-Host '=====================================================================' -ForegroundColor DarkGray
         Write-Host ''
-        Write-Host 'Keyboard Shortcuts inside fzf:' -ForegroundColor Yellow
-        Write-Host '----------------------------------------------------------' -ForegroundColor DarkGray
-        Write-Host '  [Tab] / [Shift+Tab] : Select / Deselect multiple files or folders' -ForegroundColor Green
-        Write-Host '  [Ctrl + A] / [Alt+A]: Select all visible items' -ForegroundColor Green
-        Write-Host '  [Ctrl + D] / [Alt+D]: Deselect all selected items' -ForegroundColor Green
-        Write-Host '  [Ctrl + P]          : Toggle interactive file/folder preview' -ForegroundColor Green
-        Write-Host '  [Enter]             : Copy selected path(s) to Clipboard and exit' -ForegroundColor Green
-        Write-Host '  [Esc] / [Ctrl + C]  : Cancel without modifying clipboard' -ForegroundColor Green
-        Write-Host '  [Up / Down]         : Move selection cursor up / down' -ForegroundColor Green
+        Write-Host 'Interactive Navigation Controls:' -ForegroundColor Yellow
+        Write-Host '---------------------------------------------------------------------' -ForegroundColor DarkGray
+        Write-Host '  [->] / [Enter on Folder] : Open and expand directory' -ForegroundColor Green
+        Write-Host '  [<-] / [Select ../]      : Go back to parent directory' -ForegroundColor Green
+        Write-Host '  [Tab] / [Shift+Tab]      : Select / Deselect multiple files or folders' -ForegroundColor Green
+        Write-Host '  [Enter on File]          : Copy file path(s) to Clipboard and exit' -ForegroundColor Green
+        Write-Host '  [Alt + Enter] / [Ctrl+Y] : Copy highlighted folder / selected items immediately' -ForegroundColor Green
+        Write-Host '  [Ctrl + A]               : Select all visible items in current directory' -ForegroundColor Green
+        Write-Host '  [Ctrl + D]               : Deselect all selected items' -ForegroundColor Green
+        Write-Host '  [Esc] / [Ctrl + C]       : Cancel and exit without modifying clipboard' -ForegroundColor Green
+        Write-Host '  [Up / Down]              : Move selection cursor up / down' -ForegroundColor Green
         Write-Host ''
         Write-Host 'Parameters & Formatting Flags:' -ForegroundColor Yellow
-        Write-Host '----------------------------------------------------------' -ForegroundColor DarkGray
-        Write-Host '  -d, -Directory      : List and select directories/folders only' -ForegroundColor White
-        Write-Host '  -abs, -Absolute     : Copy full absolute paths (e.g. C:/Users/...)' -ForegroundColor White
-        Write-Host '  -n, -Name           : Copy file/folder names only without paths' -ForegroundColor White
-        Write-Host '  -md, -Markdown      : Copy as Markdown links [name](file:///path)' -ForegroundColor White
-        Write-Host '  -s, -Space          : Join multiple paths with spaces (e.g. for git add)' -ForegroundColor White
-        Write-Host '  -c, -Comma          : Join multiple paths with commas' -ForegroundColor White
-        Write-Host '  -h, -Help           : Display this shortcuts and usage guide' -ForegroundColor White
+        Write-Host '---------------------------------------------------------------------' -ForegroundColor DarkGray
+        Write-Host '  -r, -Recurse             : Run full recursive flat search mode' -ForegroundColor White
+        Write-Host '  -abs, -Absolute          : Copy full absolute paths (e.g. C:/Users/...)' -ForegroundColor White
+        Write-Host '  -n, -Name                : Copy file/folder names only without paths' -ForegroundColor White
+        Write-Host '  -md, -Markdown           : Copy as Markdown links [name](file:///path)' -ForegroundColor White
+        Write-Host '  -s, -Space               : Join multiple paths with spaces (e.g. for git add)' -ForegroundColor White
+        Write-Host '  -c, -Comma               : Join multiple paths with commas' -ForegroundColor White
+        Write-Host '  -h, -Help                : Display this shortcuts and usage guide' -ForegroundColor White
         Write-Host ''
         Write-Host 'Ignore Config (.gitignore / cpf-ignore.txt):' -ForegroundColor Yellow
-        Write-Host '----------------------------------------------------------' -ForegroundColor DarkGray
-        Write-Host '  Central rules file  : %USERPROFILE%\Documents\myenv\powershell\cpf-ignore.txt' -ForegroundColor DarkCyan
-        Write-Host '  Local rules         : Automatically inherits from .gitignore & .cpfignore' -ForegroundColor DarkCyan
+        Write-Host '---------------------------------------------------------------------' -ForegroundColor DarkGray
+        Write-Host '  Central rules file       : %USERPROFILE%\Documents\myenv\powershell\cpf-ignore.txt' -ForegroundColor DarkCyan
+        Write-Host '  Local rules              : Automatically inherits from .gitignore and .cpfignore' -ForegroundColor DarkCyan
         Write-Host ''
         return
     }
@@ -270,7 +274,7 @@ function cpf {
         return
     }
 
-    # Resolve root search location safely
+    # Resolve root start location safely
     $currentLocation = (Get-Location).ProviderPath
     $searchTarget = $currentLocation
 
@@ -323,47 +327,95 @@ function cpf {
     # Always ensure critical root system folders are ignored
     @('.git', 'node_modules', 'AppData') | ForEach-Object { [void]$exactIgnoreNames.Add($_) }
 
-    # Fast iterative directory scanning with ignore filters
-    try {
+    # Helper function to check if item should be ignored
+    $isIgnored = {
+        param([string]$name)
+        if ($exactIgnoreNames.Contains($name)) { return $true }
+        foreach ($pat in $wildcardIgnores) {
+            if ($name -like $pat) { return $true }
+        }
+        return $false
+    }
+
+    # Helper function to format and copy paths to clipboard
+    $copyAndExit = {
+        param([string[]]$rawItems, [string]$currentDir)
+
+        $formattedPaths = [System.Collections.Generic.List[string]]::new()
+
+        foreach ($raw in $rawItems) {
+            if ([string]::IsNullOrWhiteSpace($raw)) { continue }
+            $cleaned = $raw -replace '^\s*\[DIR\]\s*|^\s*\[FILE\]\s*', '' -replace '/$', ''
+            if ($cleaned -eq '..' -or [string]::IsNullOrWhiteSpace($cleaned)) { continue }
+
+            $fullItemPath = Join-Path $currentDir $cleaned
+
+            if ($Absolute) {
+                $formattedPaths.Add(($fullItemPath -replace '\\', '/'))
+            } elseif ($Name) {
+                $formattedPaths.Add([System.IO.Path]::GetFileName($cleaned))
+            } elseif ($Markdown) {
+                $fullNormalized = $fullItemPath -replace '\\', '/'
+                $baseName = [System.IO.Path]::GetFileName($cleaned)
+                $formattedPaths.Add("[$baseName](file:///$fullNormalized)")
+            } else {
+                $baseLen = $currentLocation.TrimEnd('\', '/').Length
+                if ($fullItemPath.StartsWith($currentLocation, [System.StringComparison]::OrdinalIgnoreCase)) {
+                    $rel = $fullItemPath.Substring($baseLen).TrimStart('\', '/')
+                } else {
+                    $rel = $fullItemPath
+                }
+                $formattedPaths.Add(($rel -replace '\\', '/'))
+            }
+        }
+
+        if ($formattedPaths.Count -eq 0) { return }
+
+        $delimiter = if ($Space) { ' ' } elseif ($Comma) { ', ' } else { "`r`n" }
+        $resultText = ($formattedPaths -join $delimiter)
+
+        try {
+            $resultText | Set-Clipboard
+        } catch {
+            try { $resultText | clip.exe } catch {
+                Write-Host "Failed to copy to clipboard: $_" -ForegroundColor Red
+                return
+            }
+        }
+
+        if ($formattedPaths.Count -eq 1) {
+            Write-Host "Copied 1 path to clipboard: $($formattedPaths[0])" -ForegroundColor Green
+        } else {
+            Write-Host "Copied $($formattedPaths.Count) paths to clipboard:" -ForegroundColor Green
+            $previewCount = [System.Math]::Min($formattedPaths.Count, 8)
+            for ($i = 0; $i -lt $previewCount; $i++) {
+                Write-Host "  $($i + 1). $($formattedPaths[$i])" -ForegroundColor DarkCyan
+            }
+            if ($formattedPaths.Count -gt 8) {
+                Write-Host "  ... and $($formattedPaths.Count - 8) more" -ForegroundColor DarkGray
+            }
+        }
+    }
+
+    # =========================================================================
+    # RECURSIVE FLAT SEARCH MODE (-r / -Recurse)
+    # =========================================================================
+    if ($Recurse) {
         $baseLen = $currentLocation.TrimEnd('\', '/').Length
         $queue = [System.Collections.Generic.Queue[string]]::new()
         $queue.Enqueue($searchTarget)
-
         $itemsList = [System.Collections.Generic.List[string]]::new()
 
         while ($queue.Count -gt 0) {
-            $currentDir = $queue.Dequeue()
+            $curr = $queue.Dequeue()
             try {
-                $dirInfo = [System.IO.DirectoryInfo]::new($currentDir)
-                $entries = $dirInfo.GetFileSystemInfos()
-            } catch {
-                continue
-            }
+                $entries = [System.IO.DirectoryInfo]::new($curr).GetFileSystemInfos()
+            } catch { continue }
 
             foreach ($entry in $entries) {
-                $name = $entry.Name
+                if (& $isIgnored $entry.Name) { continue }
                 $isDir = ($entry.Attributes -band [System.IO.FileAttributes]::Directory) -ne 0
-
-                # Check exact ignore match
-                if ($exactIgnoreNames.Contains($name)) {
-                    continue
-                }
-
-                # Check wildcard ignore match
-                $skip = $false
-                foreach ($pat in $wildcardIgnores) {
-                    if ($name -like $pat) {
-                        $skip = $true
-                        break
-                    }
-                }
-                if ($skip) { continue }
-
-                if ($isDir) {
-                    $queue.Enqueue($entry.FullName)
-                }
-
-                if ($Directory -and -not $isDir) { continue }
+                if ($isDir) { $queue.Enqueue($entry.FullName) }
 
                 $full = $entry.FullName
                 if ($full.StartsWith($currentLocation, [System.StringComparison]::OrdinalIgnoreCase)) {
@@ -371,108 +423,163 @@ function cpf {
                 } else {
                     $rel = $full
                 }
-                $itemsList.Add(($rel -replace '\\', '/'))
+                $prefix = if ($isDir) { '[DIR]  ' } else { '[FILE] ' }
+                $suffix = if ($isDir) { '/' } else { '' }
+                $itemsList.Add("$prefix$($rel -replace '\\', '/')$suffix")
             }
         }
 
         if ($itemsList.Count -eq 0) {
-            Write-Host "No files or folders found to select in: $searchTarget" -ForegroundColor Yellow
+            Write-Host "No files or folders found in: $searchTarget" -ForegroundColor Yellow
             return
         }
 
-        $fzfHeader = '[TAB] Select | [CTRL+A] All | [CTRL+D] None | [CTRL+P] Preview | [ENTER] Copy'
-        $promptText = if ($Directory) { 'Copy Folder(s) > ' } else { 'Copy Path(s) > ' }
-        $previewScript = Join-Path $env:USERPROFILE "Documents\myenv\scripts\cpf-preview.cmd"
-
+        $fzfHeader = '[TAB] Select | [CTRL+A] All | [CTRL+D] None | [ENTER] Copy and Exit'
         $selected = $itemsList | & $fzfExe --multi `
+            --height=50% `
+            --layout=reverse `
+            --prompt="Copy Path > " `
+            --header="$fzfHeader" `
+            --bind="ctrl-a:select-all,ctrl-d:deselect-all"
+
+        if ($selected) {
+            & $copyAndExit @($selected) $currentLocation
+        }
+        return
+    }
+
+    # =========================================================================
+    # INTERACTIVE HIERARCHICAL DRILL-DOWN NAVIGATOR (Default)
+    # =========================================================================
+    $browsingDir = $searchTarget
+
+    while ($true) {
+        $dirEntries = [System.Collections.Generic.List[string]]::new()
+
+        # Add parent folder option if not at drive root
+        $parent = Split-Path $browsingDir -Parent
+        if (-not [string]::IsNullOrWhiteSpace($parent)) {
+            $dirEntries.Add('[DIR]  ../')
+        }
+
+        # List subdirectories (folders) first
+        try {
+            $dirs = Get-ChildItem -LiteralPath $browsingDir -Directory -ErrorAction SilentlyContinue |
+                Where-Object { -not (& $isIgnored $_.Name) } |
+                Sort-Object Name
+
+            foreach ($d in $dirs) {
+                $dirEntries.Add("[DIR]  $($d.Name)/")
+            }
+        } catch {}
+
+        # List files next
+        try {
+            $files = Get-ChildItem -LiteralPath $browsingDir -File -ErrorAction SilentlyContinue |
+                Where-Object { -not (& $isIgnored $_.Name) } |
+                Sort-Object Name
+
+            foreach ($f in $files) {
+                $dirEntries.Add("[FILE] $($f.Name)")
+            }
+        } catch {}
+
+        if ($dirEntries.Count -eq 0) {
+            Write-Host "Folder is empty: $browsingDir" -ForegroundColor Yellow
+            if ($parent) {
+                $browsingDir = $parent
+                continue
+            } else {
+                return
+            }
+        }
+
+        # Calculate display path for prompt
+        $baseLen = $currentLocation.TrimEnd('\', '/').Length
+        $relDisplay = if ($browsingDir.StartsWith($currentLocation, [System.StringComparison]::OrdinalIgnoreCase)) {
+            $rel = $browsingDir.Substring($baseLen).TrimStart('\', '/') -replace '\\', '/'
+            if ([string]::IsNullOrWhiteSpace($rel)) { '.' } else { $rel }
+        } else {
+            $browsingDir -replace '\\', '/'
+        }
+
+        $fzfHeader = '[->/ENTER] Open Folder | [<-] Back | [TAB] Select | [ENTER on File / ALT+ENTER] Copy'
+        $promptText = "Folder: $relDisplay > "
+
+        $fzfOutput = $dirEntries | & $fzfExe --multi `
             --height=50% `
             --layout=reverse `
             --prompt="$promptText" `
             --header="$fzfHeader" `
-            --preview="`"$previewScript`" {}" `
-            --preview-window="right:50%:wrap" `
-            --bind="ctrl-a:select-all,ctrl-d:deselect-all,alt-a:select-all,alt-d:deselect-all,ctrl-p:toggle-preview"
-    } catch {
-        Write-Host "Error running fzf: $_" -ForegroundColor Red
-        return
-    }
+            --expect=right,left,alt-enter,ctrl-y `
+            --bind="ctrl-a:select-all,ctrl-d:deselect-all,left:accept,right:accept"
 
-    # Clean exit if user pressed ESC or cancelled
-    if ($null -eq $selected -or $selected.Count -eq 0) {
-        return
-    }
-
-    $selectedItems = @($selected) | ForEach-Object {
-        if ($_ -is [string]) {
-            $_.Split("`r`n", [System.StringSplitOptions]::RemoveEmptyEntries)
-        } else {
-            $_
-        }
-    } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
-
-    if ($selectedItems.Count -eq 0) {
-        return
-    }
-
-    $formattedPaths = [System.Collections.Generic.List[string]]::new()
-
-    foreach ($item in $selectedItems) {
-        $cleanItem = $item.Trim()
-        if ([string]::IsNullOrWhiteSpace($cleanItem)) { continue }
-
-        $normalizedRel = $cleanItem -replace '\\', '/' -replace '^\./', ''
-
-        if ($Absolute) {
-            $fullPath = [System.IO.Path]::GetFullPath((Join-Path $currentLocation $cleanItem)) -replace '\\', '/'
-            $formattedPaths.Add($fullPath)
-        } elseif ($Name) {
-            $fileName = [System.IO.Path]::GetFileName($cleanItem.TrimEnd('\', '/'))
-            $formattedPaths.Add($fileName)
-        } elseif ($Markdown) {
-            $fullPath = [System.IO.Path]::GetFullPath((Join-Path $currentLocation $cleanItem)) -replace '\\', '/'
-            $fileName = [System.IO.Path]::GetFileName($cleanItem.TrimEnd('\', '/'))
-            $formattedPaths.Add("[$fileName](file:///$fullPath)")
-        } else {
-            $formattedPaths.Add($normalizedRel)
-        }
-    }
-
-    if ($formattedPaths.Count -eq 0) {
-        return
-    }
-
-    $delimiter = if ($Space) {
-        ' '
-    } elseif ($Comma) {
-        ', '
-    } else {
-        "`r`n"
-    }
-
-    $resultText = ($formattedPaths -join $delimiter)
-
-    # Copy to clipboard and confirm
-    try {
-        $resultText | Set-Clipboard
-    } catch {
-        try {
-            $resultText | clip.exe
-        } catch {
-            Write-Host "Failed to copy to clipboard: $_" -ForegroundColor Red
+        # User pressed Esc or cancelled
+        if ($null -eq $fzfOutput -or $fzfOutput.Count -eq 0) {
             return
         }
-    }
 
-    if ($formattedPaths.Count -eq 1) {
-        Write-Host "Copied 1 path to clipboard: $($formattedPaths[0])" -ForegroundColor Green
-    } else {
-        Write-Host "Copied $($formattedPaths.Count) paths to clipboard:" -ForegroundColor Green
-        $previewCount = [System.Math]::Min($formattedPaths.Count, 8)
-        for ($i = 0; $i -lt $previewCount; $i++) {
-            Write-Host "  $($i + 1). $($formattedPaths[$i])" -ForegroundColor DarkCyan
+        $lines = @($fzfOutput)
+        $key = $lines[0]
+        $selectedItems = if ($lines.Count -gt 1) { $lines[1..($lines.Count - 1)] } else { @() }
+
+        # Handle Left Arrow Key (Go to Parent)
+        if ($key -eq 'left') {
+            if (-not [string]::IsNullOrWhiteSpace($parent)) {
+                $browsingDir = $parent
+            }
+            continue
         }
-        if ($formattedPaths.Count -gt 8) {
-            Write-Host "  ... and $($formattedPaths.Count - 8) more" -ForegroundColor DarkGray
+
+        if ($selectedItems.Count -eq 0) {
+            continue
+        }
+
+        # If user explicitly pressed Alt+Enter or Ctrl+Y to copy highlighted folder or multi-selected items
+        if ($key -eq 'alt-enter' -or $key -eq 'ctrl-y') {
+            & $copyAndExit $selectedItems $browsingDir
+            return
+        }
+
+        # If multiple items were selected with Tab, copy them and exit
+        if ($selectedItems.Count -gt 1) {
+            & $copyAndExit $selectedItems $browsingDir
+            return
+        }
+
+        # Single item selected
+        $singleItem = $selectedItems[0]
+
+        # Selected '[DIR]  ../' -> Go up
+        if ($singleItem -match '^\s*\[DIR\]\s*\.\./') {
+            if (-not [string]::IsNullOrWhiteSpace($parent)) {
+                $browsingDir = $parent
+            }
+            continue
+        }
+
+        # Selected a folder
+        if ($singleItem.StartsWith('[DIR]')) {
+            $folderName = $singleItem -replace '^\s*\[DIR\]\s*', '' -replace '/$', ''
+            $targetSubDir = Join-Path $browsingDir $folderName
+
+            # If Right Arrow or Enter was pressed, drill into folder
+            if ($key -eq 'right' -or [string]::IsNullOrWhiteSpace($key)) {
+                if (Test-Path -LiteralPath $targetSubDir -PathType Container) {
+                    $browsingDir = $targetSubDir
+                    continue
+                }
+            }
+
+            # Otherwise copy folder path
+            & $copyAndExit @($singleItem) $browsingDir
+            return
+        }
+
+        # Selected a file -> Copy path and exit!
+        if ($singleItem.StartsWith('[FILE]')) {
+            & $copyAndExit @($singleItem) $browsingDir
+            return
         }
     }
 }
