@@ -515,13 +515,63 @@ function cpf {
             --bind="ctrl-a:select-all,ctrl-d:deselect-all,left:accept,right:accept"
 
         # User pressed Esc or cancelled
-        if ($null -eq $fzfOutput -or $fzfOutput.Count -eq 0) {
+        if ($null -eq $fzfOutput) {
             return
         }
 
-        $lines = @($fzfOutput)
-        $key = $lines[0]
-        $selectedItems = if ($lines.Count -gt 1) { $lines[1..($lines.Count - 1)] } else { @() }
+        # Normalize fzf output lines safely
+        $outputList = [System.Collections.Generic.List[string]]::new()
+        if ($fzfOutput -is [string]) {
+            $splitLines = $fzfOutput -split "`r?`n"
+            foreach ($sl in $splitLines) {
+                $outputList.Add("$sl")
+            }
+        } else {
+            foreach ($entryItem in @($fzfOutput)) {
+                if ($entryItem -is [string]) {
+                    $splitLines = $entryItem -split "`r?`n"
+                    foreach ($sl in $splitLines) {
+                        $outputList.Add("$sl")
+                    }
+                } else {
+                    $outputList.Add("$entryItem")
+                }
+            }
+        }
+
+        if ($outputList.Count -eq 0) {
+            return
+        }
+
+        $key = ''
+        $selectedItems = [System.Collections.Generic.List[string]]::new()
+
+        if ($outputList.Count -ge 2) {
+            $firstLine = "$($outputList[0])".Trim().ToLowerInvariant()
+            if ($firstLine -in @('right', 'left', 'alt-enter', 'ctrl-y', '')) {
+                $key = $firstLine
+                for ($idx = 1; $idx -lt $outputList.Count; $idx++) {
+                    $itemStr = "$($outputList[$idx])".Trim()
+                    if (-not [string]::IsNullOrWhiteSpace($itemStr)) {
+                        $selectedItems.Add($itemStr)
+                    }
+                }
+            } else {
+                foreach ($itemEntry in $outputList) {
+                    $itemStr = "$itemEntry".Trim()
+                    if (-not [string]::IsNullOrWhiteSpace($itemStr)) {
+                        $selectedItems.Add($itemStr)
+                    }
+                }
+            }
+        } elseif ($outputList.Count -eq 1) {
+            $singleStr = "$($outputList[0])".Trim()
+            if ($singleStr -in @('right', 'left', 'alt-enter', 'ctrl-y')) {
+                $key = $singleStr.ToLowerInvariant()
+            } elseif (-not [string]::IsNullOrWhiteSpace($singleStr)) {
+                $selectedItems.Add($singleStr)
+            }
+        }
 
         # Handle Left Arrow Key (Go to Parent)
         if ($key -eq 'left') {
@@ -548,7 +598,7 @@ function cpf {
         }
 
         # Single item selected
-        $singleItem = $selectedItems[0]
+        $singleItem = "$($selectedItems[0])"
 
         # Selected '[DIR]  ../' -> Go up
         if ($singleItem -match '^\s*\[DIR\]\s*\.\./') {
@@ -559,7 +609,7 @@ function cpf {
         }
 
         # Selected a folder
-        if ($singleItem.StartsWith('[DIR]')) {
+        if ($singleItem -match '^\s*\[DIR\]') {
             $folderName = $singleItem -replace '^\s*\[DIR\]\s*', '' -replace '/$', ''
             $targetSubDir = Join-Path $browsingDir $folderName
 
@@ -577,7 +627,7 @@ function cpf {
         }
 
         # Selected a file -> Copy path and exit!
-        if ($singleItem.StartsWith('[FILE]')) {
+        if ($singleItem -match '^\s*\[FILE\]') {
             & $copyAndExit @($singleItem) $browsingDir
             return
         }
