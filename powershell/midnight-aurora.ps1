@@ -233,11 +233,11 @@ function cpf {
         Write-Host ''
         Write-Host 'Interactive Tree Controls (VS Code Style):' -ForegroundColor Yellow
         Write-Host '---------------------------------------------------------------------' -ForegroundColor DarkGray
-        Write-Host '  [->] / [Enter on Folder] : Expand folder in-place (like VS Code)' -ForegroundColor Green
+        Write-Host '  [->]                     : Expand folder in-place' -ForegroundColor Green
         Write-Host '  [<-]                     : Collapse folder / parent folder in-place' -ForegroundColor Green
         Write-Host '  [Tab] / [Shift+Tab]      : Select / Deselect multiple files or folders' -ForegroundColor Green
-        Write-Host '  [Enter on File]          : Copy file path to Clipboard and exit' -ForegroundColor Green
-        Write-Host '  [Alt + Enter] / [Ctrl+Y] : Copy highlighted folder / selected items immediately' -ForegroundColor Green
+        Write-Host '  [Enter]                  : Copy selected file or folder path(s) to Clipboard and exit' -ForegroundColor Green
+        Write-Host '  [Alt + Enter] / [Ctrl+Y] : Copy highlighted item immediately and exit' -ForegroundColor Green
         Write-Host '  [Ctrl + A]               : Select all visible items' -ForegroundColor Green
         Write-Host '  [Ctrl + D]               : Deselect all selected items' -ForegroundColor Green
         Write-Host '  [Esc] / [Ctrl + C]       : Cancel without modifying clipboard' -ForegroundColor Green
@@ -534,7 +534,7 @@ function cpf {
             $searchTarget -replace '\\', '/'
         }
 
-        $fzfHeader = '[->/ENTER on Folder] Expand/Collapse | [<-] Collapse | [TAB] Select | [ENTER on File/ALT+ENTER] Copy'
+        $fzfHeader = '[->] Expand | [<-] Collapse | [TAB] Select | [ENTER] Copy & Exit'
         $promptText = "Tree Explorer: $relDisplay > "
 
         $fzfOutput = $treeList | & $fzfExe --multi `
@@ -665,31 +665,17 @@ function cpf {
         }
 
         # Handle Right Arrow Key on a Folder (Expand in-place)
-        if ($key -eq 'right' -and $isFolder) {
-            [void]$expandedFolders.Add($targetRel)
-            $lastTargetRel = $targetRel
-            continue
-        }
-
-        # Handle Enter Key on a Folder (Toggle Expand / Collapse in-place)
-        if ($isFolder -and [string]::IsNullOrWhiteSpace($key)) {
-            if ($expandedFolders.Contains($targetRel)) {
-                [void]$expandedFolders.Remove($targetRel)
-                $subPrefix = "$targetRel/"
-                $toRemove = @($expandedFolders | Where-Object { $_.StartsWith($subPrefix, [System.StringComparison]::OrdinalIgnoreCase) })
-                foreach ($tr in $toRemove) { [void]$expandedFolders.Remove($tr) }
-            } else {
+        if ($key -eq 'right') {
+            if ($isFolder) {
                 [void]$expandedFolders.Add($targetRel)
+                $lastTargetRel = $targetRel
             }
-            $lastTargetRel = $targetRel
             continue
         }
 
-        # Handle Enter Key on a File -> Copy path and exit!
-        if (-not $isFolder) {
-            & $copyAndExit @($targetRel)
-            return
-        }
+        # Enter Key -> Copy selected file or folder path and exit!
+        & $copyAndExit @($targetRel)
+        return
     }
 }
 
