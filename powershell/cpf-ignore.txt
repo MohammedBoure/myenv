@@ -35,7 +35,7 @@ bin
 obj
 dist
 build
-target
+# target
 *.dll
 *.pdb
 *.suo

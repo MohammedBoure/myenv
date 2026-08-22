@@ -462,48 +462,50 @@ function cpf {
     $expandedFolders = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
     $lastTargetRel = ''
 
-    function Build-TreeRows($targetDir, $depth, $baseRel) {
-        $rows = [System.Collections.Generic.List[string]]::new()
-        $indent = '    ' * $depth
+    function Get-TreeRows($targetDir) {
+        $collector = [System.Collections.Generic.List[string]]::new()
 
-        # Subdirectories first
-        try {
-            $dirs = Get-ChildItem -LiteralPath $targetDir -Directory -ErrorAction SilentlyContinue |
-                Where-Object { -not (& $isIgnored $_.Name) } |
-                Sort-Object Name
+        $walk = {
+            param($dir, $depth, $baseRel)
+            $indent = '    ' * $depth
 
-            foreach ($d in $dirs) {
-                $rel = if ($baseRel) { "$baseRel/$($d.Name)" } else { $d.Name }
-                $isExp = $expandedFolders.Contains($rel)
-                $icon = if ($isExp) { 'v ' } else { '> ' }
-                $rows.Add("$rel`t$indent$icon$($d.Name)/")
+            # Subdirectories first
+            try {
+                $dirs = Get-ChildItem -LiteralPath $dir -Directory -ErrorAction SilentlyContinue |
+                    Where-Object { -not (& $isIgnored $_.Name) } |
+                    Sort-Object Name
 
-                if ($isExp) {
-                    $childRows = @(Build-TreeRows $d.FullName ($depth + 1) $rel)
-                    foreach ($cr in $childRows) {
-                        if (-not [string]::IsNullOrWhiteSpace($cr)) { $rows.Add("$cr") }
+                foreach ($d in $dirs) {
+                    $rel = if ($baseRel) { "$baseRel/$($d.Name)" } else { $d.Name }
+                    $isExp = $expandedFolders.Contains($rel)
+                    $icon = if ($isExp) { 'v ' } else { '> ' }
+                    $collector.Add("$rel`t$indent$icon$($d.Name)/")
+
+                    if ($isExp) {
+                        & $walk $d.FullName ($depth + 1) $rel
                     }
                 }
-            }
-        } catch {}
+            } catch {}
 
-        # Files next
-        try {
-            $files = Get-ChildItem -LiteralPath $targetDir -File -ErrorAction SilentlyContinue |
-                Where-Object { -not (& $isIgnored $_.Name) } |
-                Sort-Object Name
+            # Files next
+            try {
+                $files = Get-ChildItem -LiteralPath $dir -File -ErrorAction SilentlyContinue |
+                    Where-Object { -not (& $isIgnored $_.Name) } |
+                    Sort-Object Name
 
-            foreach ($f in $files) {
-                $rel = if ($baseRel) { "$baseRel/$($f.Name)" } else { $f.Name }
-                $rows.Add("$rel`t$indent  $($f.Name)")
-            }
-        } catch {}
+                foreach ($f in $files) {
+                    $rel = if ($baseRel) { "$baseRel/$($f.Name)" } else { $f.Name }
+                    $collector.Add("$rel`t$indent  $($f.Name)")
+                }
+            } catch {}
+        }
 
-        return ,$rows.ToArray()
+        & $walk $targetDir 0 ''
+        return $collector
     }
 
     while ($true) {
-        [string[]]$treeList = @(Build-TreeRows $searchTarget 0 '')
+        $treeList = Get-TreeRows $searchTarget
 
         if ($treeList.Count -eq 0) {
             Write-Host "Folder is empty: $searchTarget" -ForegroundColor Yellow
