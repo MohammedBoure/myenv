@@ -166,23 +166,24 @@ function cb {
 }
 Set-Alias -Name c -Value cb -Option ReadOnly, AllScope -ErrorAction SilentlyContinue
 
-# Copy Path via fzf - Hierarchical Directory Navigator & Multi-Path Selector
+# Copy Path via fzf - VS Code Style Interactive Tree Explorer & Multi-Path Selector
 function cpf {
     <#
     .SYNOPSIS
-        Interactively browse directory hierarchy, select files/folders with arrow keys & Tab, and copy paths to clipboard.
+        VS Code Explorer in Terminal: Browse folder tree in-place, expand/collapse with Left/Right arrows, and copy paths.
     .DESCRIPTION
-        Interactive folder tree navigator:
-        - Folders start closed. Navigate with Up/Down (arrow keys).
-        - Open/drill into folders with Right Arrow (->) or Enter.
-        - Go back up with Left Arrow (<-) or selecting '[DIR] ../'.
-        - Multi-select files and folders with Tab.
-        - Copy paths to clipboard on Enter (for files) or Alt+Enter / Ctrl+Y (for folders/selections).
+        Interactive tree explorer like VS Code:
+        - Folders start closed (> folder/). Navigate with Up/Down arrows.
+        - Press Right Arrow (->) or Enter to expand a folder in-place (v folder/).
+        - Press Left Arrow (<-) to collapse an open folder or its parent.
+        - Press Enter on any file to copy its relative path to Clipboard and exit.
+        - Press Alt+Enter or Ctrl+Y on any folder/file to copy its path immediately.
+        - Use Tab for multi-selection across any branches, then Enter to copy all.
         - Automatically respects .gitignore and powershell/cpf-ignore.txt.
     .PARAMETER Path
-        Optional initial directory to start browsing from. Defaults to current directory ('.').
+        Optional directory to start tree exploration from. Defaults to current directory ('.').
     .PARAMETER Recurse
-        Perform recursive flat search instead of hierarchical drill-down navigation.
+        Perform recursive flat search instead of in-place tree exploration.
     .PARAMETER Absolute
         Copy full absolute paths (e.g. C:/Users/...).
     .PARAMETER Name
@@ -227,19 +228,19 @@ function cpf {
     if ($Help -or ($Path -in @('-h', '--help', '-?', 'help', '/?', '/h'))) {
         Write-Host ''
         Write-Host '=====================================================================' -ForegroundColor DarkGray
-        Write-Host ' [*] cpf (Copy Path) - Interactive Tree Navigator & Selector Guide   ' -ForegroundColor Cyan
+        Write-Host ' [*] cpf (Copy Path) - VS Code Terminal Tree Explorer Guide          ' -ForegroundColor Cyan
         Write-Host '=====================================================================' -ForegroundColor DarkGray
         Write-Host ''
-        Write-Host 'Interactive Navigation Controls:' -ForegroundColor Yellow
+        Write-Host 'Interactive Tree Controls (VS Code Style):' -ForegroundColor Yellow
         Write-Host '---------------------------------------------------------------------' -ForegroundColor DarkGray
-        Write-Host '  [->] / [Enter on Folder] : Open and expand directory' -ForegroundColor Green
-        Write-Host '  [<-] / [Select ../]      : Go back to parent directory' -ForegroundColor Green
+        Write-Host '  [->] / [Enter on Folder] : Expand folder in-place (like VS Code)' -ForegroundColor Green
+        Write-Host '  [<-]                     : Collapse folder / parent folder in-place' -ForegroundColor Green
         Write-Host '  [Tab] / [Shift+Tab]      : Select / Deselect multiple files or folders' -ForegroundColor Green
-        Write-Host '  [Enter on File]          : Copy file path(s) to Clipboard and exit' -ForegroundColor Green
+        Write-Host '  [Enter on File]          : Copy file path to Clipboard and exit' -ForegroundColor Green
         Write-Host '  [Alt + Enter] / [Ctrl+Y] : Copy highlighted folder / selected items immediately' -ForegroundColor Green
-        Write-Host '  [Ctrl + A]               : Select all visible items in current directory' -ForegroundColor Green
+        Write-Host '  [Ctrl + A]               : Select all visible items' -ForegroundColor Green
         Write-Host '  [Ctrl + D]               : Deselect all selected items' -ForegroundColor Green
-        Write-Host '  [Esc] / [Ctrl + C]       : Cancel and exit without modifying clipboard' -ForegroundColor Green
+        Write-Host '  [Esc] / [Ctrl + C]       : Cancel without modifying clipboard' -ForegroundColor Green
         Write-Host '  [Up / Down]              : Move selection cursor up / down' -ForegroundColor Green
         Write-Host ''
         Write-Host 'Parameters & Formatting Flags:' -ForegroundColor Yellow
@@ -339,24 +340,24 @@ function cpf {
 
     # Helper function to format and copy paths to clipboard
     $copyAndExit = {
-        param([string[]]$rawItems, [string]$currentDir)
+        param([string[]]$selectedRelPaths)
 
         $formattedPaths = [System.Collections.Generic.List[string]]::new()
 
-        foreach ($raw in $rawItems) {
-            if ([string]::IsNullOrWhiteSpace($raw)) { continue }
-            $cleaned = $raw -replace '^\s*\[DIR\]\s*|^\s*\[FILE\]\s*', '' -replace '/$', ''
-            if ($cleaned -eq '..' -or [string]::IsNullOrWhiteSpace($cleaned)) { continue }
+        foreach ($rawRel in $selectedRelPaths) {
+            if ([string]::IsNullOrWhiteSpace($rawRel)) { continue }
+            $cleanRel = $rawRel.Trim().TrimEnd('/', '\')
+            if ([string]::IsNullOrWhiteSpace($cleanRel)) { continue }
 
-            $fullItemPath = Join-Path $currentDir $cleaned
+            $fullItemPath = Join-Path $searchTarget $cleanRel
 
             if ($Absolute) {
                 $formattedPaths.Add(($fullItemPath -replace '\\', '/'))
             } elseif ($Name) {
-                $formattedPaths.Add([System.IO.Path]::GetFileName($cleaned))
+                $formattedPaths.Add([System.IO.Path]::GetFileName($cleanRel))
             } elseif ($Markdown) {
                 $fullNormalized = $fullItemPath -replace '\\', '/'
-                $baseName = [System.IO.Path]::GetFileName($cleaned)
+                $baseName = [System.IO.Path]::GetFileName($cleanRel)
                 $formattedPaths.Add("[$baseName](file:///$fullNormalized)")
             } else {
                 $baseLen = $currentLocation.TrimEnd('\', '/').Length
@@ -423,9 +424,9 @@ function cpf {
                 } else {
                     $rel = $full
                 }
-                $prefix = if ($isDir) { '[DIR]  ' } else { '[FILE] ' }
+                $prefix = if ($isDir) { '> ' } else { '  ' }
                 $suffix = if ($isDir) { '/' } else { '' }
-                $itemsList.Add("$prefix$($rel -replace '\\', '/')$suffix")
+                $itemsList.Add("$rel`t$prefix$($rel -replace '\\', '/')$suffix")
             }
         }
 
@@ -436,81 +437,95 @@ function cpf {
 
         $fzfHeader = '[TAB] Select | [CTRL+A] All | [CTRL+D] None | [ENTER] Copy and Exit'
         $selected = $itemsList | & $fzfExe --multi `
-            --height=50% `
+            --height=60% `
             --layout=reverse `
             --prompt="Copy Path > " `
             --header="$fzfHeader" `
+            --delimiter="`t" `
+            --with-nth=2 `
             --bind="ctrl-a:select-all,ctrl-d:deselect-all"
 
         if ($selected) {
-            & $copyAndExit @($selected) $currentLocation
+            $pickedRels = [System.Collections.Generic.List[string]]::new()
+            foreach ($item in @($selected)) {
+                $p = "$item".Split("`t")[0]
+                if (-not [string]::IsNullOrWhiteSpace($p)) { $pickedRels.Add($p) }
+            }
+            & $copyAndExit $pickedRels
         }
         return
     }
 
     # =========================================================================
-    # INTERACTIVE HIERARCHICAL DRILL-DOWN NAVIGATOR (Default)
+    # VS CODE STYLE IN-PLACE INTERACTIVE TREE EXPLORER (Default)
     # =========================================================================
-    $browsingDir = $searchTarget
+    $expandedFolders = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
 
-    while ($true) {
-        $dirEntries = [System.Collections.Generic.List[string]]::new()
+    function Build-TreeRows($targetDir, $depth, $baseRel) {
+        $rows = [System.Collections.Generic.List[string]]::new()
+        $indent = '    ' * $depth
 
-        # Add parent folder option if not at drive root
-        $parent = Split-Path $browsingDir -Parent
-        if (-not [string]::IsNullOrWhiteSpace($parent)) {
-            $dirEntries.Add('[DIR]  ../')
-        }
-
-        # List subdirectories (folders) first
+        # Subdirectories first
         try {
-            $dirs = Get-ChildItem -LiteralPath $browsingDir -Directory -ErrorAction SilentlyContinue |
+            $dirs = Get-ChildItem -LiteralPath $targetDir -Directory -ErrorAction SilentlyContinue |
                 Where-Object { -not (& $isIgnored $_.Name) } |
                 Sort-Object Name
 
             foreach ($d in $dirs) {
-                $dirEntries.Add("[DIR]  $($d.Name)/")
+                $rel = if ($baseRel) { "$baseRel/$($d.Name)" } else { $d.Name }
+                $isExp = $expandedFolders.Contains($rel)
+                $icon = if ($isExp) { 'v ' } else { '> ' }
+                $rows.Add("$rel`t$indent$icon$($d.Name)/")
+
+                if ($isExp) {
+                    $childRows = Build-TreeRows $d.FullName ($depth + 1) $rel
+                    foreach ($cr in $childRows) { $rows.Add($cr) }
+                }
             }
         } catch {}
 
-        # List files next
+        # Files next
         try {
-            $files = Get-ChildItem -LiteralPath $browsingDir -File -ErrorAction SilentlyContinue |
+            $files = Get-ChildItem -LiteralPath $targetDir -File -ErrorAction SilentlyContinue |
                 Where-Object { -not (& $isIgnored $_.Name) } |
                 Sort-Object Name
 
             foreach ($f in $files) {
-                $dirEntries.Add("[FILE] $($f.Name)")
+                $rel = if ($baseRel) { "$baseRel/$($f.Name)" } else { $f.Name }
+                $rows.Add("$rel`t$indent  $($f.Name)")
             }
         } catch {}
 
-        if ($dirEntries.Count -eq 0) {
-            Write-Host "Folder is empty: $browsingDir" -ForegroundColor Yellow
-            if ($parent) {
-                $browsingDir = $parent
-                continue
-            } else {
-                return
-            }
+        return $rows
+    }
+
+    while ($true) {
+        $treeList = Build-TreeRows $searchTarget 0 ''
+
+        if ($treeList.Count -eq 0) {
+            Write-Host "Folder is empty: $searchTarget" -ForegroundColor Yellow
+            return
         }
 
-        # Calculate display path for prompt
+        # Prompt & Header
         $baseLen = $currentLocation.TrimEnd('\', '/').Length
-        $relDisplay = if ($browsingDir.StartsWith($currentLocation, [System.StringComparison]::OrdinalIgnoreCase)) {
-            $rel = $browsingDir.Substring($baseLen).TrimStart('\', '/') -replace '\\', '/'
+        $relDisplay = if ($searchTarget.StartsWith($currentLocation, [System.StringComparison]::OrdinalIgnoreCase)) {
+            $rel = $searchTarget.Substring($baseLen).TrimStart('\', '/') -replace '\\', '/'
             if ([string]::IsNullOrWhiteSpace($rel)) { '.' } else { $rel }
         } else {
-            $browsingDir -replace '\\', '/'
+            $searchTarget -replace '\\', '/'
         }
 
-        $fzfHeader = '[->/ENTER] Open Folder | [<-] Back | [TAB] Select | [ENTER on File / ALT+ENTER] Copy'
-        $promptText = "Folder: $relDisplay > "
+        $fzfHeader = '[->/ENTER on Folder] Expand/Collapse | [<-] Collapse | [TAB] Select | [ENTER on File/ALT+ENTER] Copy'
+        $promptText = "Tree Explorer: $relDisplay > "
 
-        $fzfOutput = $dirEntries | & $fzfExe --multi `
-            --height=50% `
+        $fzfOutput = $treeList | & $fzfExe --multi `
+            --height=60% `
             --layout=reverse `
             --prompt="$promptText" `
             --header="$fzfHeader" `
+            --delimiter="`t" `
+            --with-nth=2 `
             --expect=right,left,alt-enter,ctrl-y `
             --bind="ctrl-a:select-all,ctrl-d:deselect-all,left:accept,right:accept"
 
@@ -544,7 +559,7 @@ function cpf {
         }
 
         $key = ''
-        $selectedItems = [System.Collections.Generic.List[string]]::new()
+        $selectedLines = [System.Collections.Generic.List[string]]::new()
 
         if ($outputList.Count -ge 2) {
             $firstLine = "$($outputList[0])".Trim().ToLowerInvariant()
@@ -553,14 +568,14 @@ function cpf {
                 for ($idx = 1; $idx -lt $outputList.Count; $idx++) {
                     $itemStr = "$($outputList[$idx])".Trim()
                     if (-not [string]::IsNullOrWhiteSpace($itemStr)) {
-                        $selectedItems.Add($itemStr)
+                        $selectedLines.Add($itemStr)
                     }
                 }
             } else {
                 foreach ($itemEntry in $outputList) {
                     $itemStr = "$itemEntry".Trim()
                     if (-not [string]::IsNullOrWhiteSpace($itemStr)) {
-                        $selectedItems.Add($itemStr)
+                        $selectedLines.Add($itemStr)
                     }
                 }
             }
@@ -569,66 +584,84 @@ function cpf {
             if ($singleStr -in @('right', 'left', 'alt-enter', 'ctrl-y')) {
                 $key = $singleStr.ToLowerInvariant()
             } elseif (-not [string]::IsNullOrWhiteSpace($singleStr)) {
-                $selectedItems.Add($singleStr)
+                $selectedLines.Add($singleStr)
             }
         }
 
-        # Handle Left Arrow Key (Go to Parent)
-        if ($key -eq 'left') {
-            if (-not [string]::IsNullOrWhiteSpace($parent)) {
-                $browsingDir = $parent
-            }
+        if ($selectedLines.Count -eq 0) {
             continue
         }
 
-        if ($selectedItems.Count -eq 0) {
-            continue
-        }
-
-        # If user explicitly pressed Alt+Enter or Ctrl+Y to copy highlighted folder or multi-selected items
+        # If user explicitly pressed Alt+Enter or Ctrl+Y to copy immediately
         if ($key -eq 'alt-enter' -or $key -eq 'ctrl-y') {
-            & $copyAndExit $selectedItems $browsingDir
+            $pickedRels = [System.Collections.Generic.List[string]]::new()
+            foreach ($sl in $selectedLines) {
+                $p = $sl.Split("`t")[0]
+                if (-not [string]::IsNullOrWhiteSpace($p)) { $pickedRels.Add($p) }
+            }
+            & $copyAndExit $pickedRels
             return
         }
 
-        # If multiple items were selected with Tab, copy them and exit
-        if ($selectedItems.Count -gt 1) {
-            & $copyAndExit $selectedItems $browsingDir
+        # If multiple items were selected with Tab, copy all and exit
+        if ($selectedLines.Count -gt 1) {
+            $pickedRels = [System.Collections.Generic.List[string]]::new()
+            foreach ($sl in $selectedLines) {
+                $p = $sl.Split("`t")[0]
+                if (-not [string]::IsNullOrWhiteSpace($p)) { $pickedRels.Add($p) }
+            }
+            & $copyAndExit $pickedRels
             return
         }
 
         # Single item selected
-        $singleItem = "$($selectedItems[0])"
+        $singleLine = "$($selectedLines[0])"
+        $parts = $singleLine.Split("`t")
+        $targetRel = $parts[0]
+        $display = if ($parts.Count -gt 1) { $parts[1] } else { '' }
+        $isFolder = $display.Trim().EndsWith('/') -or (Test-Path -LiteralPath (Join-Path $searchTarget $targetRel) -PathType Container)
 
-        # Selected '[DIR]  ../' -> Go up
-        if ($singleItem -match '^\s*\[DIR\]\s*\.\./') {
-            if (-not [string]::IsNullOrWhiteSpace($parent)) {
-                $browsingDir = $parent
+        # Handle Left Arrow Key (Collapse folder or collapse parent)
+        if ($key -eq 'left') {
+            if ($isFolder -and $expandedFolders.Contains($targetRel)) {
+                # Collapse this folder
+                [void]$expandedFolders.Remove($targetRel)
+                # Also remove any nested subfolders
+                $subPrefix = "$targetRel/"
+                $toRemove = @($expandedFolders | Where-Object { $_.StartsWith($subPrefix, [System.StringComparison]::OrdinalIgnoreCase) })
+                foreach ($tr in $toRemove) { [void]$expandedFolders.Remove($tr) }
+            } elseif ($targetRel.Contains('/')) {
+                # Collapse parent folder
+                $parentRel = [System.IO.Path]::GetDirectoryName($targetRel.Replace('/', '\')).Replace('\', '/')
+                if (-not [string]::IsNullOrWhiteSpace($parentRel)) {
+                    [void]$expandedFolders.Remove($parentRel)
+                }
             }
             continue
         }
 
-        # Selected a folder
-        if ($singleItem -match '^\s*\[DIR\]') {
-            $folderName = $singleItem -replace '^\s*\[DIR\]\s*', '' -replace '/$', ''
-            $targetSubDir = Join-Path $browsingDir $folderName
-
-            # If Right Arrow or Enter was pressed, drill into folder
-            if ($key -eq 'right' -or [string]::IsNullOrWhiteSpace($key)) {
-                if (Test-Path -LiteralPath $targetSubDir -PathType Container) {
-                    $browsingDir = $targetSubDir
-                    continue
-                }
-            }
-
-            # Otherwise copy folder path
-            & $copyAndExit @($singleItem) $browsingDir
-            return
+        # Handle Right Arrow Key on a Folder (Expand in-place)
+        if ($key -eq 'right' -and $isFolder) {
+            [void]$expandedFolders.Add($targetRel)
+            continue
         }
 
-        # Selected a file -> Copy path and exit!
-        if ($singleItem -match '^\s*\[FILE\]') {
-            & $copyAndExit @($singleItem) $browsingDir
+        # Handle Enter Key on a Folder (Toggle Expand / Collapse in-place)
+        if ($isFolder -and [string]::IsNullOrWhiteSpace($key)) {
+            if ($expandedFolders.Contains($targetRel)) {
+                [void]$expandedFolders.Remove($targetRel)
+                $subPrefix = "$targetRel/"
+                $toRemove = @($expandedFolders | Where-Object { $_.StartsWith($subPrefix, [System.StringComparison]::OrdinalIgnoreCase) })
+                foreach ($tr in $toRemove) { [void]$expandedFolders.Remove($tr) }
+            } else {
+                [void]$expandedFolders.Add($targetRel)
+            }
+            continue
+        }
+
+        # Handle Enter Key on a File -> Copy path and exit!
+        if (-not $isFolder) {
+            & $copyAndExit @($targetRel)
             return
         }
     }
