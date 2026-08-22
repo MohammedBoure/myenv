@@ -274,45 +274,69 @@ function cpf {
         return
     }
 
-    # Resolve root search location
+    # Resolve root search location safely
     $currentLocation = (Get-Location).ProviderPath
-    $searchTarget = if ([string]::IsNullOrWhiteSpace($Path) -or $Path -eq '.') {
-        $currentLocation
-    } else {
-        $resolved = Resolve-Path -LiteralPath $Path -ErrorAction SilentlyContinue
-        if ($resolved) { $resolved.ProviderPath } else { $currentLocation }
+    $searchTarget = $currentLocation
+
+    if (-not [string]::IsNullOrWhiteSpace($Path) -and $Path -ne '.') {
+        $cleanPath = $Path.Trim().TrimEnd('\', '/')
+        $resolved = $null
+
+        if (Test-Path -LiteralPath $cleanPath) {
+            $resolved = (Resolve-Path -LiteralPath $cleanPath -ErrorAction SilentlyContinue).ProviderPath
+        } elseif (Test-Path -Path $cleanPath) {
+            $resolved = (Resolve-Path -Path $cleanPath -ErrorAction SilentlyContinue).ProviderPath
+        }
+
+        if (-not $resolved) {
+            Write-Host "Error: Path '$Path' was not found in '$currentLocation'." -ForegroundColor Red
+            return
+        }
+        $searchTarget = $resolved
     }
 
-    if (-not (Test-Path -LiteralPath $searchTarget)) {
-        Write-Host "Error: Target path '$searchTarget' does not exist." -ForegroundColor Red
-        return
-    }
-
-    # Stream relative files and folders into fzf
+    # Fast iterative directory scanning with junk-folder pruning
     try {
-        $baseLen = $currentLocation.TrimEnd('\').Length
-        $gciParams = @{
-            LiteralPath = $searchTarget
-            Recurse     = $true
-            ErrorAction = 'SilentlyContinue'
-        }
-        if ($Directory) {
-            $gciParams['Directory'] = $true
-        }
+        $skipFolders = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+        @('.git', 'node_modules', 'AppData', '.vscode', '.idea', '.gemini', '.cache', 'bin', 'obj', 'dist', 'build', 'vendor', '__pycache__', '.next', '.nuxt', 'target') |
+            ForEach-Object { [void]$skipFolders.Add($_) }
 
-        $itemsStream = Get-ChildItem @gciParams | ForEach-Object {
-            $fullName = $_.FullName
-            if ($fullName.StartsWith($currentLocation, [System.StringComparison]::OrdinalIgnoreCase)) {
-                $rel = $fullName.Substring($baseLen).TrimStart('\', '/')
-            } else {
-                $baseUri = [System.Uri]($currentLocation.TrimEnd('\') + '\')
-                $targetUri = [System.Uri]$fullName
-                $rel = [System.Uri]::UnescapeDataString($baseUri.MakeRelativeUri($targetUri).ToString())
+        $baseLen = $currentLocation.TrimEnd('\', '/').Length
+        $queue = [System.Collections.Generic.Queue[string]]::new()
+        $queue.Enqueue($searchTarget)
+
+        $itemsList = [System.Collections.Generic.List[string]]::new()
+
+        while ($queue.Count -gt 0) {
+            $currentDir = $queue.Dequeue()
+            try {
+                $dirInfo = [System.IO.DirectoryInfo]::new($currentDir)
+                $entries = $dirInfo.GetFileSystemInfos()
+            } catch {
+                continue
             }
-            $rel -replace '\\', '/' -replace '^\./', ''
+
+            foreach ($entry in $entries) {
+                $isDir = ($entry.Attributes -band [System.IO.FileAttributes]::Directory) -ne 0
+
+                if ($isDir) {
+                    if ($skipFolders.Contains($entry.Name)) { continue }
+                    $queue.Enqueue($entry.FullName)
+                }
+
+                if ($Directory -and -not $isDir) { continue }
+
+                $full = $entry.FullName
+                if ($full.StartsWith($currentLocation, [System.StringComparison]::OrdinalIgnoreCase)) {
+                    $rel = $full.Substring($baseLen).TrimStart('\', '/')
+                } else {
+                    $rel = $full
+                }
+                $itemsList.Add(($rel -replace '\\', '/'))
+            }
         }
 
-        if (-not $itemsStream) {
+        if ($itemsList.Count -eq 0) {
             Write-Host "No files or folders found to select in: $searchTarget" -ForegroundColor Yellow
             return
         }
@@ -320,7 +344,7 @@ function cpf {
         $fzfHeader = '[TAB] Select | [ALT+A] All | [ALT+D] None | [CTRL+P] Preview | [ENTER] Copy'
         $promptText = if ($Directory) { 'Copy Folder(s) > ' } else { 'Copy Path(s) > ' }
 
-        $selected = $itemsStream | & $fzfExe --multi `
+        $selected = $itemsList | & $fzfExe --multi `
             --height=50% `
             --layout=reverse `
             --prompt="$promptText" `
@@ -416,9 +440,20 @@ function cpf {
 # Auto-complete folder names when typing 'cpf <Tab>'
 Register-ArgumentCompleter -CommandName 'cpf' -ParameterName 'Path' -ScriptBlock {
     param($commandName, $parameterName, $wordToComplete, $commandAst, $fakeBoundParameters)
-    $pattern = if ([string]::IsNullOrWhiteSpace($wordToComplete)) { '*' } else { "$wordToComplete*" }
-    Get-ChildItem -Path $pattern -Directory -ErrorAction SilentlyContinue | ForEach-Object {
-        $rel = (Resolve-Path -Relative -LiteralPath $_.FullName) -replace '^\.\\', '' -replace '\\', '/'
-        [System.Management.Automation.CompletionResult]::new($rel, $rel, 'ProviderContainer', $_.Name)
+    $cleanWord = if ([string]::IsNullOrWhiteSpace($wordToComplete)) { '' } else { $wordToComplete.Replace('/', '\') }
+    $searchDir = if ($cleanWord.Contains('\')) {
+        $parent = [System.IO.Path]::GetDirectoryName($cleanWord)
+        if ([string]::IsNullOrWhiteSpace($parent)) { '.' } else { $parent }
+    } else { '.' }
+
+    $prefix = if ($cleanWord.Contains('\')) { [System.IO.Path]::GetFileName($cleanWord) } else { $cleanWord }
+
+    if (Test-Path -LiteralPath $searchDir) {
+        Get-ChildItem -LiteralPath $searchDir -Directory -ErrorAction SilentlyContinue |
+            Where-Object { $_.Name -like "$prefix*" -and $_.Name -notmatch '^\.(git|gemini|vscode|idea)$|node_modules|AppData' } |
+            ForEach-Object {
+                $rel = (Resolve-Path -Relative -LiteralPath $_.FullName) -replace '^\.\\', '' -replace '\\', '/'
+                [System.Management.Automation.CompletionResult]::new($rel, $rel, 'ProviderContainer', $_.Name)
+            }
     }
 }
