@@ -54,7 +54,7 @@ A high-performance, keyboard-driven tiling desktop environment for Windows devel
 - **True Black Console Theme**: `#000000` background with **32% Transparency** (`WindowAlpha = 173` / 68% opacity).
 - **PSReadLine**: `Ctrl+Backspace` for backward word deletion (`BackwardKillWord`), history predictions (`ListView`), and Tab menu completion.
 - **Auto-LS on Navigation (`cd`)**: Automatically lists directory contents (`ls` / `Get-ChildItem`) whenever navigating to a new directory via `cd` or `chdir`.
-- **FZF Path Copy (`cpf`)**: Fuzzy-find any file interactively and copy its normalized relative path directly to the clipboard.
+- **FZF Multi-Path Copy (`cpf`)**: Fuzzy-find single or multiple files/folders interactively (`Tab` multi-select, `Ctrl+P` preview) and copy normalized relative/absolute paths or Markdown links to clipboard.
 
 ### 5. CMD (Command Prompt) Auto-Completion & Clink History Predictions
 - **Clink History Auto-Suggestions**: Built-in real-time command prediction as you type (`autosuggest.enable = true`) matching previously executed commands in dark gray text. Press `→` (Right Arrow) to accept.

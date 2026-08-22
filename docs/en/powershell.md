@@ -36,7 +36,7 @@ High-performance, customized **PowerShell** profile featuring **PSReadLine**, Mi
 | Shortcut | Description |
 |---|---|
 | `cd` / `chdir` | Navigate to directory and auto-list files (`Get-ChildItem`) |
-| `cpf` | Interactively select a file via fzf and copy its normalized relative path to Clipboard |
+| `cpf` | Interactively select single/multiple files via fzf (`Tab` multi-select, `Ctrl+P` preview, `-abs`, `-md`, `-s`, `-c`) and copy paths to Clipboard |
 | `docs` | Terminal Documentation & Shortcut Navigator CLI |
 | `cb` / `c` | Execute command, display output, and copy directly to Clipboard |
 | `| cb` | Pipe output to screen and Clipboard simultaneously |

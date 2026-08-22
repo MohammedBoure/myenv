@@ -167,18 +167,30 @@ function cb {
 Set-Alias -Name c -Value cb -Option ReadOnly, AllScope -ErrorAction SilentlyContinue
 
 # Copy Path via fzf - Interactively select a file or folder and copy its normalized relative path
+# Copy Path via fzf - Interactively select single or multiple files/folders and copy normalized relative/absolute paths
 function cpf {
     <#
     .SYNOPSIS
-        Interactively search and select a file/folder with fzf, then copy its normalized relative path to the clipboard.
+        Interactively search and select file(s)/folder(s) with fzf, then copy normalized paths to the clipboard.
     .DESCRIPTION
-        Launches fzf to interactively search and select a file or folder starting from the current working directory.
-        The selected path is converted to a relative path, normalized with forward slashes ('/'), stripped of
-        leading './' or '.\', and copied to the Windows clipboard via Set-Clipboard.
+        Launches fzf with multi-selection enabled to search and select files or folders starting from the working directory.
+        Supports Tab multi-selection, Select All (Alt+A), Deselect All (Alt+D), and interactive Preview (Ctrl+P).
+        Formats paths as relative (default), absolute (-abs), filename only (-n), or Markdown links (-md),
+        and copies them to the clipboard separated by newlines (default), spaces (-s), or commas (-c).
     .PARAMETER Path
-        Optional root folder to search from. Supports Tab completion. Defaults to the current directory ('.').
+        Optional root folder to search from. Supports Tab completion. Defaults to current directory ('.').
     .PARAMETER Directory
         Search and select folders/directories only.
+    .PARAMETER Absolute
+        Copy full absolute paths (e.g. C:/Users/...).
+    .PARAMETER Name
+        Copy base file/folder names only without directory paths.
+    .PARAMETER Markdown
+        Copy as Markdown links [name](file:///path).
+    .PARAMETER Space
+        Join multiple selected paths with spaces instead of newlines.
+    .PARAMETER Comma
+        Join multiple selected paths with commas.
     .PARAMETER Help
         Display the shortcuts and usage guide.
     #>
@@ -190,6 +202,21 @@ function cpf {
         [Alias('d', 'FoldersOnly')]
         [switch]$Directory,
 
+        [Alias('abs', 'Full')]
+        [switch]$Absolute,
+
+        [Alias('n', 'Base')]
+        [switch]$Name,
+
+        [Alias('md', 'Link')]
+        [switch]$Markdown,
+
+        [Alias('s')]
+        [switch]$Space,
+
+        [Alias('c')]
+        [switch]$Comma,
+
         [Alias('h', '?')]
         [switch]$Help
     )
@@ -198,24 +225,37 @@ function cpf {
     if ($Help -or ($Path -in @('-h', '--help', '-?', 'help', '/?', '/h'))) {
         Write-Host ''
         Write-Host '==========================================================' -ForegroundColor DarkGray
-        Write-Host ' [*] cpf (Copy Path via fzf) - Interactive Path Selector  ' -ForegroundColor Cyan
+        Write-Host ' [*] cpf (Copy Path via fzf) - Multi-Path Selector Guide  ' -ForegroundColor Cyan
         Write-Host '==========================================================' -ForegroundColor DarkGray
         Write-Host ''
         Write-Host 'Keyboard Shortcuts inside fzf:' -ForegroundColor Yellow
         Write-Host '----------------------------------------------------------' -ForegroundColor DarkGray
-        Write-Host '  [Enter]       : Copy selected relative path to Clipboard and exit' -ForegroundColor Green
-        Write-Host '  [Esc]         : Cancel without modifying clipboard' -ForegroundColor Green
-        Write-Host '  [Ctrl + C]    : Abort selection immediately' -ForegroundColor Green
-        Write-Host '  [Up / Down]   : Move selection cursor up / down' -ForegroundColor Green
-        Write-Host '  [Tab]         : In terminal, auto-complete folder names for cpf' -ForegroundColor Green
+        Write-Host '  [Tab] / [Shift+Tab] : Select / Deselect multiple files or folders' -ForegroundColor Green
+        Write-Host '  [Alt + A]           : Select all visible items' -ForegroundColor Green
+        Write-Host '  [Alt + D]           : Deselect all selected items' -ForegroundColor Green
+        Write-Host '  [Ctrl + P]          : Toggle interactive file/folder preview' -ForegroundColor Green
+        Write-Host '  [Enter]             : Copy selected path(s) to Clipboard and exit' -ForegroundColor Green
+        Write-Host '  [Esc] / [Ctrl + C]  : Cancel without modifying clipboard' -ForegroundColor Green
+        Write-Host '  [Up / Down]         : Move selection cursor up / down' -ForegroundColor Green
+        Write-Host ''
+        Write-Host 'Parameters & Formatting Flags:' -ForegroundColor Yellow
+        Write-Host '----------------------------------------------------------' -ForegroundColor DarkGray
+        Write-Host '  -d, -Directory      : List and select directories/folders only' -ForegroundColor White
+        Write-Host '  -abs, -Absolute     : Copy full absolute paths (e.g. C:/Users/...)' -ForegroundColor White
+        Write-Host '  -n, -Name           : Copy file/folder names only without paths' -ForegroundColor White
+        Write-Host '  -md, -Markdown      : Copy as Markdown links [name](file:///path)' -ForegroundColor White
+        Write-Host '  -s, -Space          : Join multiple paths with spaces (e.g. for git add)' -ForegroundColor White
+        Write-Host '  -c, -Comma          : Join multiple paths with commas' -ForegroundColor White
+        Write-Host '  -h, -Help           : Display this shortcuts and usage guide' -ForegroundColor White
         Write-Host ''
         Write-Host 'Usage & Examples:' -ForegroundColor Yellow
         Write-Host '----------------------------------------------------------' -ForegroundColor DarkGray
-        Write-Host '  cpf                 : Interactively search & copy all files/folders from current directory' -ForegroundColor White
-        Write-Host '  cpf <folder>        : Scope fuzzy finder to a specific folder (e.g. cpf docs)' -ForegroundColor White
-        Write-Host '  cpf <folder><Tab>   : Tab-complete any existing folder name in terminal' -ForegroundColor White
-        Write-Host '  cpf -d              : List and select directories/folders only' -ForegroundColor White
-        Write-Host '  cpf -h / cpf --help : Display this shortcut and usage guide' -ForegroundColor White
+        Write-Host '  cpf                 : Multi-select files/folders (Tab to pick multiple)' -ForegroundColor White
+        Write-Host '  cpf scripts         : Scope search to scripts folder' -ForegroundColor White
+        Write-Host '  cpf -d              : Select and copy folders only' -ForegroundColor White
+        Write-Host '  cpf -s              : Copy multiple paths separated by spaces' -ForegroundColor White
+        Write-Host '  cpf -abs            : Copy absolute system paths' -ForegroundColor White
+        Write-Host '  cpf -md             : Copy as Markdown links' -ForegroundColor White
         Write-Host ''
         return
     }
@@ -277,32 +317,98 @@ function cpf {
             return
         }
 
-        $fzfHeader = '[ENTER] Copy Path to Clipboard | [ESC] Cancel | Type to filter'
-        $promptText = if ($Directory) { 'Copy Folder > ' } else { 'Copy Path > ' }
+        $fzfHeader = '[TAB] Select | [ALT+A] All | [ALT+D] None | [CTRL+P] Preview | [ENTER] Copy'
+        $promptText = if ($Directory) { 'Copy Folder(s) > ' } else { 'Copy Path(s) > ' }
 
-        $selected = $itemsStream | & $fzfExe --height=50% --layout=reverse --prompt="$promptText" --header="$fzfHeader" --preview-window=hidden
+        $selected = $itemsStream | & $fzfExe --multi `
+            --height=50% `
+            --layout=reverse `
+            --prompt="$promptText" `
+            --header="$fzfHeader" `
+            --preview='cmd /c if exist "{}" (if exist "{}\*" (dir /b /o:n "{}") else (type "{}"))' `
+            --preview-window="right:50%:hidden:wrap" `
+            --bind="alt-a:select-all,alt-d:deselect-all,ctrl-p:toggle-preview"
     } catch {
         Write-Host "Error running fzf: $_" -ForegroundColor Red
         return
     }
 
     # Clean exit if user pressed ESC or cancelled
-    if ([string]::IsNullOrWhiteSpace($selected)) {
+    if ($null -eq $selected -or $selected.Count -eq 0) {
         return
     }
 
-    $formattedPath = $selected.Trim() -replace '\\', '/' -replace '^\./', ''
+    $selectedItems = @($selected) | ForEach-Object {
+        if ($_ -is [string]) {
+            $_.Split("`r`n", [System.StringSplitOptions]::RemoveEmptyEntries)
+        } else {
+            $_
+        }
+    } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) }
+
+    if ($selectedItems.Count -eq 0) {
+        return
+    }
+
+    $formattedPaths = [System.Collections.Generic.List[string]]::new()
+
+    foreach ($item in $selectedItems) {
+        $cleanItem = $item.Trim()
+        if ([string]::IsNullOrWhiteSpace($cleanItem)) { continue }
+
+        $normalizedRel = $cleanItem -replace '\\', '/' -replace '^\./', ''
+
+        if ($Absolute) {
+            $fullPath = [System.IO.Path]::GetFullPath((Join-Path $currentLocation $cleanItem)) -replace '\\', '/'
+            $formattedPaths.Add($fullPath)
+        } elseif ($Name) {
+            $fileName = [System.IO.Path]::GetFileName($cleanItem.TrimEnd('\', '/'))
+            $formattedPaths.Add($fileName)
+        } elseif ($Markdown) {
+            $fullPath = [System.IO.Path]::GetFullPath((Join-Path $currentLocation $cleanItem)) -replace '\\', '/'
+            $fileName = [System.IO.Path]::GetFileName($cleanItem.TrimEnd('\', '/'))
+            $formattedPaths.Add("[$fileName](file:///$fullPath)")
+        } else {
+            $formattedPaths.Add($normalizedRel)
+        }
+    }
+
+    if ($formattedPaths.Count -eq 0) {
+        return
+    }
+
+    $delimiter = if ($Space) {
+        ' '
+    } elseif ($Comma) {
+        ', '
+    } else {
+        "`r`n"
+    }
+
+    $resultText = ($formattedPaths -join $delimiter)
 
     # Copy to clipboard and confirm
     try {
-        $formattedPath | Set-Clipboard
-        Write-Host "Copied to clipboard: $formattedPath" -ForegroundColor Green
+        $resultText | Set-Clipboard
     } catch {
         try {
-            $formattedPath | clip.exe
-            Write-Host "Copied to clipboard: $formattedPath" -ForegroundColor Green
+            $resultText | clip.exe
         } catch {
             Write-Host "Failed to copy to clipboard: $_" -ForegroundColor Red
+            return
+        }
+    }
+
+    if ($formattedPaths.Count -eq 1) {
+        Write-Host "Copied 1 path to clipboard: $($formattedPaths[0])" -ForegroundColor Green
+    } else {
+        Write-Host "Copied $($formattedPaths.Count) paths to clipboard:" -ForegroundColor Green
+        $previewCount = [System.Math]::Min($formattedPaths.Count, 8)
+        for ($i = 0; $i -lt $previewCount; $i++) {
+            Write-Host "  $($i + 1). $($formattedPaths[$i])" -ForegroundColor DarkCyan
+        }
+        if ($formattedPaths.Count -gt 8) {
+            Write-Host "  ... and $($formattedPaths.Count - 8) more" -ForegroundColor DarkGray
         }
     }
 }
