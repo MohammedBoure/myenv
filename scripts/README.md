@@ -20,6 +20,7 @@ Central automation scripts, system configuration utilities, and native binary la
 | [`cmd-init.cmd`](file:///C:/Users/moham/Documents/myenv/scripts/cmd-init.cmd) | CMD AutoRun script setting doskey macros, aliases, and Clink injection. |
 | [`app-launcher.ps1`](file:///C:/Users/moham/Documents/myenv/scripts/app-launcher.ps1) | WPF centered application launcher dialog (`Alt + Q`). |
 | [`cb.cmd`](file:///C:/Users/moham/Documents/myenv/scripts/cb.cmd) | Runs command, prints output to console, and copies to clipboard. |
+| [`cpf-preview.cmd`](file:///C:/Users/moham/Documents/myenv/scripts/cpf-preview.cmd) | Ultra-fast universal file and directory preview helper for `cpf` (fzf). |
 | [`open-terminal-here.exe`](file:///C:/Users/moham/Documents/myenv/scripts/open-terminal-here.exe) | Native launcher to open CMD / PowerShell at active File Explorer path. |
 | [`OpenTerminalHere.cs`](file:///C:/Users/moham/Documents/myenv/scripts/OpenTerminalHere.cs) | C# source code for `open-terminal-here.exe`. |
 | [`sudo.cmd`](file:///C:/Users/moham/Documents/myenv/scripts/sudo.cmd) | Elevates commands with Administrator privileges in CMD. |

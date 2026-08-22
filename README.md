@@ -169,8 +169,8 @@ A high-performance, keyboard-driven tiling desktop environment for Windows devel
 | `Alt + 1..5` | Focus workspace 1-5 (Left Monitor) |
 | `Alt + 6..0` | Focus workspace 6-10 (Right Monitor, `Alt+0` = 10) |
 | `Alt + Shift + 1..0` | Move window to workspace 1-10 and focus it |
-| `Alt + PageUp` / `Alt + A` | Focus previous active workspace |
-| `Alt + PageDown` / `Alt + S` | Focus next active workspace |
+| `Alt + PageUp` | Focus previous workspace |
+| `Alt + PageDown` | Focus next workspace |
 | `Alt + D` | Focus recent workspace |
 | `Alt + Shift + A/F/D/S` | Move workspace to Left / Right / Top / Bottom monitor |
 

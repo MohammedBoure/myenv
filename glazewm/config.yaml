@@ -276,11 +276,6 @@ keybindings:
 
 
   # Workspaces Navigation
-  - commands: ['focus --next-active-workspace']
-    bindings: ['alt+s']
-  - commands: ['focus --prev-active-workspace']
-    bindings: ['alt+a']
-
   - commands: ['focus --prev-workspace']
     bindings: ['alt+page_up']
   - commands: ['focus --next-workspace']

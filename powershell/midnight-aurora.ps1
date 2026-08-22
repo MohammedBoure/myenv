@@ -231,8 +231,8 @@ function cpf {
         Write-Host 'Keyboard Shortcuts inside fzf:' -ForegroundColor Yellow
         Write-Host '----------------------------------------------------------' -ForegroundColor DarkGray
         Write-Host '  [Tab] / [Shift+Tab] : Select / Deselect multiple files or folders' -ForegroundColor Green
-        Write-Host '  [Alt + A]           : Select all visible items' -ForegroundColor Green
-        Write-Host '  [Alt + D]           : Deselect all selected items' -ForegroundColor Green
+        Write-Host '  [Ctrl + A] / [Alt+A]: Select all visible items' -ForegroundColor Green
+        Write-Host '  [Ctrl + D] / [Alt+D]: Deselect all selected items' -ForegroundColor Green
         Write-Host '  [Ctrl + P]          : Toggle interactive file/folder preview' -ForegroundColor Green
         Write-Host '  [Enter]             : Copy selected path(s) to Clipboard and exit' -ForegroundColor Green
         Write-Host '  [Esc] / [Ctrl + C]  : Cancel without modifying clipboard' -ForegroundColor Green
@@ -248,14 +248,10 @@ function cpf {
         Write-Host '  -c, -Comma          : Join multiple paths with commas' -ForegroundColor White
         Write-Host '  -h, -Help           : Display this shortcuts and usage guide' -ForegroundColor White
         Write-Host ''
-        Write-Host 'Usage & Examples:' -ForegroundColor Yellow
+        Write-Host 'Ignore Config (.gitignore / cpf-ignore.txt):' -ForegroundColor Yellow
         Write-Host '----------------------------------------------------------' -ForegroundColor DarkGray
-        Write-Host '  cpf                 : Multi-select files/folders (Tab to pick multiple)' -ForegroundColor White
-        Write-Host '  cpf scripts         : Scope search to scripts folder' -ForegroundColor White
-        Write-Host '  cpf -d              : Select and copy folders only' -ForegroundColor White
-        Write-Host '  cpf -s              : Copy multiple paths separated by spaces' -ForegroundColor White
-        Write-Host '  cpf -abs            : Copy absolute system paths' -ForegroundColor White
-        Write-Host '  cpf -md             : Copy as Markdown links' -ForegroundColor White
+        Write-Host '  Central rules file  : %USERPROFILE%\Documents\myenv\powershell\cpf-ignore.txt' -ForegroundColor DarkCyan
+        Write-Host '  Local rules         : Automatically inherits from .gitignore & .cpfignore' -ForegroundColor DarkCyan
         Write-Host ''
         return
     }
@@ -295,12 +291,40 @@ function cpf {
         $searchTarget = $resolved
     }
 
-    # Fast iterative directory scanning with junk-folder pruning
-    try {
-        $skipFolders = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
-        @('.git', 'node_modules', 'AppData', '.vscode', '.idea', '.gemini', '.cache', 'bin', 'obj', 'dist', 'build', 'vendor', '__pycache__', '.next', '.nuxt', 'target') |
-            ForEach-Object { [void]$skipFolders.Add($_) }
+    # Load ignore rules (Global cpf-ignore.txt + local .gitignore / .cpfignore)
+    $exactIgnoreNames = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    $wildcardIgnores = [System.Collections.Generic.List[string]]::new()
 
+    $ignoreFilesToLoad = [System.Collections.Generic.List[string]]::new()
+    $globalIgnorePath = Join-Path $env:USERPROFILE "Documents\myenv\powershell\cpf-ignore.txt"
+    if (Test-Path -LiteralPath $globalIgnorePath) { $ignoreFilesToLoad.Add($globalIgnorePath) }
+
+    $localGitIgnore = Join-Path $searchTarget ".gitignore"
+    if (Test-Path -LiteralPath $localGitIgnore) { $ignoreFilesToLoad.Add($localGitIgnore) }
+
+    $localCpfIgnore = Join-Path $searchTarget ".cpfignore"
+    if (Test-Path -LiteralPath $localCpfIgnore) { $ignoreFilesToLoad.Add($localCpfIgnore) }
+
+    foreach ($igFile in $ignoreFilesToLoad) {
+        try {
+            $lines = Get-Content -LiteralPath $igFile -ErrorAction SilentlyContinue
+            foreach ($line in $lines) {
+                $trimmed = $line.Trim().TrimEnd('/', '\')
+                if ([string]::IsNullOrWhiteSpace($trimmed) -or $trimmed.StartsWith('#')) { continue }
+                if ($trimmed.Contains('*') -or $trimmed.Contains('?')) {
+                    $wildcardIgnores.Add($trimmed)
+                } else {
+                    [void]$exactIgnoreNames.Add($trimmed)
+                }
+            }
+        } catch {}
+    }
+
+    # Always ensure critical root system folders are ignored
+    @('.git', 'node_modules', 'AppData') | ForEach-Object { [void]$exactIgnoreNames.Add($_) }
+
+    # Fast iterative directory scanning with ignore filters
+    try {
         $baseLen = $currentLocation.TrimEnd('\', '/').Length
         $queue = [System.Collections.Generic.Queue[string]]::new()
         $queue.Enqueue($searchTarget)
@@ -317,10 +341,25 @@ function cpf {
             }
 
             foreach ($entry in $entries) {
+                $name = $entry.Name
                 $isDir = ($entry.Attributes -band [System.IO.FileAttributes]::Directory) -ne 0
 
+                # Check exact ignore match
+                if ($exactIgnoreNames.Contains($name)) {
+                    continue
+                }
+
+                # Check wildcard ignore match
+                $skip = $false
+                foreach ($pat in $wildcardIgnores) {
+                    if ($name -like $pat) {
+                        $skip = $true
+                        break
+                    }
+                }
+                if ($skip) { continue }
+
                 if ($isDir) {
-                    if ($skipFolders.Contains($entry.Name)) { continue }
                     $queue.Enqueue($entry.FullName)
                 }
 
@@ -341,17 +380,18 @@ function cpf {
             return
         }
 
-        $fzfHeader = '[TAB] Select | [ALT+A] All | [ALT+D] None | [CTRL+P] Preview | [ENTER] Copy'
+        $fzfHeader = '[TAB] Select | [CTRL+A] All | [CTRL+D] None | [CTRL+P] Preview | [ENTER] Copy'
         $promptText = if ($Directory) { 'Copy Folder(s) > ' } else { 'Copy Path(s) > ' }
+        $previewScript = Join-Path $env:USERPROFILE "Documents\myenv\scripts\cpf-preview.cmd"
 
         $selected = $itemsList | & $fzfExe --multi `
             --height=50% `
             --layout=reverse `
             --prompt="$promptText" `
             --header="$fzfHeader" `
-            --preview='cmd /c if exist "{}" (if exist "{}\*" (dir /b /o:n "{}") else (type "{}"))' `
-            --preview-window="right:50%:hidden:wrap" `
-            --bind="alt-a:select-all,alt-d:deselect-all,ctrl-p:toggle-preview"
+            --preview="`"$previewScript`" {}" `
+            --preview-window="right:50%:wrap" `
+            --bind="ctrl-a:select-all,ctrl-d:deselect-all,alt-a:select-all,alt-d:deselect-all,ctrl-p:toggle-preview"
     } catch {
         Write-Host "Error running fzf: $_" -ForegroundColor Red
         return

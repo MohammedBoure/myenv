@@ -1,0 +1,53 @@
+# =====================================================================
+# cpf Global Ignore Configuration (powershell/cpf-ignore.txt)
+# =====================================================================
+# Syntax rules (similar to .gitignore):
+# - Add folder names or file names to ignore (e.g. node_modules, dist)
+# - Use wildcards like *.log, *.tmp, *.dll
+# - Lines starting with # are comments
+# - Blank lines are ignored
+#
+# Note: cpf also automatically loads local .gitignore and .cpfignore files!
+# =====================================================================
+
+# System & IDE folders
+AppData
+.git
+.vscode
+.idea
+.gemini
+.cache
+.turbo
+.next
+.nuxt
+.output
+
+# Dependencies & Package Managers
+node_modules
+vendor
+__pycache__
+.venv
+venv
+.pytest_cache
+
+# Build Artifacts & Compiled Binaries
+bin
+obj
+dist
+build
+target
+*.dll
+*.pdb
+*.suo
+*.user
+
+# Logs & Temporary Files
+*.log
+*.tmp
+*.bak
+*.swp
+Thumbs.db
+desktop.ini
+
+# Archives & Legacy
+_legacy_originals

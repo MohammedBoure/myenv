@@ -52,8 +52,8 @@
 | `Alt + 1..8` | Focus workspace 1-8 (Left Display) |
 | `Alt + 9..0` | Focus workspace 9-10 (Right Display) |
 | `Alt + Shift + 1..0` | Move focused window to target workspace and follow focus |
-| `Alt + PageUp` / `Alt + A` | Focus previous active workspace |
-| `Alt + PageDown` / `Alt + S` | Focus next active workspace |
+| `Alt + PageUp` | Focus previous workspace |
+| `Alt + PageDown` | Focus next workspace |
 | `Alt + D` | Focus recently used workspace |
 | `Alt + Shift + A/F/D/S` | Move active workspace to target display (Left/Right/Up/Down) |
 
