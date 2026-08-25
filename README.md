@@ -20,6 +20,7 @@ A high-performance, keyboard-driven tiling desktop environment for Windows devel
 | 🔠 **QuickTranslate Tool** | 🇺🇸 [docs/en/quick-translate.md](file:///%USERPROFILE%/Documents/myenv/docs/en/quick-translate.md) | 🇸🇦 [docs/ar/quick-translate.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/quick-translate.md) |
 | 🌙 **NightPad (Night Mode Editor)** | 🇺🇸 [docs/en/night-pad.md](file:///%USERPROFILE%/Documents/myenv/docs/en/night-pad.md) | 🇸🇦 [docs/ar/night-pad.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/night-pad.md) |
 | 🌐 **NetLimiter (Bandwidth Control)** | 🇺🇸 [docs/en/netlimiter.md](file:///%USERPROFILE%/Documents/myenv/docs/en/netlimiter.md) | 🇸🇦 [docs/ar/netlimiter.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/netlimiter.md) |
+| 🤖 **Gemini Antigravity (AI)** | 🇺🇸 [docs/en/gemini-antigravity.md](file:///%USERPROFILE%/Documents/myenv/docs/en/gemini-antigravity.md) | 🇸🇦 [docs/ar/gemini-antigravity.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/gemini-antigravity.md) |
 | ⚙️ **Automation Scripts** | 🇺🇸 [docs/en/automation-scripts.md](file:///%USERPROFILE%/Documents/myenv/docs/en/automation-scripts.md) | 🇸🇦 [docs/ar/automation-scripts.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/automation-scripts.md) |
 
 ---
@@ -103,6 +104,7 @@ A high-performance, keyboard-driven tiling desktop environment for Windows devel
 | **Clink Settings** | [clink/clink_settings](file:///%USERPROFILE%/Documents/myenv/clink/clink_settings) | Clink history auto-suggestions configuration |
 | **NightPad Source** | [tools/nightpad/](file:///%USERPROFILE%/Documents/myenv/tools/nightpad) | Source code for NightPad professional text editor (.NET 10 WPF + AvalonEdit) |
 | **NightPad Binary** | [scripts/nightpad/NightPad.exe](file:///%USERPROFILE%/Documents/myenv/scripts/nightpad/NightPad.exe) | Compiled standalone executable for NightPad |
+| **Gemini Antigravity** | [gemini/](file:///%USERPROFILE%/Documents/myenv/gemini) | Global Antigravity instructions (`GEMINI.md`), MCP config, rules, and skills linked to `%USERPROFILE%\.gemini\config` |
 | **Package Manifest** | [winget-packages.json](file:///%USERPROFILE%/Documents/myenv/winget-packages.json) | Exported Winget package manifest for developer tools |
 
 ---
@@ -112,6 +114,7 @@ A high-performance, keyboard-driven tiling desktop environment for Windows devel
 | Script | Path | Description |
 |---|---|---|
 | **`setup-all.ps1`** | [scripts/setup-all.ps1](file:///%USERPROFILE%/Documents/myenv/scripts/setup-all.ps1) | Master setup script: applies junctions, taskbar autohide, PSReadLine, Clink, Winget packages, CMD autorun, Alt+Shift disable, reloads YASB, and builds NightPad. |
+| **`setup-gemini-config.ps1`** | [scripts/setup-gemini-config.ps1](file:///%USERPROFILE%/Documents/myenv/scripts/setup-gemini-config.ps1) | Configures central directory junction linking `%USERPROFILE%\.gemini\config` to `%USERPROFILE%\Documents\myenv\gemini`. |
 | **`np.cmd` / `nightpad.cmd`** | [scripts/np.cmd](file:///%USERPROFILE%/Documents/myenv/scripts/np.cmd) | Instant command-line launcher for NightPad (`np [file]`). |
 | **`install-packages.ps1`** | [scripts/install-packages.ps1](file:///%USERPROFILE%/Documents/myenv/scripts/install-packages.ps1) | Restores/installs all developer packages from `winget-packages.json`. |
 | **`set-taskbar-autohide.ps1`** | [scripts/set-taskbar-autohide.ps1](file:///%USERPROFILE%/Documents/myenv/scripts/set-taskbar-autohide.ps1) | Toggles Windows Taskbar auto-hide in Registry and restarts Explorer. |

@@ -43,7 +43,8 @@ $junctions = @(
     @{ Source = "$userProfile\.config\yasb"; Target = "$myenvPath\yasb" },
     @{ Source = "$userProfile\.config\tacky-borders"; Target = "$myenvPath\tacky-borders" },
     @{ Source = "$userProfile\.glzr\glazewm"; Target = "$myenvPath\glazewm" },
-    @{ Source = "$userProfile\.glzr\zebar"; Target = "$myenvPath\zebar" }
+    @{ Source = "$userProfile\.glzr\zebar"; Target = "$myenvPath\zebar" },
+    @{ Source = "$userProfile\.gemini\config"; Target = "$myenvPath\gemini" }
 )
 
 foreach ($j in $junctions) {

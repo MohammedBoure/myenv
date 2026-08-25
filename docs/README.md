@@ -16,3 +16,5 @@ Central documentation hub for the MyEnv environment in English and Arabic.
 | [`en/yasb.md`](file:///C:/Users/moham/Documents/myenv/docs/en/yasb.md) | YASB status bar widgets and dark styling. |
 | [`en/quick-translate.md`](file:///C:/Users/moham/Documents/myenv/docs/en/quick-translate.md) | QuickTranslate screen OCR and translation guide. |
 | [`en/automation-scripts.md`](file:///C:/Users/moham/Documents/myenv/docs/en/automation-scripts.md) | Reference for all automation scripts in `scripts/`. |
+| [`en/gemini-antigravity.md`](file:///C:/Users/moham/Documents/myenv/docs/en/gemini-antigravity.md) | English guide for Gemini Antigravity environment configuration and rules. |
+| [`ar/gemini-antigravity.md`](file:///C:/Users/moham/Documents/myenv/docs/ar/gemini-antigravity.md) | Arabic guide for Gemini Antigravity environment configuration and rules (دليل إعداد بيئة Antigravity). |
