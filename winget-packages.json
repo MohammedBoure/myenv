@@ -197,6 +197,10 @@
 				{
 					"PackageIdentifier" : "Microsoft.WindowsTerminal",
 					"Version" : "1.24.11911.0"
+				},
+				{
+					"PackageIdentifier" : "Genymobile.scrcpy",
+					"Version" : "4.1"
 				}
 			],
 			"SourceDetails" : 

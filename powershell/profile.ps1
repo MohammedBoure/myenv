@@ -24,6 +24,7 @@ $myenvDir = Join-Path $userProfile "Documents\myenv"
 # Central development environment paths.
 $pathsToAdd = @(
     "$userProfile\AppData\Local\agy\bin",
+    "$userProfile\.local\bin",
     "$userProfile\AppData\Local\Microsoft\WindowsApps",
     "$myenvDir\scripts",
     "$myenvDir\scripts\nightpad",
@@ -46,6 +47,31 @@ foreach ($p in $pathsToAdd) {
         $existing = @($env:Path -split ';' | Where-Object { $_ -ne '' })
         if (-not ($existing | Where-Object { $_.TrimEnd('\') -ieq $p.TrimEnd('\') })) {
             $env:Path = "$p;$env:Path"
+        }
+    }
+}
+
+# Dynamically resolve WinGet package executable directories (scrcpy, ffmpeg, fzf, fastfetch, etc.)
+$wingetPackagesDir = Join-Path $userProfile "AppData\Local\Microsoft\WinGet\Packages"
+if (Test-Path -LiteralPath $wingetPackagesDir) {
+    Get-ChildItem -LiteralPath $wingetPackagesDir -Directory -ErrorAction SilentlyContinue | ForEach-Object {
+        $pkgDir = $_.FullName
+        $subDirs = Get-ChildItem -LiteralPath $pkgDir -Directory -ErrorAction SilentlyContinue
+        $targetDirs = @($pkgDir)
+        if ($subDirs) {
+            foreach ($sub in $subDirs) {
+                $targetDirs += $sub.FullName
+                $nestedBin = Join-Path $sub.FullName "bin"
+                if (Test-Path -LiteralPath $nestedBin) { $targetDirs += $nestedBin }
+            }
+        }
+        foreach ($td in $targetDirs) {
+            if (Get-ChildItem -LiteralPath $td -Filter "*.exe" -File -ErrorAction SilentlyContinue) {
+                $existing = @($env:Path -split ';' | Where-Object { $_ -ne '' })
+                if (-not ($existing | Where-Object { $_.TrimEnd('\') -ieq $td.TrimEnd('\') })) {
+                    $env:Path = "$td;$env:Path"
+                }
+            }
         }
     }
 }
