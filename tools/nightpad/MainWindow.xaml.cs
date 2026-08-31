@@ -24,6 +24,7 @@ public partial class MainWindow : Window
     private const double BaseFontSize = 14.0;
     private string? _currentFilePath;
     private bool _isModified;
+    private bool _isAutoDetectMode = true;
     private string _currentSyntaxName = "Plain Text";
 
     // Auto-completion state for quick keyboard save
@@ -96,6 +97,11 @@ public partial class MainWindow : Window
             {
                 _isModified = true;
                 UpdateTitle();
+            }
+
+            if (_isAutoDetectMode)
+            {
+                AutoDetectAndApplySyntaxFromContent();
             }
 
             CheckAutoArabicDetection();
@@ -210,8 +216,21 @@ public partial class MainWindow : Window
             }
 
             _isModified = false;
-            _currentSyntaxName = SyntaxService.GetLanguageByExtension(_currentFilePath);
+            string extLang = SyntaxService.GetLanguageByExtension(_currentFilePath);
+            if (extLang != "Plain Text")
+            {
+                _isAutoDetectMode = false;
+                _currentSyntaxName = extLang;
+            }
+            else
+            {
+                _isAutoDetectMode = true;
+                string contentLang = SyntaxService.DetectLanguageFromContent(MainEditor.Document.Text);
+                _currentSyntaxName = contentLang;
+            }
+
             ApplySyntax(_currentSyntaxName);
+            UpdateSyntaxMenuSelection();
 
             CheckAutoArabicDetection();
             UpdateTitle();
@@ -238,8 +257,10 @@ public partial class MainWindow : Window
         MainEditor.Document.Text = string.Empty;
         _currentFilePath = null;
         _isModified = false;
+        _isAutoDetectMode = true;
         _currentSyntaxName = "Plain Text";
         ApplySyntax(_currentSyntaxName);
+        UpdateSyntaxMenuSelection();
 
         SetTextDirection(FlowDirection.LeftToRight);
         UpdateTitle();
@@ -517,7 +538,9 @@ public partial class MainWindow : Window
             _isModified = false;
 
             _currentSyntaxName = SyntaxService.GetLanguageByExtension(_currentFilePath);
+            _isAutoDetectMode = (_currentSyntaxName == "Plain Text");
             ApplySyntax(_currentSyntaxName);
+            UpdateSyntaxMenuSelection();
 
             UpdateTitle();
             UpdateStatusBar();
@@ -568,7 +591,9 @@ public partial class MainWindow : Window
                 _isModified = false;
 
                 _currentSyntaxName = SyntaxService.GetLanguageByExtension(_currentFilePath);
+                _isAutoDetectMode = (_currentSyntaxName == "Plain Text");
                 ApplySyntax(_currentSyntaxName);
+                UpdateSyntaxMenuSelection();
 
                 UpdateTitle();
                 UpdateStatusBar();
@@ -733,16 +758,107 @@ public partial class MainWindow : Window
     private void InitializeSyntaxMenu()
     {
         MenuSyntaxParent.Items.Clear();
+
+        var autoDetectItem = new MenuItem
+        {
+            Header = "Auto-Detect Language",
+            IsCheckable = true,
+            IsChecked = _isAutoDetectMode
+        };
+        autoDetectItem.Click += (s, e) => SetAutoDetectMode(true);
+        MenuSyntaxParent.Items.Add(autoDetectItem);
+        MenuSyntaxParent.Items.Add(new Separator());
+
         foreach (var lang in SyntaxService.SupportedLanguages)
         {
-            var item = new MenuItem { Header = lang };
-            item.Click += (s, e) =>
+            var item = new MenuItem
             {
-                _currentSyntaxName = lang;
-                ApplySyntax(lang);
-                UpdateStatusBar();
+                Header = lang,
+                IsCheckable = true,
+                IsChecked = (lang == _currentSyntaxName)
             };
+            item.Click += (s, e) => SetManualLanguage(lang);
             MenuSyntaxParent.Items.Add(item);
+        }
+    }
+
+    private void SetAutoDetectMode(bool autoDetect)
+    {
+        _isAutoDetectMode = autoDetect;
+        if (_isAutoDetectMode)
+        {
+            string detected = "Plain Text";
+            if (!string.IsNullOrEmpty(_currentFilePath))
+            {
+                string extLang = SyntaxService.GetLanguageByExtension(_currentFilePath);
+                if (extLang != "Plain Text")
+                {
+                    detected = extLang;
+                }
+            }
+
+            if (detected == "Plain Text")
+            {
+                detected = SyntaxService.DetectLanguageFromContent(MainEditor.Document.Text);
+            }
+
+            _currentSyntaxName = detected;
+            ApplySyntax(_currentSyntaxName);
+        }
+
+        UpdateSyntaxMenuSelection();
+        UpdateStatusBar();
+    }
+
+    private void SetManualLanguage(string lang)
+    {
+        _isAutoDetectMode = false;
+        _currentSyntaxName = lang;
+        ApplySyntax(lang);
+        UpdateSyntaxMenuSelection();
+        UpdateStatusBar();
+    }
+
+    private void AutoDetectAndApplySyntaxFromContent()
+    {
+        string detected = "Plain Text";
+        if (!string.IsNullOrEmpty(_currentFilePath))
+        {
+            string extLang = SyntaxService.GetLanguageByExtension(_currentFilePath);
+            if (extLang != "Plain Text")
+            {
+                detected = extLang;
+            }
+        }
+
+        if (detected == "Plain Text")
+        {
+            detected = SyntaxService.DetectLanguageFromContent(MainEditor.Document.Text);
+        }
+
+        if (detected != _currentSyntaxName)
+        {
+            _currentSyntaxName = detected;
+            ApplySyntax(_currentSyntaxName);
+            UpdateSyntaxMenuSelection();
+        }
+    }
+
+    private void UpdateSyntaxMenuSelection()
+    {
+        foreach (var itemObj in MenuSyntaxParent.Items)
+        {
+            if (itemObj is MenuItem item)
+            {
+                if (item.Header?.ToString() == "Auto-Detect Language")
+                {
+                    item.IsChecked = _isAutoDetectMode;
+                }
+                else if (item.Header is string headerStr)
+                {
+                    item.IsChecked = (headerStr == _currentSyntaxName);
+                }
+            }
         }
     }
 
@@ -754,15 +870,26 @@ public partial class MainWindow : Window
     private void BtnLanguageSelector_Click(object sender, RoutedEventArgs e)
     {
         var contextMenu = new ContextMenu();
+
+        var autoDetectItem = new MenuItem
+        {
+            Header = "Auto-Detect Language",
+            IsCheckable = true,
+            IsChecked = _isAutoDetectMode
+        };
+        autoDetectItem.Click += (s, ev) => SetAutoDetectMode(true);
+        contextMenu.Items.Add(autoDetectItem);
+        contextMenu.Items.Add(new Separator());
+
         foreach (var lang in SyntaxService.SupportedLanguages)
         {
-            var item = new MenuItem { Header = lang };
-            item.Click += (s, ev) =>
+            var item = new MenuItem
             {
-                _currentSyntaxName = lang;
-                ApplySyntax(lang);
-                UpdateStatusBar();
+                Header = lang,
+                IsCheckable = true,
+                IsChecked = (lang == _currentSyntaxName)
             };
+            item.Click += (s, ev) => SetManualLanguage(lang);
             contextMenu.Items.Add(item);
         }
         contextMenu.PlacementTarget = BtnLanguageSelector;
@@ -1399,6 +1526,7 @@ public partial class MainWindow : Window
         else StatusEol.Text = "Windows (CRLF)";
 
         BtnLanguageSelector.Content = _currentSyntaxName;
+        BtnLanguageSelector.ToolTip = $"Syntax Highlighting: {_currentSyntaxName} {(_isAutoDetectMode ? "(Auto-Detected)" : "(Manual)")} - Click to switch language";
     }
 
     protected override void OnClosing(System.ComponentModel.CancelEventArgs e)

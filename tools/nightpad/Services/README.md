@@ -6,7 +6,7 @@ Core business logic, path completion, Arabic language utilities, Markdown live p
 
 | File | Purpose |
 |---|---|
-| [`SyntaxService.cs`](file:///C:/Users/moham/Documents/myenv/tools/nightpad/Services/SyntaxService.cs) | Manages syntax highlighting definitions for 20+ programming languages, registering embedded XML Syntax Highlighting Definitions (XSHD) with custom dark mode themes and extension mapping. |
+| [`SyntaxService.cs`](file:///C:/Users/moham/Documents/myenv/tools/nightpad/Services/SyntaxService.cs) | Manages syntax highlighting definitions for 20+ programming languages, content-based language auto-detection heuristics, and extension mappings. |
 | [`MarkdownRenderService.cs`](file:///C:/Users/moham/Documents/myenv/tools/nightpad/Services/MarkdownRenderService.cs) | High-performance native dark-themed WPF FlowDocument renderer for real-time Markdown live side-by-side preview with Arabic RTL support. |
 | [`PathCompletionService.cs`](file:///C:/Users/moham/Documents/myenv/tools/nightpad/Services/PathCompletionService.cs) | High-speed terminal-style keyboard path resolution, Tab auto-completion cycling, preset folder jumping (`F1`-`F4`), and auto-directory creation. |
 | [`ArabicTextService.cs`](file:///C:/Users/moham/Documents/myenv/tools/nightpad/Services/ArabicTextService.cs) | Arabic character detection, smart bidirectional Right-to-Left (RTL) flow evaluation, and multilingual Unicode word counting. |

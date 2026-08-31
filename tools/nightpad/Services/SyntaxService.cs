@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Text.RegularExpressions;
 using System.Xml;
 using ICSharpCode.AvalonEdit.Highlighting;
 using ICSharpCode.AvalonEdit.Highlighting.Xshd;
@@ -102,6 +103,151 @@ public static class SyntaxService
             ".go" => "Go",
             _ => "Plain Text"
         };
+    }
+
+    /// <summary>
+    /// Intelligently detects the programming or markup language from document content heuristics.
+    /// Returns the matched language name, or "Plain Text" if no strong match is found.
+    /// </summary>
+    public static string DetectLanguageFromContent(string? content)
+    {
+        if (string.IsNullOrWhiteSpace(content))
+            return "Plain Text";
+
+        string trimmed = content.Trim();
+
+        // 1. Shebang Detection
+        if (trimmed.StartsWith("#!"))
+        {
+            int firstLineEnd = trimmed.IndexOfAny(new[] { '\r', '\n' });
+            string firstLine = firstLineEnd > 0 ? trimmed[..firstLineEnd] : trimmed;
+            if (firstLine.Contains("python", StringComparison.OrdinalIgnoreCase)) return "Python";
+            if (firstLine.Contains("pwsh", StringComparison.OrdinalIgnoreCase) || firstLine.Contains("powershell", StringComparison.OrdinalIgnoreCase)) return "PowerShell";
+            if (firstLine.Contains("node", StringComparison.OrdinalIgnoreCase)) return "JavaScript";
+            if (firstLine.Contains("bash", StringComparison.OrdinalIgnoreCase) || firstLine.Contains("sh", StringComparison.OrdinalIgnoreCase)) return "Batch";
+            if (firstLine.Contains("php", StringComparison.OrdinalIgnoreCase)) return "PHP";
+        }
+
+        // 2. HTML / XML / SVG / XAML Detection
+        if (trimmed.StartsWith("<!DOCTYPE html", StringComparison.OrdinalIgnoreCase) ||
+            trimmed.StartsWith("<html", StringComparison.OrdinalIgnoreCase) ||
+            trimmed.StartsWith("<div", StringComparison.OrdinalIgnoreCase) ||
+            trimmed.StartsWith("<head", StringComparison.OrdinalIgnoreCase) ||
+            trimmed.StartsWith("<body", StringComparison.OrdinalIgnoreCase))
+        {
+            return "HTML";
+        }
+
+        if (trimmed.StartsWith("<?xml", StringComparison.OrdinalIgnoreCase) ||
+            trimmed.StartsWith("<svg", StringComparison.OrdinalIgnoreCase) ||
+            trimmed.StartsWith("<Project", StringComparison.OrdinalIgnoreCase) ||
+            trimmed.StartsWith("<ResourceDictionary", StringComparison.OrdinalIgnoreCase) ||
+            trimmed.StartsWith("<Window", StringComparison.OrdinalIgnoreCase) ||
+            trimmed.StartsWith("<UserControl", StringComparison.OrdinalIgnoreCase) ||
+            (trimmed.StartsWith("<") && trimmed.EndsWith(">") && trimmed.Contains("xmlns")))
+        {
+            return "XML";
+        }
+
+        // 3. JSON Detection
+        if ((trimmed.StartsWith("{") && trimmed.EndsWith("}")) || (trimmed.StartsWith("[") && trimmed.EndsWith("]")))
+        {
+            if (trimmed.Contains("\":") || trimmed.Contains("\": ") || trimmed.Contains("\":\t"))
+            {
+                return "JSON";
+            }
+        }
+
+        // 4. YAML Detection (Frontmatter or YAML keys)
+        if (trimmed.StartsWith("---") ||
+            Regex.IsMatch(trimmed, @"^(---|\w+:\s*([^\r\n]*|\s*\n\s*-\s+))", RegexOptions.Multiline))
+        {
+            if (Regex.IsMatch(trimmed, @"^\s*[\w.-]+:\s*(\S|$)", RegexOptions.Multiline) &&
+                !trimmed.Contains(";") && !trimmed.Contains("{") && !trimmed.Contains("}"))
+            {
+                return "YAML";
+            }
+        }
+
+        // 5. C# Detection
+        if (Regex.IsMatch(trimmed, @"\b(using\s+System(\.[a-zA-Z0-9_]+)*;|namespace\s+[a-zA-Z0-9_.]+|public\s+(class|record|struct|interface|enum)\s+[a-zA-Z0-9_]+|Console\.(WriteLine|Write)|async\s+Task)\b"))
+        {
+            return "C#";
+        }
+
+        // 6. Python Detection
+        if (Regex.IsMatch(trimmed, @"\b(def\s+[a-zA-Z0-9_]+\s*\(.*?\)\s*:|class\s+[a-zA-Z0-9_]+(\(.*?\))?\s*:|import\s+[a-zA-Z0-9_]+|from\s+[a-zA-Z0-9_]+\s+import|if\s+__name__\s*==\s*['""]__main__['""]|elif\s+.*?:|except\s+([a-zA-Z0-9_]+\s+as\s+[a-zA-Z0-9_]+|\w+)\s*:)\b"))
+        {
+            return "Python";
+        }
+
+        // 7. PowerShell Detection
+        if (Regex.IsMatch(trimmed, @"\b(param\s*\(|Write-(Host|Output|Error|Warning)|Get-[A-Z][a-zA-Z0-9]+|Set-[A-Z][a-zA-Z0-9]+|Start-Process|\[CmdletBinding\(\)\]|\$PSScriptRoot|\$PSVersionTable|\$env:[a-zA-Z0-9_]+)\b", RegexOptions.IgnoreCase))
+        {
+            return "PowerShell";
+        }
+
+        // 8. SQL Detection
+        if (Regex.IsMatch(trimmed, @"\b(SELECT\s+.*?\s+FROM\s+|INSERT\s+INTO\s+|UPDATE\s+\w+\s+SET\s+|DELETE\s+FROM\s+|CREATE\s+TABLE\s+|ALTER\s+TABLE\s+|DROP\s+TABLE\s+)\b", RegexOptions.IgnoreCase))
+        {
+            return "SQL";
+        }
+
+        // 9. C / C++ Detection
+        if (Regex.IsMatch(trimmed, @"(#include\s+[<""].*?[>""]|std::(cout|vector|string|cin)|int\s+main\s*\(\s*(void|[^\)]*)\)\s*\{)"))
+        {
+            return "C/C++";
+        }
+
+        // 10. Rust Detection
+        if (Regex.IsMatch(trimmed, @"\b(fn\s+main\s*\(\s*\)|let\s+mut\s+[a-zA-Z0-9_]+|pub\s+fn\s+[a-zA-Z0-9_]+|println!\s*\(|use\s+std::)\b"))
+        {
+            return "Rust";
+        }
+
+        // 11. Go Detection
+        if (Regex.IsMatch(trimmed, @"\b(package\s+[a-zA-Z0-9_]+|func\s+main\s*\(\s*\)|func\s+\(.*?\)|\bfmt\.(Println|Printf|Sprintf))\b"))
+        {
+            return "Go";
+        }
+
+        // 12. JavaScript / TypeScript Detection
+        if (Regex.IsMatch(trimmed, @"\b(export\s+(default|const|let|function|class)|import\s+.*?from\s+['""]|const\s+[a-zA-Z0-9_]+\s*=\s*require\(|console\.(log|error|warn|debug)|function\s+[a-zA-Z0-9_]*\s*\(.*?\)\s*\{|=>\s*\{)"))
+        {
+            if (Regex.IsMatch(trimmed, @"\b(interface\s+[a-zA-Z0-9_]+|type\s+[a-zA-Z0-9_]+\s*=|:\s*(string|number|boolean|any)\[\]?)\b"))
+            {
+                return "TypeScript";
+            }
+            return "JavaScript";
+        }
+
+        // 13. CSS Detection
+        if (Regex.IsMatch(trimmed, @"^[.#a-zA-Z0-9_,\s>:+~\[\]=""]+\s*\{\s*[\r\n\s]*[a-zA-Z-]+:\s*[^;]+;", RegexOptions.Multiline))
+        {
+            return "CSS";
+        }
+
+        // 14. Batch / CMD Detection
+        if (trimmed.StartsWith("@echo off", StringComparison.OrdinalIgnoreCase) ||
+            Regex.IsMatch(trimmed, @"\b(setlocal|endlocal|goto\s+:[a-zA-Z0-9_]+|rem\s+)\b", RegexOptions.IgnoreCase))
+        {
+            return "Batch";
+        }
+
+        // 15. INI / Config / ENV Detection
+        if (Regex.IsMatch(trimmed, @"^\[[a-zA-Z0-9_.-]+\]\s*$", RegexOptions.Multiline) ||
+            Regex.IsMatch(trimmed, @"^[A-Z0-9_]+=[^\r\n]+$", RegexOptions.Multiline))
+        {
+            return "INI / Config";
+        }
+
+        // 16. Markdown Detection
+        if (Regex.IsMatch(trimmed, @"^(#{1,6}\s+.*$|```|\*\*[^*]+\*\*|\[[^\]]+\]\([^)]+\)|>\s+.*$)", RegexOptions.Multiline))
+        {
+            return "Markdown";
+        }
+
+        return "Plain Text";
     }
 
     private static void InitializeCustomSyntaxes()
