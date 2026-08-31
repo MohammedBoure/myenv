@@ -9,4 +9,5 @@ Source code and binaries for internal development tools and utilities in the MyE
 | [`nightpad/`](file:///C:/Users/moham/Documents/myenv/tools/nightpad) | Source code for **NightPad**, the professional Obsidian Night Mode text and code editor (.NET 10 WPF + AvalonEdit). |
 | [`quick-translate/`](file:///C:/Users/moham/Documents/myenv/tools/quick-translate) | Source code for **QuickTranslate**, the fast screen OCR and Arabic translation overlay (.NET 10 WPF + WinRT OCR). |
 | [`fzf/`](file:///C:/Users/moham/Documents/myenv/tools/fzf) | Precompiled Fuzzy Finder (`fzf.exe`) binary for interactive command-line fuzzy matching. |
-| [`tacky-borders/`](file:///C:/Users/moham/Documents/myenv/tools/tacky-borders) | Native Rust Direct3D active window border manager (`tacky-borders.exe`). |
+| [`focused-border/`](file:///C:/Users/moham/Documents/myenv/tools/focused-border) | Native C#/Win32 active window focus border overlay (`FocusedBorder.exe`). |
+| [`tacky-borders/`](file:///C:/Users/moham/Documents/myenv/tools/tacky-borders) | Alternative Rust Direct3D active window border manager (`tacky-borders.exe`). |

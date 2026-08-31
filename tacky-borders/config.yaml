@@ -5,7 +5,7 @@ watch_config_changes: True
 enable_logging: True
 
 # rendering_backend: Type of renderer. Supported values: V2, Legacy.
-rendering_backend: V2
+rendering_backend: Legacy
 
 # Global configuration options for Windows 10 Focused Window Border
 global:

@@ -71,7 +71,7 @@ if (Get-Command "yasbc.exe" -ErrorAction SilentlyContinue) {
     Write-Host "Reloaded YASB." -ForegroundColor Green
 }
 
-# 8. Configure Windows 10 Active Window Borders (tacky-borders & DWM)
+# 8. Configure Windows 10 Active Window Borders (FocusedBorder & DWM)
 Write-Host "`n[8/10] Configuring Active Window Borders..." -ForegroundColor Cyan
 & "$myenvPath\scripts\set-windows10-border.ps1"
 
@@ -80,14 +80,23 @@ Get-CimInstance Win32_Process -Filter "CommandLine LIKE '%focused-window-border.
     Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue
 }
 
-# Start tacky-borders if not running
-$tackyExe = "$myenvPath\tools\tacky-borders\tacky-borders.exe"
-if (Test-Path $tackyExe) {
-    if (-not (Get-Process -Name "tacky-borders" -ErrorAction SilentlyContinue)) {
-        Start-Process -FilePath $tackyExe -WindowStyle Hidden
-        Write-Host "Started tacky-borders service." -ForegroundColor Green
+# Compile & Start FocusedBorder native service
+$borderExe = "$myenvPath\tools\focused-border\FocusedBorder.exe"
+$borderSrc = "$myenvPath\tools\focused-border\FocusedBorder.cs"
+if ((-not (Test-Path $borderExe)) -and (Test-Path $borderSrc)) {
+    $csc = "C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
+    if (Test-Path $csc) {
+        Write-Host "Compiling FocusedBorder native service..." -ForegroundColor Yellow
+        & $csc /target:winexe /optimize+ /out:"$borderExe" "$borderSrc" | Out-Null
+    }
+}
+
+if (Test-Path $borderExe) {
+    if (-not (Get-Process -Name "FocusedBorder" -ErrorAction SilentlyContinue)) {
+        Start-Process -FilePath $borderExe -WindowStyle Hidden
+        Write-Host "Started FocusedBorder service." -ForegroundColor Green
     } else {
-        Write-Host "tacky-borders is already running." -ForegroundColor Green
+        Write-Host "FocusedBorder is already running." -ForegroundColor Green
     }
 }
 
