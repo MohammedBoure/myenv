@@ -164,7 +164,16 @@ public partial class MainWindow : Window
 
     public void OpenFile(string filePath)
     {
-        if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath))
+        OpenOrCreateFile(filePath);
+    }
+
+    /// <summary>
+    /// Loads a file if it exists, or initializes a new buffer bound to the specified target file path.
+    /// Automatically applies syntax highlighting based on the file extension and updates the document title.
+    /// </summary>
+    public void OpenOrCreateFile(string filePath)
+    {
+        if (string.IsNullOrWhiteSpace(filePath))
             return;
 
         if (_isModified && !PromptSaveBeforeAction())
@@ -172,11 +181,35 @@ public partial class MainWindow : Window
 
         try
         {
-            string content = File.ReadAllText(filePath, Encoding.UTF8);
-            MainEditor.Document.Text = content;
-            _currentFilePath = Path.GetFullPath(filePath);
-            _isModified = false;
+            string fullPath = Path.GetFullPath(filePath);
 
+            if (Directory.Exists(fullPath))
+            {
+                _currentFilePath = null;
+                MainEditor.Document.Text = string.Empty;
+                _isModified = false;
+                _currentSyntaxName = "Plain Text";
+                ApplySyntax(_currentSyntaxName);
+                UpdateTitle();
+                UpdateStatusBar();
+                ShowQuickSave();
+                ApplyPresetDirectory(fullPath);
+                return;
+            }
+
+            _currentFilePath = fullPath;
+
+            if (File.Exists(fullPath))
+            {
+                string content = File.ReadAllText(fullPath, Encoding.UTF8);
+                MainEditor.Document.Text = content;
+            }
+            else
+            {
+                MainEditor.Document.Text = string.Empty;
+            }
+
+            _isModified = false;
             _currentSyntaxName = SyntaxService.GetLanguageByExtension(_currentFilePath);
             ApplySyntax(_currentSyntaxName);
 
@@ -193,7 +226,7 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            MessageBox.Show($"Could not open file:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show($"Could not open/initialize file:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
         }
     }
 
@@ -233,9 +266,16 @@ public partial class MainWindow : Window
 
         try
         {
+            string? dir = Path.GetDirectoryName(_currentFilePath);
+            if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+            {
+                Directory.CreateDirectory(dir);
+            }
+
             File.WriteAllText(_currentFilePath, MainEditor.Document.Text, new UTF8Encoding(false));
             _isModified = false;
             UpdateTitle();
+            UpdateStatusBar();
             return true;
         }
         catch (Exception ex)
@@ -517,6 +557,12 @@ public partial class MainWindow : Window
         {
             try
             {
+                string? dir = Path.GetDirectoryName(dlg.FileName);
+                if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+                {
+                    Directory.CreateDirectory(dir);
+                }
+
                 File.WriteAllText(dlg.FileName, MainEditor.Document.Text, new UTF8Encoding(false));
                 _currentFilePath = dlg.FileName;
                 _isModified = false;

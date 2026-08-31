@@ -131,11 +131,11 @@ function np {
     $nightpadExe = Join-Path $myenvDir "scripts\nightpad\NightPad.exe"
     if (Test-Path -LiteralPath $nightpadExe) {
         if ($args.Count -eq 0) {
-            Start-Process -FilePath $nightpadExe
+            Start-Process -FilePath $nightpadExe -WorkingDirectory (Get-Location).Path
         } else {
-            $target = $args[0]
-            $resolved = if (Test-Path -LiteralPath $target) { (Resolve-Path -LiteralPath $target).Path } else { [System.IO.Path]::GetFullPath($target) }
-            Start-Process -FilePath $nightpadExe -ArgumentList "`"$resolved`""
+            $target = $args -join ' '
+            $resolved = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($target)
+            Start-Process -FilePath $nightpadExe -ArgumentList "`"$resolved`"" -WorkingDirectory (Get-Location).Path
         }
     } else {
         notepad.exe @args

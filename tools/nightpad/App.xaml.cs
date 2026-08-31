@@ -13,14 +13,16 @@ public partial class App : Application
     {
         var mainWindow = new MainWindow();
 
-        if (e.Args.Length > 0 && !string.IsNullOrWhiteSpace(e.Args[0]))
+        if (e.Args.Length > 0)
         {
             try
             {
-                string fullPath = Path.GetFullPath(e.Args[0]);
-                if (File.Exists(fullPath))
+                string rawArg = e.Args.Length == 1 ? e.Args[0] : string.Join(" ", e.Args);
+                rawArg = rawArg.Trim('"', ' ');
+                if (!string.IsNullOrWhiteSpace(rawArg))
                 {
-                    mainWindow.OpenFile(fullPath);
+                    string fullPath = Path.GetFullPath(rawArg);
+                    mainWindow.OpenOrCreateFile(fullPath);
                 }
             }
             catch
