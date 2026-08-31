@@ -1,4 +1,4 @@
-# myenv - Black & Transparent theme for classic Windows PowerShell console
+# myenv - Black & Transparent theme for classic Windows PowerShell console & Windows Terminal
 $ErrorActionPreference = 'Stop'
 
 function Convert-HexToConsoleColor([string]$Hex) {
@@ -28,6 +28,7 @@ $palette = @{
     ColorTable15 = '#FFFFFF'  # Pure White
 }
 
+# 1. Configure Classic Windows Console Host (conhost.exe) Registry Settings
 $keys = @(
     'HKCU:\Console',
     'HKCU:\Console\%SystemRoot%_System32_cmd.exe',
@@ -66,5 +67,77 @@ foreach ($key in $keys) {
     Set-ItemProperty -Path $key -Name HistoryBufferSize -Type DWord -Value 50
     Set-ItemProperty -Path $key -Name VirtualTerminalLevel -Type DWord -Value 1
     Remove-ItemProperty -Path $key -Name CodePage -ErrorAction SilentlyContinue
+}
+
+# 2. Configure Windows 11 Windows Terminal (wt.exe) Settings & Transparency
+$wtSettingsPaths = @(
+    "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json",
+    "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminalPreview_8wekyb3d8bbwe\LocalState\settings.json",
+    "$env:LOCALAPPDATA\Microsoft\Windows Terminal\settings.json"
+)
+
+foreach ($wtPath in $wtSettingsPaths) {
+    if (Test-Path -LiteralPath $wtPath) {
+        try {
+            $rawJson = Get-Content -LiteralPath $wtPath -Raw -Encoding utf8
+            $wtConfig = $rawJson | ConvertFrom-Json
+
+            $midnightAuroraScheme = [PSCustomObject]@{
+                name                = "Midnight Aurora"
+                background          = "#000000"
+                foreground          = "#F8F8F2"
+                cursorColor         = "#FFFFFF"
+                selectionBackground = "#44475A"
+                black               = "#000000"
+                red                 = "#FF5555"
+                green               = "#50FA7B"
+                yellow              = "#F1FA8C"
+                blue                = "#8BE9FD"
+                purple              = "#BD93F9"
+                cyan                = "#8BE9FD"
+                white               = "#F8F8F2"
+                brightBlack         = "#6272A4"
+                brightRed           = "#FF6E6E"
+                brightGreen         = "#69FF94"
+                brightYellow        = "#FFFFA5"
+                brightBlue          = "#D6ACFF"
+                brightPurple        = "#FF79C6"
+                brightCyan          = "#A4FFFF"
+                brightWhite         = "#FFFFFF"
+            }
+
+            # Schemes array
+            $existingSchemes = if ($wtConfig.schemes) { @($wtConfig.schemes | Where-Object { $_.name -ne "Midnight Aurora" }) } else { @() }
+            $existingSchemes += $midnightAuroraScheme
+            $wtConfig.schemes = $existingSchemes
+
+            # Defaults configuration
+            if (-not $wtConfig.profiles) {
+                $wtConfig | Add-Member -NotePropertyName profiles -NotePropertyValue ([PSCustomObject]@{}) -Force
+            }
+            if (-not $wtConfig.profiles.defaults) {
+                $wtConfig.profiles | Add-Member -NotePropertyName defaults -NotePropertyValue ([PSCustomObject]@{}) -Force
+            }
+
+            $defaults = $wtConfig.profiles.defaults
+            $defaults | Add-Member -NotePropertyName colorScheme -NotePropertyValue "Midnight Aurora" -Force
+            $defaults | Add-Member -NotePropertyName opacity -NotePropertyValue 68 -Force
+            $defaults | Add-Member -NotePropertyName useAcrylic -NotePropertyValue $false -Force
+            $defaults | Add-Member -NotePropertyName padding -NotePropertyValue "8, 8, 8, 8" -Force
+
+            if (-not $defaults.font) {
+                $defaults | Add-Member -NotePropertyName font -NotePropertyValue ([PSCustomObject]@{}) -Force
+            }
+            $defaults.font | Add-Member -NotePropertyName face -NotePropertyValue "Consolas" -Force
+            $defaults.font | Add-Member -NotePropertyName size -NotePropertyValue 11 -Force
+
+            $updatedJson = $wtConfig | ConvertTo-Json -Depth 15
+            if ($updatedJson -ne $rawJson) {
+                Set-Content -LiteralPath $wtPath -Value $updatedJson -Encoding utf8
+            }
+        } catch {
+            # Silently skip on parsing error during shell load
+        }
+    }
 }
 # Theme applied silently on profile load.

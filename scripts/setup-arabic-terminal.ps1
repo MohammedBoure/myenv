@@ -35,12 +35,12 @@ if (Test-Path $cscPath) {
     Write-Host "[WARNING] csc.exe compiler not found at $cscPath" -ForegroundColor Red
 }
 
-# 2. Apply Console Registry Settings (CodePage 65001 & Consolas Font)
-Write-Host "`n[2/3] Applying UTF-8 CodePage 65001 & Consolas Console registry..." -ForegroundColor Yellow
+# 2. Apply Console Registry Settings & Windows Terminal Theme
+Write-Host "`n[2/3] Applying UTF-8, Consolas Font, and Transparency (Console & Windows Terminal)..." -ForegroundColor Yellow
 $consoleThemeScript = Join-Path $myenvPath "powershell\console-theme.ps1"
 if (Test-Path $consoleThemeScript) {
     & $consoleThemeScript
-    Write-Host "[+] Applied Console Theme & UTF-8 registry settings." -ForegroundColor Green
+    Write-Host "[+] Applied Console Theme, Windows Terminal & UTF-8 registry settings." -ForegroundColor Green
 }
 
 # 3. Set User-Level Environment Variables for UTF-8

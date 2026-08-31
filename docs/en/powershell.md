@@ -11,8 +11,8 @@ High-performance, customized **PowerShell** profile featuring **PSReadLine**, Mi
 2. **PSReadLine Enhancements**:
    - `ListView` history predictions and auto-suggestions.
    - `Ctrl+Backspace` for backward word deletion (`BackwardKillWord`).
-3. **Midnight Aurora Theme & Transparency**:
-   - True black console background with **32% Transparency** (68% Opacity).
+3. **Midnight Aurora Theme & Transparency (Windows 10 & 11)**:
+   - True black console background with **32% Transparency** (68% Opacity) synchronized automatically across classic Windows Console (`conhost.exe`) and Windows 11 Windows Terminal (`wt.exe`).
 4. **Elevated `sudo` Command**:
    - `sudo`: Opens a new elevated PowerShell window at current working directory.
    - `sudo <command>`: Executes target command with Administrator privileges in current path.

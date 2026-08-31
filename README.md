@@ -52,7 +52,7 @@ A high-performance, keyboard-driven tiling desktop environment for Windows devel
 ### 4. PowerShell Environment & Console Theme
 - **Centralized Profile**: `powershell/profile.ps1` automatically loaded by `$PROFILE` (uses dynamic `$env:USERPROFILE`).
 - **Dev Tools PATH**: `dotnet`, `flutter`, `jdk-17`, `Android SDK`, `kotlin`, `msys64`, `php`, `composer`, `nodejs`, `npm`.
-- **True Black Console Theme**: `#000000` background with **32% Transparency** (`WindowAlpha = 173` / 68% opacity).
+- **True Black Console & Terminal Theme**: `#000000` background with **32% Transparency** (68% opacity / `WindowAlpha = 173`) synchronized across classic Windows Console (`conhost.exe`) and Windows 11 Windows Terminal (`wt.exe`).
 - **PSReadLine**: `Ctrl+Backspace` for backward word deletion (`BackwardKillWord`), history predictions (`ListView`), and Tab menu completion.
 - **Auto-LS on Navigation (`cd`)**: Automatically lists directory contents (`ls` / `Get-ChildItem`) whenever navigating to a new directory via `cd` or `chdir`.
 - **FZF Multi-Path Copy (`cpf`)**: Fuzzy-find single or multiple files/folders interactively (`Tab` multi-select, `Ctrl+P` preview) and copy normalized relative/absolute paths or Markdown links to clipboard.
