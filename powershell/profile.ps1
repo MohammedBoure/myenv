@@ -100,8 +100,9 @@ if (Test-Path $themePath) { . $themePath }
 $consoleThemePath = Join-Path $myenvDir "powershell\console-theme.ps1"
 if (Test-Path $consoleThemePath) { . $consoleThemePath }
 
-# Fastfetch is optional and uses the centralized config.
-if (-not [Console]::IsInputRedirected -and -not [Console]::IsOutputRedirected) {
+# Fastfetch runs once per interactive console session.
+if (-not [Console]::IsInputRedirected -and -not [Console]::IsOutputRedirected -and -not $global:__MyEnvFastfetchShown) {
+    $global:__MyEnvFastfetchShown = $true
     $fastfetch = Get-Command fastfetch -ErrorAction SilentlyContinue
     $fastConfig = Join-Path $userProfile ".config\fastfetch\config.jsonc"
     if ($fastfetch -and (Test-Path $fastConfig)) {
