@@ -71,9 +71,25 @@ if (Get-Command "yasbc.exe" -ErrorAction SilentlyContinue) {
     Write-Host "Reloaded YASB." -ForegroundColor Green
 }
 
-# 8. Configure Windows 10 Native Active Window Border
-Write-Host "`n[8/9] Configuring Windows 10 Native Active Window Border..." -ForegroundColor Cyan
+# 8. Configure Windows 10 Active Window Borders (tacky-borders & DWM)
+Write-Host "`n[8/10] Configuring Active Window Borders..." -ForegroundColor Cyan
 & "$myenvPath\scripts\set-windows10-border.ps1"
+
+# Terminate any legacy WPF PowerShell border scripts
+Get-CimInstance Win32_Process -Filter "CommandLine LIKE '%focused-window-border.ps1%'" -ErrorAction SilentlyContinue | ForEach-Object {
+    Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue
+}
+
+# Start tacky-borders if not running
+$tackyExe = "$myenvPath\tools\tacky-borders\tacky-borders.exe"
+if (Test-Path $tackyExe) {
+    if (-not (Get-Process -Name "tacky-borders" -ErrorAction SilentlyContinue)) {
+        Start-Process -FilePath $tackyExe -WindowStyle Hidden
+        Write-Host "Started tacky-borders service." -ForegroundColor Green
+    } else {
+        Write-Host "tacky-borders is already running." -ForegroundColor Green
+    }
+}
 
 # 9. Configure Arabic Terminal & Windows Terminal Support
 Write-Host "`n[9/10] Configuring Arabic & Windows Terminal Support..." -ForegroundColor Cyan
