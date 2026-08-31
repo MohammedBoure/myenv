@@ -2,7 +2,7 @@ general:
   # Commands to run when the WM has started.
   startup_commands:
     - 'shell-exec powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File %USERPROFILE%\Documents\myenv\scripts\smart-tiling-direction.ps1'
-    - 'shell-exec %USERPROFILE%\Documents\myenv\tools\focused-border\FocusedBorder.exe'
+    - 'shell-exec %USERPROFILE%\Documents\myenv\scripts\focused-border\FocusedBorder.exe'
 
   # Commands to run just before the WM is shutdown.
   shutdown_commands: []

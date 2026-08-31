@@ -80,14 +80,13 @@ Get-CimInstance Win32_Process -Filter "CommandLine LIKE '%focused-window-border.
     Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue
 }
 
-# Compile & Start FocusedBorder native service
-$borderExe = "$myenvPath\tools\focused-border\FocusedBorder.exe"
-$borderSrc = "$myenvPath\tools\focused-border\FocusedBorder.cs"
-if ((-not (Test-Path $borderExe)) -and (Test-Path $borderSrc)) {
-    $csc = "C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
-    if (Test-Path $csc) {
-        Write-Host "Compiling FocusedBorder native service..." -ForegroundColor Yellow
-        & $csc /target:winexe /optimize+ /out:"$borderExe" "$borderSrc" | Out-Null
+# Build & Start FocusedBorder native service
+$borderExe = "$myenvPath\scripts\focused-border\FocusedBorder.exe"
+$borderProj = "$myenvPath\tools\focused-border\FocusedBorder.csproj"
+if ((-not (Test-Path $borderExe)) -and (Test-Path $borderProj)) {
+    if (Get-Command dotnet -ErrorAction SilentlyContinue) {
+        Write-Host "Publishing FocusedBorder native service..." -ForegroundColor Yellow
+        dotnet publish "$borderProj" -c Release -o "$myenvPath\scripts\focused-border" --nologo -v q
     }
 }
 
