@@ -29,6 +29,6 @@ Central automation scripts, system configuration utilities, and native binary la
 | [`toggle-window-transparency.ps1`](file:///C:/Users/moham/Documents/myenv/scripts/toggle-window-transparency.ps1) | Window transparency toggle script (`Alt + Shift + Z`). |
 | [`smart-tiling-direction.ps1`](file:///C:/Users/moham/Documents/myenv/scripts/smart-tiling-direction.ps1) | Background helper for dynamic window tiling splits. |
 | [`focused-window-border.ps1`](file:///C:/Users/moham/Documents/myenv/scripts/focused-window-border.ps1) | Legacy WPF border helper (superseded by native `tools/focused-border/FocusedBorder.exe`). |
-| [`setup-arabic-terminal.ps1`](file:///C:/Users/moham/Documents/myenv/scripts/setup-arabic-terminal.ps1) | UTF-8, Arabic terminal, and Windows Terminal / Console transparency setup. |
+| [`setup-arabic-terminal.ps1`](file:///C:/Users/moham/Documents/myenv/scripts/setup-arabic-terminal.ps1) | Arabic text rendering and UTF-8 setup (registers Windows Terminal as default host, configures Cascadia Code font, DirectWrite renderer, and CodePage 65001). |
 | [`setup-gemini-config.ps1`](file:///C:/Users/moham/Documents/myenv/scripts/setup-gemini-config.ps1) | Sets up central directory junction linking `%USERPROFILE%\.gemini\config` to `%USERPROFILE%\Documents\myenv\gemini`. |
 | [`docs.ps1`](file:///C:/Users/moham/Documents/myenv/scripts/docs.ps1) | Interactive CLI documentation viewer. |

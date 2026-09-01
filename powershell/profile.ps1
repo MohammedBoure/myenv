@@ -3,7 +3,9 @@
 $utf8 = New-Object System.Text.UTF8Encoding($false)
 try {
     [Console]::OutputEncoding = $utf8
+    [Console]::InputEncoding = $utf8
     $OutputEncoding = $utf8
+    chcp 65001 > $null
 } catch {}
 
 $PSDefaultParameterValues['*:Encoding'] = 'utf8'

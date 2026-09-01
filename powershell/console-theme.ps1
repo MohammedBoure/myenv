@@ -49,7 +49,7 @@ foreach ($key in $keys) {
     }
     Set-ItemProperty -Path $key -Name ScreenColors -Type DWord -Value 7
     Set-ItemProperty -Path $key -Name PopupColors -Type DWord -Value 245
-    Set-ItemProperty -Path $key -Name FaceName -Type String -Value 'Consolas'
+    Set-ItemProperty -Path $key -Name FaceName -Type String -Value 'Cascadia Code'
     Set-ItemProperty -Path $key -Name FontFamily -Type DWord -Value 54
     Set-ItemProperty -Path $key -Name FontSize -Type DWord -Value 1048576
     Set-ItemProperty -Path $key -Name FontWeight -Type DWord -Value 400
