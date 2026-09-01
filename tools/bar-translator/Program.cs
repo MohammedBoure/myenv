@@ -11,7 +11,7 @@ namespace BarTranslator {
         private static Mutex? singleInstanceMutex;
 
         [STAThread]
-        public static async Task Main(string[] args) {
+        public static void Main(string[] args) {
             Console.OutputEncoding = Encoding.UTF8;
             StateManager.Initialize();
 
@@ -40,12 +40,14 @@ namespace BarTranslator {
                 if (command is "--translate" or "-t" or "translate") {
                     string query = string.Join(" ", args.Skip(1));
                     if (!string.IsNullOrWhiteSpace(query)) {
-                        var result = await TranslationEngine.TranslateToEnglishArabicAsync(query);
-                        if (result != null) {
-                            StateManager.UpdateState(result);
-                            Console.WriteLine(StateManager.GetCurrentJson());
-                            return;
-                        }
+                        try {
+                            var result = TranslationEngine.TranslateToEnglishArabicAsync(query).GetAwaiter().GetResult();
+                            if (result != null) {
+                                StateManager.UpdateState(result);
+                                Console.WriteLine(StateManager.GetCurrentJson());
+                                return;
+                            }
+                        } catch {}
                     }
                     Console.WriteLine("{}");
                     return;
