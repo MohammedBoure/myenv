@@ -6,5 +6,6 @@ Yet Another Status Bar (YASB) configuration, widget definitions, and CSS styles.
 
 | File | Purpose |
 |---|---|
-| [`config.yaml`](file:///C:/Users/moham/Documents/myenv/yasb/config.yaml) | YASB widgets configuration (workspaces, active window title, system monitors, clock/date, audio, battery, network). |
-| [`styles.css`](file:///C:/Users/moham/Documents/myenv/yasb/styles.css) | Custom CSS styling implementing the Obsidian Sharp Dark aesthetic with 0px corner radius and transparent bar. |
+| [`config.yaml`](file:///C:/Users/moham/Documents/myenv/yasb/config.yaml) | YASB widgets configuration (workspaces, active window title, real-time selection translator, system monitors, clock/date, audio, battery, network). |
+| [`styles.css`](file:///C:/Users/moham/Documents/myenv/yasb/styles.css) | Custom CSS styling implementing the Obsidian Sharp Dark aesthetic with 0px corner radius, transparent bar, and translator widget styles. |
+

@@ -10,6 +10,7 @@ Central automation scripts, system configuration utilities, and native binary la
 | [`np.cmd`](file:///C:/Users/moham/Documents/myenv/scripts/np.cmd) | Command-line wrapper to launch NightPad instantly (`np [file]`). |
 | [`nightpad.cmd`](file:///C:/Users/moham/Documents/myenv/scripts/nightpad.cmd) | Command-line wrapper to launch NightPad (`nightpad [file]`). |
 | [`quick-translate/`](file:///C:/Users/moham/Documents/myenv/scripts/quick-translate) | Published binaries for QuickTranslate screen OCR and translation. |
+| [`bar-translator/`](file:///C:/Users/moham/Documents/myenv/scripts/bar-translator) | Published binaries and CLI helpers for status bar real-time selection translator. |
 | [`setup-all.ps1`](file:///C:/Users/moham/Documents/myenv/scripts/setup-all.ps1) | Master environment installer and setup script. |
 | [`install-packages.ps1`](file:///C:/Users/moham/Documents/myenv/scripts/install-packages.ps1) | Installs developer tools via Winget manifest. |
 | [`set-taskbar-autohide.ps1`](file:///C:/Users/moham/Documents/myenv/scripts/set-taskbar-autohide.ps1) | Enables Taskbar Auto-Hide in Windows Registry. |

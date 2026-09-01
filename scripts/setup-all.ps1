@@ -123,4 +123,34 @@ if (-not (Test-Path $scPath) -and (Test-Path $nightpadExe)) {
     Write-Host "Created NightPad shortcut." -ForegroundColor Green
 }
 
+# 11. Build & Start BarTranslator (Top Bar Real-Time Selection Translator)
+Write-Host "`n[11/11] Building & Starting BarTranslator Service..." -ForegroundColor Cyan
+$translatorExe = "$myenvPath\scripts\bar-translator\BarTranslator.exe"
+$translatorProj = "$myenvPath\tools\bar-translator\BarTranslator.csproj"
+if ((-not (Test-Path $translatorExe)) -and (Test-Path $translatorProj)) {
+    if (Get-Command dotnet -ErrorAction SilentlyContinue) {
+        Write-Host "Publishing BarTranslator..." -ForegroundColor Yellow
+        dotnet publish "$translatorProj" -c Release -o "$myenvPath\scripts\bar-translator" --nologo -v q
+    }
+}
+$getStateExe = "$myenvPath\scripts\bar-translator\get-state.exe"
+$getStateCs = "$myenvPath\scripts\bar-translator\GetState.cs"
+if ((-not (Test-Path $getStateExe)) -and (Test-Path $getStateCs)) {
+    & "C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe" /nologo /optimize /target:exe /out:"$getStateExe" "$getStateCs"
+}
+$actionExe = "$myenvPath\scripts\bar-translator\translator-action.exe"
+$actionCs = "$myenvPath\scripts\bar-translator\Actions.cs"
+if ((-not (Test-Path $actionExe)) -and (Test-Path $actionCs)) {
+    & "C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe" /nologo /optimize /target:winexe /out:"$actionExe" "$actionCs"
+}
+if (Test-Path $translatorExe) {
+    if (-not (Get-Process -Name "BarTranslator" -ErrorAction SilentlyContinue)) {
+        Start-Process -FilePath $translatorExe -WindowStyle Hidden
+        Write-Host "Started BarTranslator daemon." -ForegroundColor Green
+    } else {
+        Write-Host "BarTranslator is already running." -ForegroundColor Green
+    }
+}
+
 Write-Host "`nSetup completed successfully!" -ForegroundColor Green
+

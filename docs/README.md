@@ -15,6 +15,8 @@ Central documentation hub for the MyEnv environment in English and Arabic.
 | [`en/glazewm.md`](file:///C:/Users/moham/Documents/myenv/docs/en/glazewm.md) | GlazeWM tiling window manager shortcuts and configuration. |
 | [`en/yasb.md`](file:///C:/Users/moham/Documents/myenv/docs/en/yasb.md) | YASB status bar widgets and dark styling. |
 | [`en/quick-translate.md`](file:///C:/Users/moham/Documents/myenv/docs/en/quick-translate.md) | QuickTranslate screen OCR and translation guide. |
+| [`en/bar-translator.md`](file:///C:/Users/moham/Documents/myenv/docs/en/bar-translator.md) | BarTranslator real-time status bar selection translator guide. |
+| [`ar/bar-translator.md`](file:///C:/Users/moham/Documents/myenv/docs/ar/bar-translator.md) | BarTranslator real-time status bar selection translator guide in Arabic (دليل مترجم شريط الحالة الفوري). |
 | [`en/automation-scripts.md`](file:///C:/Users/moham/Documents/myenv/docs/en/automation-scripts.md) | Reference for all automation scripts in `scripts/`. |
 | [`en/gemini-antigravity.md`](file:///C:/Users/moham/Documents/myenv/docs/en/gemini-antigravity.md) | English guide for Gemini Antigravity environment configuration and rules. |
 | [`ar/gemini-antigravity.md`](file:///C:/Users/moham/Documents/myenv/docs/ar/gemini-antigravity.md) | Arabic guide for Gemini Antigravity environment configuration and rules (دليل إعداد بيئة Antigravity). |

@@ -18,6 +18,7 @@ A high-performance, keyboard-driven tiling desktop environment for Windows devel
 | 🪟 **GlazeWM (Tiling Window Manager)** | 🇺🇸 [docs/en/glazewm.md](file:///%USERPROFILE%/Documents/myenv/docs/en/glazewm.md) | 🇸🇦 [docs/ar/glazewm.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/glazewm.md) |
 | 📊 **YASB Status Bar** | 🇺🇸 [docs/en/yasb.md](file:///%USERPROFILE%/Documents/myenv/docs/en/yasb.md) | 🇸🇦 [docs/ar/yasb.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/yasb.md) |
 | 🔠 **QuickTranslate Tool** | 🇺🇸 [docs/en/quick-translate.md](file:///%USERPROFILE%/Documents/myenv/docs/en/quick-translate.md) | 🇸🇦 [docs/ar/quick-translate.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/quick-translate.md) |
+| 🌐 **BarTranslator (Top Bar Translator)** | 🇺🇸 [docs/en/bar-translator.md](file:///%USERPROFILE%/Documents/myenv/docs/en/bar-translator.md) | 🇸🇦 [docs/ar/bar-translator.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/bar-translator.md) |
 | 🌙 **NightPad (Night Mode Editor)** | 🇺🇸 [docs/en/night-pad.md](file:///%USERPROFILE%/Documents/myenv/docs/en/night-pad.md) | 🇸🇦 [docs/ar/night-pad.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/night-pad.md) |
 | 🌐 **NetLimiter (Bandwidth Control)** | 🇺🇸 [docs/en/netlimiter.md](file:///%USERPROFILE%/Documents/myenv/docs/en/netlimiter.md) | 🇸🇦 [docs/ar/netlimiter.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/netlimiter.md) |
 | 🤖 **Gemini Antigravity (AI)** | 🇺🇸 [docs/en/gemini-antigravity.md](file:///%USERPROFILE%/Documents/myenv/docs/en/gemini-antigravity.md) | 🇸🇦 [docs/ar/gemini-antigravity.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/gemini-antigravity.md) |
@@ -104,6 +105,8 @@ A high-performance, keyboard-driven tiling desktop environment for Windows devel
 | **Clink Settings** | [clink/clink_settings](file:///%USERPROFILE%/Documents/myenv/clink/clink_settings) | Clink history auto-suggestions configuration |
 | **NightPad Source** | [tools/nightpad/](file:///%USERPROFILE%/Documents/myenv/tools/nightpad) | Source code for NightPad professional text editor (.NET 10 WPF + AvalonEdit) |
 | **NightPad Binary** | [scripts/nightpad/NightPad.exe](file:///%USERPROFILE%/Documents/myenv/scripts/nightpad/NightPad.exe) | Compiled standalone executable for NightPad |
+| **BarTranslator Source** | [tools/bar-translator/](file:///%USERPROFILE%/Documents/myenv/tools/bar-translator) | Source code for BarTranslator background selection monitor (.NET 10) |
+| **BarTranslator Binary** | [scripts/bar-translator/BarTranslator.exe](file:///%USERPROFILE%/Documents/myenv/scripts/bar-translator/BarTranslator.exe) | Compiled standalone background daemon for status bar translator |
 | **Gemini Antigravity** | [gemini/](file:///%USERPROFILE%/Documents/myenv/gemini) | Global Antigravity instructions (`GEMINI.md`), MCP config, rules, and skills linked to `%USERPROFILE%\.gemini\config` |
 | **Package Manifest** | [winget-packages.json](file:///%USERPROFILE%/Documents/myenv/winget-packages.json) | Exported Winget package manifest for developer tools |
 

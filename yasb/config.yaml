@@ -39,6 +39,7 @@ bars:
       - home
       - glazewm_workspaces
       - active_window
+      - translator
       center:
       - clock
       right:
@@ -232,6 +233,26 @@ widgets:
       max_length: 32
       max_length_ellipsis: '...'
       monitor_exclusive: false
+  translator:
+    type: yasb.custom.CustomWidget
+    options:
+      class_name: translator-widget
+      label: "<span>\uE774</span> {data[short]}"
+      label_alt: "<span>\uE774</span> {data[full]}"
+      label_placeholder: ""
+      tooltip: true
+      tooltip_label: "Original: {data[original]}\nTranslation: {data[full]}\n\n[Left Click: Toggle Full/Short | Right Click: Copy | Middle Click: Clear]"
+      exec_options:
+        run_cmd: 'C:/Users/moham/Documents/myenv/scripts/bar-translator/get-state.exe'
+        run_interval: 350
+        return_format: 'json'
+        hide_empty: true
+        use_shell: false
+        encoding: 'utf-8'
+      callbacks:
+        on_left: toggle_label
+        on_right: "C:/Users/moham/Documents/myenv/scripts/bar-translator/copy-state.cmd"
+        on_middle: "C:/Users/moham/Documents/myenv/scripts/bar-translator/clear-state.cmd"
   github:
     type: yasb.github.GithubWidget
     options:
