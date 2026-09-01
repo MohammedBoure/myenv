@@ -22,8 +22,7 @@ try {
     }
 
     Set-PSReadLineOption -EditMode Windows
-    Set-PSReadLineOption -PredictionSource History
-    Set-PSReadLineOption -PredictionViewStyle ListView
+    Set-PSReadLineOption -PredictionSource None
     Set-PSReadLineOption -BellStyle None
     Set-PSReadLineKeyHandler -Key Tab -Function MenuComplete
     Set-PSReadLineKeyHandler -Key Ctrl+Backspace -Function BackwardKillWord

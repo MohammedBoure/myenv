@@ -78,11 +78,17 @@ foreach ($wtPath in $wtSettingsPaths) {
                 $wtSettings.profiles.defaults.font.face = "Cascadia Code"
             }
 
-            # Disable AtlasEngine to enable DirectWrite text shaping fallback
+            # Enable AtlasEngine and RTL support for modern DirectWrite text shaping
             if ($null -eq $wtSettings.profiles.defaults.useAtlasEngine) {
-                $wtSettings.profiles.defaults | Add-Member -MemberType NoteProperty -Name "useAtlasEngine" -Value $false
+                $wtSettings.profiles.defaults | Add-Member -MemberType NoteProperty -Name "useAtlasEngine" -Value $true
             } else {
-                $wtSettings.profiles.defaults.useAtlasEngine = $false
+                $wtSettings.profiles.defaults.useAtlasEngine = $true
+            }
+
+            if ($null -eq $wtSettings.profiles.defaults.'experimental.supportRTL') {
+                $wtSettings.profiles.defaults | Add-Member -MemberType NoteProperty -Name "experimental.supportRTL" -Value $true
+            } else {
+                $wtSettings.profiles.defaults.'experimental.supportRTL' = $true
             }
 
             $updatedJson = ConvertTo-Json $wtSettings -Depth 32

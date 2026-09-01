@@ -1,12 +1,16 @@
 # myenv - single source of truth for Windows PowerShell
 
-$utf8 = New-Object System.Text.UTF8Encoding($false)
-try {
-    [Console]::OutputEncoding = $utf8
-    [Console]::InputEncoding = $utf8
-    $OutputEncoding = $utf8
-    chcp 65001 > $null
-} catch {}
+# Ensure strict UTF-8 stream decoding
+[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+[Console]::InputEncoding  = [System.Text.UTF8Encoding]::new($false)
+$OutputEncoding           = [System.Text.UTF8Encoding]::new($false)
+chcp 65001 > $null
+
+# Configure PSReadLine if loaded
+if (Get-Module -ListAvailable PSReadLine) {
+    Set-PSReadLineOption -EditMode Windows
+    Set-PSReadLineOption -PredictionSource None
+}
 
 $PSDefaultParameterValues['*:Encoding'] = 'utf8'
 $PSDefaultParameterValues['Out-File:Encoding'] = 'utf8'
