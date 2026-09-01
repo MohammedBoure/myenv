@@ -133,7 +133,7 @@ if ((-not (Test-Path $translatorExe)) -and (Test-Path $translatorProj)) {
         dotnet publish "$translatorProj" -c Release -o "$myenvPath\scripts\bar-translator" --nologo -v q
     }
 }
-$getStateExe = "$myenvPath\scripts\bar-translator\get-state.exe"
+$getStateExe = "$myenvPath\scripts\bar-translator\get-state-reader.exe"
 $getStateCs = "$myenvPath\scripts\bar-translator\GetState.cs"
 if ((-not (Test-Path $getStateExe)) -and (Test-Path $getStateCs)) {
     & "C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe" /nologo /optimize /target:exe /out:"$getStateExe" "$getStateCs"

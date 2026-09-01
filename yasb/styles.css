@@ -383,28 +383,29 @@
 
 /* Real-Time Selection Translator Widget */
 .translator-widget {
-    background-color: rgba(26, 26, 26, 0.85);
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    background-color: rgba(22, 22, 22, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.15);
     padding: 2px 10px;
-    margin: 2px 4px;
+    margin: 2px 6px;
+    min-width: 40px;
 }
 
 .translator-widget:hover {
     background-color: rgba(45, 45, 45, 0.95);
-    border-color: #ffffff;
+    border: 1px solid #ffffff;
 }
 
-.translator-widget .icon {
-    font-family: var(--icons-font), var(--icons-font-fallback);
-    color: #ffffff;
-    font-size: 13px;
-    margin-right: 6px;
-}
-
-.translator-widget .label {
+.translator-widget QLabel {
     color: #ffffff;
     font-weight: 600;
     font-family: "Segoe UI Variable", "Segoe UI", "Cairo", sans-serif;
     font-size: 12px;
 }
+
+.translator-widget QLabel[class*="icon"] {
+    font-family: var(--icons-font), var(--icons-font-fallback);
+    font-size: 13px;
+    margin-right: 6px;
+}
+
 

@@ -8,7 +8,8 @@ Standalone binaries and automation helpers for the status bar real-time English-
 |---|---|
 | [`BarTranslator.exe`](file:///C:/Users/moham/Documents/myenv/scripts/bar-translator/BarTranslator.exe) | Published background daemon that monitors text selection and performs instant translation. |
 | [`get-state.exe`](file:///C:/Users/moham/Documents/myenv/scripts/bar-translator/get-state.exe) | Ultra-fast native state reader (< 5ms) invoked by YASB's custom widget to fetch current translation JSON. |
-| [`GetState.cs`](file:///C:/Users/moham/Documents/myenv/scripts/bar-translator/GetState.cs) | Source code for `get-state.exe` (compiled with .NET Framework `csc.exe`). |
+| [`get-state-reader.exe`](file:///C:/Users/moham/Documents/myenv/scripts/bar-translator/get-state-reader.exe) | Live state reader with default idle placeholder for continuous top bar visibility. |
+| [`GetState.cs`](file:///C:/Users/moham/Documents/myenv/scripts/bar-translator/GetState.cs) | Source code for `get-state.exe` and `get-state-reader.exe` (compiled with .NET Framework `csc.exe`). |
 | [`translator-action.exe`](file:///C:/Users/moham/Documents/myenv/scripts/bar-translator/translator-action.exe) | Headless Win32 utility handling `copy` and `clear` callbacks without console flashes. |
 | [`Actions.cs`](file:///C:/Users/moham/Documents/myenv/scripts/bar-translator/Actions.cs) | Source code for `translator-action.exe`. |
 | [`copy-state.cmd`](file:///C:/Users/moham/Documents/myenv/scripts/bar-translator/copy-state.cmd) | Wrapper triggered on bar right-click to copy the full Arabic translation to the clipboard. |
