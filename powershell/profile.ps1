@@ -42,6 +42,8 @@ $pathsToAdd = @(
     "$userProfile\AppData\Local\Android\Sdk\emulator",
     'C:\Windows\System32\WindowsPowerShell\v1.0',
     "$userProfile\development\kotlin\bin",
+    "$userProfile\AppData\Local\Programs\Python\Python314",
+    "$userProfile\AppData\Local\Programs\Python\Python314\Scripts",
     "$userProfile\development\msys64\ucrt64\bin",
     "$userProfile\development\php",
     "$userProfile\AppData\Roaming\Composer\vendor\bin",
@@ -150,3 +152,58 @@ function np {
 }
 Set-Alias -Name nightpad -Value np -Option AllScope -ErrorAction SilentlyContinue
 Set-Alias -Name notepad -Value np -Option AllScope -ErrorAction SilentlyContinue
+
+# ==============================================================================
+# Arabic Reshaper & Interactive CLI Helper Utilities
+# ==============================================================================
+
+# Function to reshape and format Arabic strings for terminal display
+function Format-ArabicText {
+    param(
+        [Parameter(Mandatory=$true, ValueFromPipeline=$true)]
+        [string]$Text
+    )
+    process {
+        $pyCode = @"
+import sys, arabic_reshaper
+from bidi.algorithm import get_display
+
+input_text = sys.argv[1]
+# Reshape Arabic characters to connect glyphs
+reshaped = arabic_reshaper.reshape(input_text)
+print(reshaped)
+"@
+        $pythonExe = if (Test-Path "$env:LOCALAPPDATA\Programs\Python\Python314\python.exe") {
+            "$env:LOCALAPPDATA\Programs\Python\Python314\python.exe"
+        } else {
+            "python"
+        }
+        & $pythonExe -c $pyCode $Text
+    }
+}
+
+Set-Alias -Name ar -Value Format-ArabicText -Option AllScope -ErrorAction SilentlyContinue
+
+# Helper function to prompt for Arabic input via a native Windows input box
+function Get-ArabicInput {
+    param([string]$Title = "Arabic Input Prompt", [string]$Prompt = "Enter text:")
+    Add-Type -AssemblyName Microsoft.VisualBasic
+    [Microsoft.VisualBasic.Interaction]::InputBox($Prompt, $Title)
+}
+
+# Wrapper for AI / CLI execution with Arabic support
+function Invoke-ArabicCli {
+    param(
+        [Parameter(ValueFromRemainingArguments=$true)]
+        [string[]]$ArgsList
+    )
+    $rawInput = Get-ArabicInput -Title "AI CLI Prompt" -Prompt "اكتب طلبك باللغة العربية:"
+    if (![string]::IsNullOrWhiteSpace($rawInput)) {
+        # Forward the properly shaped or direct UTF-8 string to the CLI tool
+        $cli = if (Get-Command antigravity -ErrorAction SilentlyContinue) { "antigravity" } elseif (Get-Command agy -ErrorAction SilentlyContinue) { "agy" } else { "antigravity" }
+        & $cli @ArgsList $rawInput
+    }
+}
+
+Set-Alias -Name ask-ai -Value Invoke-ArabicCli -Option AllScope -ErrorAction SilentlyContinue
+Set-Alias -Name antigravity -Value agy -Option AllScope -ErrorAction SilentlyContinue
