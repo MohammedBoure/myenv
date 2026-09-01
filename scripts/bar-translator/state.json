@@ -1,7 +1,10 @@
 ﻿{
-  "short": "يخلق",
-  "full": "يخلق",
-  "original": "Create",
+  "short": "التعلم…",
+  "full": "التعلم الآلي",
+  "original": "Machine learning",
+  "original_short": "Machine learning",
+  "display_short": "Machine learning ➔ التعلم…",
+  "display_full": "Machine learning ➔ التعلم الآلي",
   "has_data": true,
-  "timestamp": 1788283563
+  "timestamp": 1788285831
 }

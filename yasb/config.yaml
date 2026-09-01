@@ -237,14 +237,14 @@ widgets:
     type: yasb.custom.CustomWidget
     options:
       class_name: translator-widget
-      label: "<span>\uE774</span> {data[short]}"
-      label_alt: "<span>\uE774</span> {data[full]}"
-      label_placeholder: "<span>\uE774</span> ترجمة فورية"
+      label: "<span>\uE774</span> {data[display_short]}"
+      label_alt: "<span>\uE774</span> {data[display_full]}"
+      label_placeholder: "<span>\uE774</span> English ➔ العربية"
       tooltip: true
-      tooltip_label: "Original: {data[original]}\nTranslation: {data[full]}\n\n[Left Click: Toggle Full/Short | Right Click: Copy | Middle Click: Clear]"
+      tooltip_label: "English: {data[original]}\nArabic: {data[full]}\n\n[Left Click: Toggle Full/Short | Right Click: Copy | Middle Click: Clear]"
       exec_options:
         run_cmd: 'C:/Users/moham/Documents/myenv/scripts/bar-translator/get-state-reader.exe'
-        run_interval: 300
+        run_interval: 120
         return_format: 'json'
         hide_empty: false
         use_shell: false

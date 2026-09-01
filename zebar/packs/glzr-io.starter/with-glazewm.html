@@ -155,7 +155,6 @@
                   ))}
                 </div>
               )}
-              {translation && (
                 <button
                   className="translator-widget"
                   onClick={() => setIsExpanded(!isExpanded)}
@@ -163,12 +162,11 @@
                     e.preventDefault();
                     fetch('http://127.0.0.1:49876/copy');
                   }}
-                  title={`Original: ${translation.original}\nTranslation: ${translation.full}\n[Left Click: Toggle Full/Short | Right Click: Copy]`}
+                  title={translation ? `Original: ${translation.original}\nTranslation: ${translation.full}\n[Left Click: Toggle Full/Short | Right Click: Copy]` : "Select English text anywhere to translate"}
                 >
                   <i className="nf nf-md-translate"></i>
-                  <span>{isExpanded ? translation.full : translation.short}</span>
+                  <span>{translation ? (isExpanded ? (translation.display_full || translation.full) : (translation.display_short || translation.short)) : "English ➔ العربية"}</span>
                 </button>
-              )}
             </div>
 
             <div className="center">{output.date?.formatted}</div>

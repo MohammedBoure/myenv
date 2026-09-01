@@ -9,8 +9,11 @@ using System.Threading.Tasks;
 namespace BarTranslator {
     public class TranslationData {
         public string Original { get; set; } = string.Empty;
+        public string OriginalShort { get; set; } = string.Empty;
         public string Full { get; set; } = string.Empty;
         public string Short { get; set; } = string.Empty;
+        public string DisplayShort { get; set; } = string.Empty;
+        public string DisplayFull { get; set; } = string.Empty;
         public bool HasData { get; set; } = false;
         public long Timestamp { get; set; } = 0;
     }
@@ -20,11 +23,15 @@ namespace BarTranslator {
         private static readonly ConcurrentDictionary<string, TranslationData> cache = new(StringComparer.OrdinalIgnoreCase);
 
         static TranslationEngine() {
-            var handler = new HttpClientHandler {
-                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
+            var handler = new SocketsHttpHandler {
+                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
+                PooledConnectionLifetime = TimeSpan.FromMinutes(15),
+                PooledConnectionIdleTimeout = TimeSpan.FromMinutes(2),
+                KeepAlivePingDelay = TimeSpan.FromSeconds(30),
+                EnableMultipleHttp2Connections = true
             };
             client = new HttpClient(handler) {
-                Timeout = TimeSpan.FromSeconds(3)
+                Timeout = TimeSpan.FromSeconds(2.5)
             };
             client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36");
         }
@@ -36,9 +43,7 @@ namespace BarTranslator {
 
         public static string SanitizeText(string text) {
             if (string.IsNullOrWhiteSpace(text)) return string.Empty;
-            // Normalize spaces, tabs, and newlines into a single space
-            string cleaned = Regex.Replace(text, @"\s+", " ").Trim();
-            return cleaned;
+            return Regex.Replace(text, @"\s+", " ").Trim();
         }
 
         public static async Task<TranslationData?> TranslateToEnglishArabicAsync(string rawText) {
@@ -47,11 +52,13 @@ namespace BarTranslator {
                 return null;
             }
 
-            // Cap length to 800 chars to ensure instant translation and avoid massive selections
-            if (text.Length > 800) {
-                text = text.Substring(0, 800).Trim();
+            // Word count limit: If larger than 10 words, ignore completely (retain last valid translation)
+            string[] origWords = text.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            if (origWords.Length > 10) {
+                return null;
             }
 
+            // In-memory instant cache lookup (0ms)
             if (cache.TryGetValue(text, out var cachedData)) {
                 return cachedData;
             }
@@ -99,23 +106,33 @@ namespace BarTranslator {
                 return null;
             }
 
-            // Decode HTML entities and clean spaces
+            // Clean Arabic text
             translatedArabic = WebUtility.HtmlDecode(translatedArabic).Trim();
             translatedArabic = Regex.Replace(translatedArabic, @"\s+", " ");
 
-            // Create smart short form (first word / first part)
-            string shortForm = GenerateShortForm(translatedArabic);
+            // Generate short form for Arabic (first word / part)
+            string shortArabic = GenerateShortArabic(translatedArabic);
+
+            // Generate short form for original English
+            string shortEnglish = GenerateShortEnglish(origWords);
+
+            // Continuous bilingual display formats
+            string displayShort = $"{shortEnglish} ➔ {shortArabic}";
+            string displayFull = $"{text} ➔ {translatedArabic}";
 
             var result = new TranslationData {
                 Original = text,
+                OriginalShort = shortEnglish,
                 Full = translatedArabic,
-                Short = shortForm,
+                Short = shortArabic,
+                DisplayShort = displayShort,
+                DisplayFull = displayFull,
                 HasData = true,
                 Timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
             };
 
-            // Cache up to 400 entries
-            if (cache.Count > 400) {
+            // Cache up to 600 entries
+            if (cache.Count > 600) {
                 cache.Clear();
             }
             cache[text] = result;
@@ -123,7 +140,7 @@ namespace BarTranslator {
             return result;
         }
 
-        private static string GenerateShortForm(string arabicText) {
+        private static string GenerateShortArabic(string arabicText) {
             if (string.IsNullOrWhiteSpace(arabicText)) return string.Empty;
 
             string[] words = arabicText.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
@@ -131,12 +148,19 @@ namespace BarTranslator {
                 return arabicText;
             }
 
-            // If the first word is very short (e.g. preposition like في, من, على, لا), keep first two words
+            // If the first word is a short particle/preposition (e.g. في, من, لا), keep first two words
             if (words[0].Length <= 3 && words.Length >= 2) {
                 return $"{words[0]} {words[1]}…";
             }
 
             return $"{words[0]}…";
+        }
+
+        private static string GenerateShortEnglish(string[] origWords) {
+            if (origWords.Length <= 2) {
+                return string.Join(" ", origWords);
+            }
+            return $"{origWords[0]} {origWords[1]}…";
         }
     }
 }

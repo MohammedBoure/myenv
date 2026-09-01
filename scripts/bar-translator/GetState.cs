@@ -24,9 +24,9 @@ namespace BarTranslator {
                 }
 
                 // Default idle state so the field is always visible on the bar
-                Console.Write("{\"short\":\"ترجمة فورية\",\"full\":\"حدد أي نص بالإنجليزية في أي مكان ليتم ترجمته هنا تلقائياً\",\"original\":\"Select English text anywhere to translate\",\"has_data\":false}");
+                Console.Write("{\"short\":\"العربية\",\"full\":\"حدد أي كلمة أو جملة بالإنجليزية ليتم ترجمتها هنا تلقائياً\",\"original\":\"English\",\"original_short\":\"English\",\"display_short\":\"English ➔ العربية\",\"display_full\":\"English ➔ العربية (حدد نصاً للترجمة)\",\"has_data\":false,\"timestamp\":0}");
             } catch {
-                Console.Write("{\"short\":\"ترجمة فورية\",\"full\":\"حدد أي نص بالإنجليزية في أي مكان ليتم ترجمته هنا تلقائياً\",\"original\":\"Select English text anywhere to translate\",\"has_data\":false}");
+                Console.Write("{\"short\":\"العربية\",\"full\":\"حدد أي كلمة أو جملة بالإنجليزية ليتم ترجمتها هنا تلقائياً\",\"original\":\"English\",\"original_short\":\"English\",\"display_short\":\"English ➔ العربية\",\"display_full\":\"English ➔ العربية (حدد نصاً للترجمة)\",\"has_data\":false,\"timestamp\":0}");
             }
         }
     }

@@ -253,8 +253,8 @@ namespace BarTranslator {
 
             Task.Run(async () => {
                 try {
-                    // Wait 60ms for target app to establish selection highlight
-                    await Task.Delay(60, token);
+                    // Ultra-fast 25ms delay for target app highlight
+                    await Task.Delay(25, token);
                     if (token.IsCancellationRequested) return;
 
                     // Skip if modifier keys are being held
@@ -269,10 +269,10 @@ namespace BarTranslator {
                     isSimulatingCopy = true;
                     SendCopyKeystrokes();
 
-                    // Poll for clipboard sequence to change (up to 300ms)
+                    // Fast polling for clipboard sequence change (8ms interval, up to 250ms)
                     bool sequenceChanged = false;
-                    for (int i = 0; i < 15; i++) {
-                        await Task.Delay(20, token);
+                    for (int i = 0; i < 25; i++) {
+                        await Task.Delay(8, token);
                         if (token.IsCancellationRequested) return;
 
                         if (GetClipboardSequenceNumber() != seqBefore) {
@@ -285,7 +285,7 @@ namespace BarTranslator {
                     isSimulatingCopy = false;
 
                     if (!sequenceChanged) {
-                        await Task.Delay(40, token);
+                        await Task.Delay(15, token);
                     }
 
                     if (token.IsCancellationRequested) return;
@@ -349,7 +349,7 @@ namespace BarTranslator {
 
             Task.Run(async () => {
                 try {
-                    await Task.Delay(25);
+                    await Task.Delay(5);
                     string text = ReadClipboardTextWithRetry();
                     await ProcessSelectedTextAsync(text);
                 } catch {}
@@ -364,9 +364,15 @@ namespace BarTranslator {
                 return;
             }
 
+            // Word count limit: If larger than 10 words, ignore completely (retain last valid translation)
+            string[] words = text.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            if (words.Length > 10) {
+                return;
+            }
+
             long now = Environment.TickCount64;
-            // Debounce if the exact same text was processed within the last 1200ms
-            if (text.Equals(lastProcessedText, StringComparison.OrdinalIgnoreCase) && (now - lastProcessedTimestamp < 1200)) {
+            // Debounce if the exact same text was processed within the last 500ms
+            if (text.Equals(lastProcessedText, StringComparison.OrdinalIgnoreCase) && (now - lastProcessedTimestamp < 500)) {
                 return;
             }
 

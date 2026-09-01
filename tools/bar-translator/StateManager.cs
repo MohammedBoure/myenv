@@ -62,6 +62,9 @@ namespace BarTranslator {
                     @short = currentData.Short,
                     full = currentData.Full,
                     original = currentData.Original,
+                    original_short = currentData.OriginalShort,
+                    display_short = currentData.DisplayShort,
+                    display_full = currentData.DisplayFull,
                     has_data = currentData.HasData,
                     timestamp = currentData.Timestamp
                 }, new JsonSerializerOptions {
@@ -99,6 +102,9 @@ namespace BarTranslator {
                         @short = data.Short,
                         full = data.Full,
                         original = data.Original,
+                        original_short = data.OriginalShort,
+                        display_short = data.DisplayShort,
+                        display_full = data.DisplayFull,
                         has_data = data.HasData,
                         timestamp = data.Timestamp
                     }, new JsonSerializerOptions {
@@ -125,6 +131,9 @@ namespace BarTranslator {
                             Short = root.TryGetProperty("short", out var s) ? s.GetString() ?? "" : "",
                             Full = root.TryGetProperty("full", out var f) ? f.GetString() ?? "" : "",
                             Original = root.TryGetProperty("original", out var o) ? o.GetString() ?? "" : "",
+                            OriginalShort = root.TryGetProperty("original_short", out var os) ? os.GetString() ?? "" : "",
+                            DisplayShort = root.TryGetProperty("display_short", out var ds) ? ds.GetString() ?? "" : "",
+                            DisplayFull = root.TryGetProperty("display_full", out var df) ? df.GetString() ?? "" : "",
                             HasData = root.TryGetProperty("has_data", out var h) && h.GetBoolean(),
                             Timestamp = root.TryGetProperty("timestamp", out var t) ? t.GetInt64() : 0
                         };
