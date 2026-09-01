@@ -169,9 +169,10 @@ import sys, arabic_reshaper
 from bidi.algorithm import get_display
 
 input_text = sys.argv[1]
-# Reshape Arabic characters to connect glyphs
+# Reshape Arabic characters and apply BiDi display ordering
 reshaped = arabic_reshaper.reshape(input_text)
-print(reshaped)
+bidi_text = get_display(reshaped)
+print(bidi_text)
 "@
         $pythonExe = if (Test-Path "$env:LOCALAPPDATA\Programs\Python\Python314\python.exe") {
             "$env:LOCALAPPDATA\Programs\Python\Python314\python.exe"
