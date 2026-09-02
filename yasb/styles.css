@@ -408,4 +408,24 @@
     margin-right: 6px;
 }
 
+/* Top Bar Menu Widget (3-Squares / Control Menu Beside Workspaces) */
+.bar-menu-widget {
+    background-color: rgba(22, 22, 22, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 2px 8px;
+    margin: 2px 2px;
+}
+
+.bar-menu-widget:hover {
+    background-color: rgba(45, 45, 45, 0.95);
+    border: 1px solid #58a6ff;
+}
+
+.bar-menu-widget QLabel {
+    color: #58a6ff;
+    font-family: var(--icons-font), var(--icons-font-fallback);
+    font-size: 13px;
+}
+
+
 

@@ -166,13 +166,60 @@ body,
   top: 3px;
 }
 
-.translator-group {
+/* Top Bar 3-Squares Menu Container (Beside Workspaces) */
+.topbar-menu-container {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  position: relative;
-  margin-left: 6px;
+  margin-left: 3px;
+  margin-right: 6px;
 }
 
+.topbar-menu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 3px 6px;
+  height: 22px;
+  cursor: pointer;
+  border-radius: 0px !important;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.topbar-menu-btn:hover,
+.topbar-menu-btn.active {
+  background: rgba(88, 166, 255, 0.28);
+  border-color: #58a6ff;
+}
+
+/* Three Squares on Top of Each Other Icon */
+.stacked-squares {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 12px;
+  height: 14px;
+}
+
+.stacked-squares .square {
+  display: block;
+  width: 4px;
+  height: 3px;
+  background-color: #58a6ff;
+  border-radius: 0px !important;
+  transition: background-color 0.15s ease;
+}
+
+.topbar-menu-btn:hover .stacked-squares .square,
+.topbar-menu-btn.active .stacked-squares .square {
+  background-color: #ffffff;
+}
+
+/* Standalone Translator Widget */
 .translator-widget {
   display: inline-flex;
   align-items: center;
@@ -181,6 +228,7 @@ body,
   border: 1px solid rgba(255, 255, 255, 0.20);
   color: #ffffff;
   padding: 3px 9px;
+  height: 22px;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
@@ -201,34 +249,11 @@ body,
   font-size: 13px;
   color: #58a6ff;
   flex-shrink: 0;
+  margin-right: 0;
 }
 
-.translator-menu-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.10);
-  border: 1px solid rgba(255, 255, 255, 0.20);
-  border-left: none;
-  color: #ffffff;
-  padding: 3px 7px;
-  font-size: 13px;
-  cursor: pointer;
-  border-radius: 0px !important;
-  transition: background 0.15s ease;
-}
-
-.translator-menu-btn:hover,
-.translator-menu-btn.active {
-  background: rgba(88, 166, 255, 0.35);
-  border-color: #58a6ff;
-}
-
-.translator-menu-btn i {
-  margin: 0;
-}
-
-/* 3-Dots Settings Popup Dropdown */
+/* Top Bar Settings & Items Dropdown */
+.topbar-dropdown,
 .translator-dropdown {
   position: absolute;
   top: 100%;
@@ -237,14 +262,14 @@ body,
   background: #0d1117;
   border: 1px solid #30363d;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
-  width: 290px;
+  width: 295px;
   z-index: 1000;
   padding: 8px;
   display: flex;
   flex-direction: column;
   gap: 6px;
   animation: fadeIn 0.15s ease-out;
-  max-height: 420px;
+  max-height: 440px;
 }
 
 @keyframes fadeIn {

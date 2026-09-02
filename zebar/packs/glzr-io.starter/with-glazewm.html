@@ -259,9 +259,9 @@
 
         // Render Settings Dropdown
         const renderSettingsDropdown = () => (
-          <div className="translator-dropdown" onClick={(e) => e.stopPropagation()}>
+          <div className="topbar-dropdown" onClick={(e) => e.stopPropagation()}>
             <div className="dropdown-header">
-              <span>Zebar Top Bar Controls</span>
+              <span>Top Bar Controls & Settings</span>
               <span style={{ fontSize: '9px', color: '#58a6ff' }}>v2.5</span>
             </div>
 
@@ -383,13 +383,34 @@
           </div>
         );
 
+        // Three Squares Menu Button Component
+        const renderMenuButton = () => (
+          <div className="topbar-menu-container">
+            <button
+              className={`topbar-menu-btn ${showMenu ? 'active' : ''}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowMenu(!showMenu);
+              }}
+              title="Top Bar Controls & Translation Settings"
+            >
+              <span className="stacked-squares">
+                <span className="square"></span>
+                <span className="square"></span>
+                <span className="square"></span>
+              </span>
+            </button>
+            {showMenu && renderSettingsDropdown()}
+          </div>
+        );
+
         // ====================================================================
         // View 1: Translation Focus Mode Layout (Maximizes Bar Space)
         // ====================================================================
         if (isTranslationMode) {
           return (
             <div className="app translation-mode-active" onClick={() => setShowMenu(false)}>
-              {/* Left: Workspaces (if enabled) */}
+              {/* Left: Workspaces + Three Squares Menu */}
               <div className="left">
                 <i className="logo nf nf-fa-windows"></i>
                 {visibility.workspaces && output.glazewm && (
@@ -409,6 +430,7 @@
                     ))}
                   </div>
                 )}
+                {renderMenuButton()}
               </div>
 
               {/* Center: Full-Width Prominent Sentence Translation Banner */}
@@ -439,24 +461,9 @@
                 )}
               </div>
 
-              {/* Right: Mode Controls & 3-Dots Menu */}
+              {/* Right: Mode Controls */}
               <div className="focus-controls">
                 <span className="focus-badge">Translation Mode</span>
-
-                <div className="translator-group">
-                  <button
-                    className={`translator-menu-btn ${showMenu ? 'active' : ''}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowMenu(!showMenu);
-                    }}
-                    title="Top Bar Controls & Settings"
-                  >
-                    <i className="nf nf-md-dots_vertical"></i>
-                  </button>
-                  {showMenu && renderSettingsDropdown()}
-                </div>
-
                 <button
                   className="exit-focus-btn"
                   onClick={toggleTranslationMode}
@@ -494,42 +501,30 @@
                 </div>
               )}
 
-              {/* Translator Widget + 3-Dots Settings Menu */}
-              <div className="translator-group">
-                {visibility.translator && (
-                  <button
-                    className="translator-widget"
-                    onClick={() => setIsExpanded(!isExpanded)}
-                    onContextMenu={(e) => {
-                      e.preventDefault();
-                      handleCopy(e);
-                    }}
-                    title={
-                      hasData
-                        ? `Original: ${translation.original}\nTranslation: ${translation.full}\n[Left Click: Toggle Full/Short | Right Click: Copy]`
-                        : isAutoCapture
-                        ? "Select or copy English text anywhere to translate"
-                        : "Copy English text (Ctrl+C) to translate"
-                    }
-                  >
-                    <i className="nf nf-md-translate"></i>
-                    <span>{getCompactDisplayText()}</span>
-                  </button>
-                )}
+              {/* Three Squares Menu Button beside Workspaces Navigation */}
+              {renderMenuButton()}
 
+              {/* Standalone Translator Widget (No 3-dots needed) */}
+              {visibility.translator && (
                 <button
-                  className={`translator-menu-btn ${showMenu ? 'active' : ''}`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowMenu(!showMenu);
+                  className="translator-widget"
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  onContextMenu={(e) => {
+                    e.preventDefault();
+                    handleCopy(e);
                   }}
-                  title="Top Bar Controls & Settings"
+                  title={
+                    hasData
+                      ? `Original: ${translation.original}\nTranslation: ${translation.full}\n[Left Click: Toggle Full/Short | Right Click: Copy]`
+                      : isAutoCapture
+                      ? "Select or copy English text anywhere to translate"
+                      : "Copy English text (Ctrl+C) to translate"
+                  }
                 >
-                  <i className="nf nf-md-dots_vertical"></i>
+                  <i className="nf nf-md-translate"></i>
+                  <span>{getCompactDisplayText()}</span>
                 </button>
-
-                {showMenu && renderSettingsDropdown()}
-              </div>
+              )}
             </div>
 
             {visibility.date && <div className="center">{output.date?.formatted}</div>}
