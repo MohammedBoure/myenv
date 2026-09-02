@@ -27,6 +27,7 @@ try {
         Set-PSReadLineOption -PredictionViewStyle InlineView
         Set-PSReadLineOption -BellStyle None
         Set-PSReadLineKeyHandler -Key Tab -Function MenuComplete
+        Set-PSReadLineKeyHandler -Chord 'Ctrl+Spacebar' -Function MenuComplete
         Set-PSReadLineKeyHandler -Key Ctrl+Backspace -Function BackwardKillWord
         Set-PSReadLineKeyHandler -Key Ctrl+v -Function Paste
         Set-PSReadLineKeyHandler -Key Ctrl+c -Function CopyOrCancelLine
@@ -106,7 +107,7 @@ function prompt {
     }
     Write-Host ''
     Write-Host '  >> ' -ForegroundColor Cyan -NoNewline
-    return ''
+    return ' '
 }
 
 Remove-Item -Path Alias:cd -Force -ErrorAction SilentlyContinue
