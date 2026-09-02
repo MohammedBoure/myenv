@@ -6,10 +6,19 @@
 $OutputEncoding           = [System.Text.UTF8Encoding]::new($false)
 chcp 65001 > $null
 
-# Configure PSReadLine if loaded
-if (Get-Module -ListAvailable PSReadLine) {
-    Set-PSReadLineOption -EditMode Windows
-    Set-PSReadLineOption -PredictionSource None
+# Configure PSReadLine & Predictive IntelliSense if interactive
+if (-not [Console]::IsInputRedirected -and -not [Console]::IsOutputRedirected) {
+    if (Get-Module -ListAvailable PSReadLine) {
+        try {
+            Import-Module PSReadLine -ErrorAction SilentlyContinue
+            Set-PSReadLineOption -EditMode Windows
+            Set-PSReadLineOption -PredictionSource HistoryAndPlugin
+            Set-PSReadLineOption -PredictionViewStyle InlineView
+        } catch {}
+    }
+    if (Get-Module -ListAvailable CompletionPredictor) {
+        Import-Module CompletionPredictor -ErrorAction SilentlyContinue
+    }
 }
 
 $PSDefaultParameterValues['*:Encoding'] = 'utf8'

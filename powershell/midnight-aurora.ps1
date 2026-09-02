@@ -21,45 +21,55 @@ try {
         }
     }
 
-    Set-PSReadLineOption -EditMode Windows
-    Set-PSReadLineOption -PredictionSource None
-    Set-PSReadLineOption -BellStyle None
-    Set-PSReadLineKeyHandler -Key Tab -Function MenuComplete
-    Set-PSReadLineKeyHandler -Key Ctrl+Backspace -Function BackwardKillWord
-    Set-PSReadLineKeyHandler -Key Ctrl+v -Function Paste
-    Set-PSReadLineKeyHandler -Key Ctrl+c -Function CopyOrCancelLine
+    if (-not [Console]::IsInputRedirected -and -not [Console]::IsOutputRedirected) {
+        Set-PSReadLineOption -EditMode Windows
+        Set-PSReadLineOption -PredictionSource HistoryAndPlugin
+        Set-PSReadLineOption -PredictionViewStyle InlineView
+        Set-PSReadLineOption -BellStyle None
+        Set-PSReadLineKeyHandler -Key Tab -Function MenuComplete
+        Set-PSReadLineKeyHandler -Key Ctrl+Backspace -Function BackwardKillWord
+        Set-PSReadLineKeyHandler -Key Ctrl+v -Function Paste
+        Set-PSReadLineKeyHandler -Key Ctrl+c -Function CopyOrCancelLine
+        Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward
+        Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward
+        Set-PSReadLineKeyHandler -Key Ctrl+f -Function ForwardChar
+        Set-PSReadLineKeyHandler -Chord 'Ctrl+RightArrow' -Function NextWord
 
-    # FZF Interactive History Search (Ctrl+R)
-    Set-PSReadLineKeyHandler -Chord 'Ctrl+r' -ScriptBlock {
-        $histPath = (Get-PSReadLineOption).HistorySavePath
-        if (Test-Path $histPath) {
-            $selected = Get-Content $histPath -Encoding UTF8 | Select-Object -Unique | fzf --height 40% --layout=reverse --prompt="Search History > "
-            if ($selected) {
-                [Microsoft.PowerShell.PSConsoleReadLine]::RevertLine()
-                [Microsoft.PowerShell.PSConsoleReadLine]::Insert($selected)
+        # FZF Interactive History Search (Ctrl+R)
+        Set-PSReadLineKeyHandler -Chord 'Ctrl+r' -ScriptBlock {
+            $histPath = (Get-PSReadLineOption).HistorySavePath
+            if (Test-Path $histPath) {
+                $selected = Get-Content $histPath -Encoding UTF8 | Select-Object -Unique | fzf --height 40% --layout=reverse --prompt="Search History > "
+                if ($selected) {
+                    [Microsoft.PowerShell.PSConsoleReadLine]::RevertLine()
+                    [Microsoft.PowerShell.PSConsoleReadLine]::Insert($selected)
+                }
             }
         }
-    }
 
-    # FZF Interactive File Search (Ctrl+T)
-    Set-PSReadLineKeyHandler -Chord 'Ctrl+t' -ScriptBlock {
-        $selected = Get-ChildItem -Recurse -File -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName | fzf --height 40% --layout=reverse --prompt="Search Files > "
-        if ($selected) {
-            [Microsoft.PowerShell.PSConsoleReadLine]::Insert("`"$selected`"")
+        # FZF Interactive File Search (Ctrl+T)
+        Set-PSReadLineKeyHandler -Chord 'Ctrl+t' -ScriptBlock {
+            $selected = Get-ChildItem -Recurse -File -ErrorAction SilentlyContinue | Select-Object -ExpandProperty FullName | fzf --height 40% --layout=reverse --prompt="Search Files > "
+            if ($selected) {
+                [Microsoft.PowerShell.PSConsoleReadLine]::Insert("`"$selected`"")
+            }
         }
-    }
-    Set-PSReadLineOption -Colors @{
-        Command   = 'Cyan'
-        Parameter = 'Yellow'
-        String    = 'Green'
-        Operator  = 'DarkCyan'
-        Variable  = 'Magenta'
-        Comment   = 'DarkGray'
-        Keyword   = 'Blue'
-        Type      = 'DarkYellow'
-        Number    = 'DarkGreen'
-        Member    = 'White'
-        InlinePrediction = 'DarkGray'
+        Set-PSReadLineOption -Colors @{
+            Command                     = 'Cyan'
+            Parameter                   = 'Yellow'
+            String                      = 'Green'
+            Operator                    = 'DarkCyan'
+            Variable                    = 'Magenta'
+            Comment                     = 'DarkGray'
+            Keyword                     = 'Blue'
+            Type                        = 'DarkYellow'
+            Number                      = 'DarkGreen'
+            Member                      = 'White'
+            InlinePrediction            = 'DarkGray'
+            ListPredictionColor         = 'Yellow'
+            ListPredictionSelectedColor = "`e[48;5;238m"
+            ListPredictionTooltipColor  = "`e[97;2;3m"
+        }
     }
 } catch {
     # Keep the profile compatible with older PSReadLine hosts.
