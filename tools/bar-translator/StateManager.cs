@@ -57,6 +57,31 @@ namespace BarTranslator {
             }
         }
 
+        public static void ToggleAutoCapture() {
+            lock (fileLock) {
+                AutoCaptureEnabled = !AutoCaptureEnabled;
+                SaveToFile(currentData);
+            }
+        }
+
+        public static void ToggleTranslationMode() {
+            lock (fileLock) {
+                TranslationMode = !TranslationMode;
+                SaveToFile(currentData);
+            }
+        }
+
+        public static void ToggleShowEnglish() {
+            lock (fileLock) {
+                ShowEnglish = !ShowEnglish;
+                if (currentData.HasData) {
+                    currentData.DisplayShort = ShowEnglish ? $"{currentData.OriginalShort} ➔ {currentData.Short}" : currentData.Short;
+                    currentData.DisplayFull = ShowEnglish ? $"{currentData.Original} ➔ {currentData.Full}" : currentData.Full;
+                }
+                SaveToFile(currentData);
+            }
+        }
+
         public static string GetCurrentJson() {
             lock (fileLock) {
                 return JsonSerializer.Serialize(new {
@@ -209,24 +234,15 @@ namespace BarTranslator {
                 response.ContentType = "application/json; charset=utf-8";
                 responseBytes = Encoding.UTF8.GetBytes("{\"copied\":true}");
             } else if (path == "/toggle_auto_capture") {
-                lock (fileLock) {
-                    AutoCaptureEnabled = !AutoCaptureEnabled;
-                    SaveToFile(currentData);
-                }
+                ToggleAutoCapture();
                 response.ContentType = "application/json; charset=utf-8";
                 responseBytes = Encoding.UTF8.GetBytes(GetCurrentJson());
             } else if (path == "/toggle_translation_mode") {
-                lock (fileLock) {
-                    TranslationMode = !TranslationMode;
-                    SaveToFile(currentData);
-                }
+                ToggleTranslationMode();
                 response.ContentType = "application/json; charset=utf-8";
                 responseBytes = Encoding.UTF8.GetBytes(GetCurrentJson());
             } else if (path == "/toggle_show_english") {
-                lock (fileLock) {
-                    ShowEnglish = !ShowEnglish;
-                    SaveToFile(currentData);
-                }
+                ToggleShowEnglish();
                 response.ContentType = "application/json; charset=utf-8";
                 responseBytes = Encoding.UTF8.GetBytes(GetCurrentJson());
             } else if (path == "/set_setting") {

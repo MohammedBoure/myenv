@@ -37,11 +37,64 @@
 
       createRoot(document.getElementById('root')).render(<App />);
 
+      const BAR_ITEMS = [
+        { key: 'workspaces', label: 'GlazeWM Workspaces', icon: 'nf-md-view_dashboard_outline', desc: 'Workspace navigation buttons' },
+        { key: 'translator', label: 'Translator Widget', icon: 'nf-md-translate', desc: 'Live English ➔ Arabic status bar translation' },
+        { key: 'date', label: 'Clock & Date', icon: 'nf-md-clock_outline', desc: 'Center date and time display' },
+        { key: 'glazewm', label: 'GlazeWM Modes & Tiling', icon: 'nf-md-swap_horizontal', desc: 'Binding modes & tiling direction switch' },
+        { key: 'network', label: 'Network & Wi-Fi', icon: 'nf-md-wifi', desc: 'Network status & active SSID' },
+        { key: 'memory', label: 'Memory (RAM)', icon: 'nf-fae-chip', desc: 'System RAM usage percentage' },
+        { key: 'cpu', label: 'CPU Performance', icon: 'nf-oct-cpu', desc: 'Processor load percentage' },
+        { key: 'battery', label: 'Battery Status', icon: 'nf-fa-battery_3', desc: 'Battery charge level & power plug' },
+        { key: 'weather', label: 'Weather Info', icon: 'nf-weather-day_sunny', desc: 'Current temperature & weather conditions' },
+      ];
+
+      const defaultVisibility = {
+        workspaces: true,
+        translator: true,
+        date: true,
+        glazewm: true,
+        network: true,
+        memory: true,
+        cpu: true,
+        battery: true,
+        weather: true,
+      };
+
       function App() {
         const [output, setOutput] = useState(providers.outputMap);
         const [translation, setTranslation] = useState(null);
         const [isExpanded, setIsExpanded] = useState(false);
         const [showMenu, setShowMenu] = useState(false);
+        const [menuTab, setMenuTab] = useState('translator'); // 'translator' | 'items'
+
+        const [visibility, setVisibility] = useState(() => {
+          try {
+            const saved = localStorage.getItem('zebar_bar_items_visibility');
+            return saved ? { ...defaultVisibility, ...JSON.parse(saved) } : defaultVisibility;
+          } catch (e) {
+            return defaultVisibility;
+          }
+        });
+
+        const toggleItemVisibility = (key) => {
+          setVisibility((prev) => {
+            const updated = { ...prev, [key]: !prev[key] };
+            try {
+              localStorage.setItem('zebar_bar_items_visibility', JSON.stringify(updated));
+            } catch (e) {}
+            return updated;
+          });
+        };
+
+        const setAllVisibility = (val) => {
+          const updated = {};
+          BAR_ITEMS.forEach(item => { updated[item.key] = val; });
+          setVisibility(updated);
+          try {
+            localStorage.setItem('zebar_bar_items_visibility', JSON.stringify(updated));
+          } catch (e) {}
+        };
 
         useEffect(() => {
           providers.onOutput(() => setOutput(providers.outputMap));
@@ -208,69 +261,125 @@
         const renderSettingsDropdown = () => (
           <div className="translator-dropdown" onClick={(e) => e.stopPropagation()}>
             <div className="dropdown-header">
-              <span>Translator Settings</span>
-              <span style={{ fontSize: '9px', color: '#58a6ff' }}>v2.0</span>
+              <span>Zebar Top Bar Controls</span>
+              <span style={{ fontSize: '9px', color: '#58a6ff' }}>v2.5</span>
             </div>
 
-            {/* Toggle 1: Auto-Transcription / Selection Capture */}
-            <div className="dropdown-item" onClick={toggleAutoCapture} title="Toggle automatic translation upon mouse text selection">
-              <div className="item-main-row">
-                <span className="item-label">
-                  <i className="nf nf-md-cursor_default_click_outline"></i>
-                  Auto-Select Capture
-                </span>
-                <span className={`toggle-badge ${isAutoCapture ? 'on' : 'off'}`}>
-                  {isAutoCapture ? 'ON' : 'OFF'}
-                </span>
-              </div>
-              <div className="item-desc">
-                {isAutoCapture
-                  ? "Translates highlighted text automatically"
-                  : "Auto-selection OFF: Copy word (Ctrl+C) to translate"}
-              </div>
-            </div>
-
-            {/* Toggle 2: Translation Focus Mode */}
-            <div className="dropdown-item" onClick={toggleTranslationMode} title="Maximize top bar area for full sentence reading">
-              <div className="item-main-row">
-                <span className="item-label">
-                  <i className="nf nf-md-fullscreen"></i>
-                  Translation Mode
-                </span>
-                <span className={`toggle-badge ${isTranslationMode ? 'on' : 'off'}`}>
-                  {isTranslationMode ? 'ON' : 'OFF'}
-                </span>
-              </div>
-              <div className="item-desc">
-                Hides extra widgets, keeping only workspace buttons & wide sentence reader
-              </div>
-            </div>
-
-            {/* Toggle 3: Show English Word */}
-            <div className="dropdown-item" onClick={toggleShowEnglish} title="Toggle bilingual display vs Arabic translation only">
-              <div className="item-main-row">
-                <span className="item-label">
-                  <i className="nf nf-md-format_letter_case"></i>
-                  Show English Text
-                </span>
-                <span className={`toggle-badge ${isShowEnglish ? 'on' : 'off'}`}>
-                  {isShowEnglish ? 'ON' : 'OFF'}
-                </span>
-              </div>
-              <div className="item-desc">
-                {isShowEnglish ? "Displays English ➔ العربية" : "Displays Arabic translation only"}
-              </div>
-            </div>
-
-            {/* Quick Actions */}
-            <div className="dropdown-actions">
-              <button className="action-btn" onClick={handleCopy} title="Copy Arabic translation to clipboard">
-                <i className="nf nf-md-content_copy"></i> Copy
+            {/* Tab switcher */}
+            <div className="dropdown-tabs">
+              <button
+                className={`dropdown-tab-btn ${menuTab === 'translator' ? 'active' : ''}`}
+                onClick={() => setMenuTab('translator')}
+              >
+                <i className="nf nf-md-translate"></i> Translator
               </button>
-              <button className="action-btn" onClick={handleClear} title="Clear current translation">
-                <i className="nf nf-md-delete_outline"></i> Clear
+              <button
+                className={`dropdown-tab-btn ${menuTab === 'items' ? 'active' : ''}`}
+                onClick={() => setMenuTab('items')}
+              >
+                <i className="nf nf-md-view_list"></i> Bar Items ({Object.values(visibility).filter(Boolean).length}/{BAR_ITEMS.length})
               </button>
             </div>
+
+            {menuTab === 'translator' ? (
+              <div className="dropdown-items-scroll">
+                {/* Toggle 1: Auto-Transcription / Selection Capture */}
+                <div className="dropdown-item" onClick={toggleAutoCapture} title="Toggle automatic translation upon mouse text selection">
+                  <div className="item-main-row">
+                    <span className="item-label">
+                      <i className="nf nf-md-cursor_default_click_outline"></i>
+                      Auto-Select Capture
+                    </span>
+                    <span className={`toggle-badge ${isAutoCapture ? 'on' : 'off'}`}>
+                      {isAutoCapture ? 'ON' : 'OFF'}
+                    </span>
+                  </div>
+                  <div className="item-desc">
+                    {isAutoCapture
+                      ? "Translates highlighted text automatically"
+                      : "Auto-selection OFF: Copy word (Ctrl+C) to translate"}
+                  </div>
+                </div>
+
+                {/* Toggle 2: Translation Focus Mode */}
+                <div className="dropdown-item" onClick={toggleTranslationMode} title="Maximize top bar area for full sentence reading">
+                  <div className="item-main-row">
+                    <span className="item-label">
+                      <i className="nf nf-md-fullscreen"></i>
+                      Translation Mode
+                    </span>
+                    <span className={`toggle-badge ${isTranslationMode ? 'on' : 'off'}`}>
+                      {isTranslationMode ? 'ON' : 'OFF'}
+                    </span>
+                  </div>
+                  <div className="item-desc">
+                    Hides extra widgets, keeping only workspace buttons & wide sentence reader
+                  </div>
+                </div>
+
+                {/* Toggle 3: Show English Word */}
+                <div className="dropdown-item" onClick={toggleShowEnglish} title="Toggle bilingual display vs Arabic translation only">
+                  <div className="item-main-row">
+                    <span className="item-label">
+                      <i className="nf nf-md-format_letter_case"></i>
+                      Show English Text
+                    </span>
+                    <span className={`toggle-badge ${isShowEnglish ? 'on' : 'off'}`}>
+                      {isShowEnglish ? 'ON' : 'OFF'}
+                    </span>
+                  </div>
+                  <div className="item-desc">
+                    {isShowEnglish ? "Displays English ➔ العربية" : "Displays Arabic translation only"}
+                  </div>
+                </div>
+
+                {/* Quick Actions */}
+                <div className="dropdown-actions">
+                  <button className="action-btn" onClick={handleCopy} title="Copy Arabic translation to clipboard">
+                    <i className="nf nf-md-content_copy"></i> Copy
+                  </button>
+                  <button className="action-btn" onClick={handleClear} title="Clear current translation">
+                    <i className="nf nf-md-delete_outline"></i> Clear
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div className="dropdown-items-scroll">
+                  {BAR_ITEMS.map((item) => {
+                    const isActive = !!visibility[item.key];
+                    return (
+                      <div
+                        key={item.key}
+                        className="dropdown-item"
+                        onClick={() => toggleItemVisibility(item.key)}
+                        title={`Click to ${isActive ? 'deactivate' : 'activate'} ${item.label}`}
+                      >
+                        <div className="item-main-row">
+                          <span className="item-label">
+                            <i className={`nf ${item.icon}`}></i>
+                            {item.label}
+                          </span>
+                          <span className={`toggle-badge ${isActive ? 'on' : 'off'}`}>
+                            {isActive ? 'ON' : 'OFF'}
+                          </span>
+                        </div>
+                        <div className="item-desc">{item.desc}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="dropdown-actions">
+                  <button className="action-btn" onClick={() => setAllVisibility(true)} title="Show all top bar items">
+                    <i className="nf nf-md-eye"></i> Show All
+                  </button>
+                  <button className="action-btn" onClick={() => setAllVisibility(false)} title="Hide all optional top bar items">
+                    <i className="nf nf-md-eye_off"></i> Hide All
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         );
 
@@ -280,10 +389,10 @@
         if (isTranslationMode) {
           return (
             <div className="app translation-mode-active" onClick={() => setShowMenu(false)}>
-              {/* Left: Workspaces Only (for instant navigation between interfaces) */}
+              {/* Left: Workspaces (if enabled) */}
               <div className="left">
                 <i className="logo nf nf-fa-windows"></i>
-                {output.glazewm && (
+                {visibility.workspaces && output.glazewm && (
                   <div className="workspaces">
                     {output.glazewm.currentWorkspaces.map(workspace => (
                       <button
@@ -341,7 +450,7 @@
                       e.stopPropagation();
                       setShowMenu(!showMenu);
                     }}
-                    title="Translator Settings"
+                    title="Top Bar Controls & Settings"
                   >
                     <i className="nf nf-md-dots_vertical"></i>
                   </button>
@@ -367,7 +476,7 @@
           <div className="app" onClick={() => setShowMenu(false)}>
             <div className="left">
               <i className="logo nf nf-fa-windows"></i>
-              {output.glazewm && (
+              {visibility.workspaces && output.glazewm && (
                 <div className="workspaces">
                   {output.glazewm.currentWorkspaces.map(workspace => (
                     <button
@@ -387,24 +496,26 @@
 
               {/* Translator Widget + 3-Dots Settings Menu */}
               <div className="translator-group">
-                <button
-                  className="translator-widget"
-                  onClick={() => setIsExpanded(!isExpanded)}
-                  onContextMenu={(e) => {
-                    e.preventDefault();
-                    handleCopy(e);
-                  }}
-                  title={
-                    hasData
-                      ? `Original: ${translation.original}\nTranslation: ${translation.full}\n[Left Click: Toggle Full/Short | Right Click: Copy]`
-                      : isAutoCapture
-                      ? "Select or copy English text anywhere to translate"
-                      : "Copy English text (Ctrl+C) to translate"
-                  }
-                >
-                  <i className="nf nf-md-translate"></i>
-                  <span>{getCompactDisplayText()}</span>
-                </button>
+                {visibility.translator && (
+                  <button
+                    className="translator-widget"
+                    onClick={() => setIsExpanded(!isExpanded)}
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      handleCopy(e);
+                    }}
+                    title={
+                      hasData
+                        ? `Original: ${translation.original}\nTranslation: ${translation.full}\n[Left Click: Toggle Full/Short | Right Click: Copy]`
+                        : isAutoCapture
+                        ? "Select or copy English text anywhere to translate"
+                        : "Copy English text (Ctrl+C) to translate"
+                    }
+                  >
+                    <i className="nf nf-md-translate"></i>
+                    <span>{getCompactDisplayText()}</span>
+                  </button>
+                )}
 
                 <button
                   className={`translator-menu-btn ${showMenu ? 'active' : ''}`}
@@ -412,7 +523,7 @@
                     e.stopPropagation();
                     setShowMenu(!showMenu);
                   }}
-                  title="Translator Settings"
+                  title="Top Bar Controls & Settings"
                 >
                   <i className="nf nf-md-dots_vertical"></i>
                 </button>
@@ -421,10 +532,10 @@
               </div>
             </div>
 
-            <div className="center">{output.date?.formatted}</div>
+            {visibility.date && <div className="center">{output.date?.formatted}</div>}
 
             <div className="right">
-              {output.glazewm && (
+              {visibility.glazewm && output.glazewm && (
                 <>
                   {output.glazewm.isPaused && (
                     <button
@@ -463,21 +574,21 @@
                 </>
               )}
 
-              {output.network && (
+              {visibility.network && output.network && (
                 <div className="network">
                   {getNetworkIcon(output.network)}
                   {output.network.defaultGateway?.ssid}
                 </div>
               )}
 
-              {output.memory && (
+              {visibility.memory && output.memory && (
                 <div className="memory">
                   <i className="nf nf-fae-chip"></i>
                   {Math.round(output.memory.usage)}%
                 </div>
               )}
 
-              {output.cpu && (
+              {visibility.cpu && output.cpu && (
                 <div className="cpu">
                   <i className="nf nf-oct-cpu"></i>
 
@@ -490,7 +601,7 @@
                 </div>
               )}
 
-              {output.battery && (
+              {visibility.battery && output.battery && (
                 <div className="battery">
                   {/* Show icon for whether battery is charging. */}
                   {output.battery.isCharging && (
@@ -501,7 +612,7 @@
                 </div>
               )}
 
-              {output.weather && (
+              {visibility.weather && output.weather && (
                 <div className="weather">
                   {getWeatherIcon(output.weather)}
                   {Math.round(output.weather.celsiusTemp)}°C

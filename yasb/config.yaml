@@ -41,6 +41,7 @@ bars:
       - active_window
       center:
       - translator
+      - translator_menu
       - clock
       right:
       - traffic
@@ -253,6 +254,20 @@ widgets:
         on_left: toggle_label
         on_right: "exec C:/Users/moham/Documents/myenv/scripts/bar-translator/copy-state.cmd"
         on_middle: "exec C:/Users/moham/Documents/myenv/scripts/bar-translator/clear-state.cmd"
+  translator_menu:
+    type: yasb.custom.CustomWidget
+    options:
+      class_name: translator-menu-widget
+      label: "<span>\uE712</span>"
+      tooltip: true
+      tooltip_label: "Translator Settings (3-Dots)\n• Auto-Select Capture\n• Translation Focus Mode\n• Show/Hide English\n\n[Click to open settings]"
+      exec_options:
+        run_cmd: 'powershell -NoProfile -Command "Write-Output ok"'
+        run_interval: 3600
+        return_format: 'string'
+      callbacks:
+        on_left: "exec C:/Users/moham/Documents/myenv/scripts/bar-translator/show-menu.cmd"
+        on_right: "exec C:/Users/moham/Documents/myenv/scripts/bar-translator/show-menu.cmd"
   github:
     type: yasb.github.GithubWidget
     options:

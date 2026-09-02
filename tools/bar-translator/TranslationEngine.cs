@@ -116,9 +116,9 @@ namespace BarTranslator {
             // Generate short form for original English
             string shortEnglish = GenerateShortEnglish(origWords);
 
-            // Continuous bilingual display formats
-            string displayShort = $"{shortEnglish} ➔ {shortArabic}";
-            string displayFull = $"{text} ➔ {translatedArabic}";
+            // Continuous bilingual display formats (respecting ShowEnglish setting)
+            string displayShort = StateManager.ShowEnglish ? $"{shortEnglish} ➔ {shortArabic}" : shortArabic;
+            string displayFull = StateManager.ShowEnglish ? $"{text} ➔ {translatedArabic}" : translatedArabic;
 
             var result = new TranslationData {
                 Original = text,

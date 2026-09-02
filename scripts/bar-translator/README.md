@@ -14,6 +14,10 @@ Standalone binaries and automation helpers for the status bar real-time English-
 | [`Actions.cs`](file:///C:/Users/moham/Documents/myenv/scripts/bar-translator/Actions.cs) | Source code for `translator-action.exe`. |
 | [`copy-state.cmd`](file:///C:/Users/moham/Documents/myenv/scripts/bar-translator/copy-state.cmd) | Wrapper triggered on bar right-click to copy the full Arabic translation to the clipboard. |
 | [`clear-state.cmd`](file:///C:/Users/moham/Documents/myenv/scripts/bar-translator/clear-state.cmd) | Wrapper triggered on bar middle-click to clear the translation and hide the widget. |
+| [`toggle-auto-capture.cmd`](file:///C:/Users/moham/Documents/myenv/scripts/bar-translator/toggle-auto-capture.cmd) | Helper script to toggle automatic mouse text selection capture on or off. |
+| [`toggle-translation-mode.cmd`](file:///C:/Users/moham/Documents/myenv/scripts/bar-translator/toggle-translation-mode.cmd) | Helper script to enter or exit dedicated full sentence reading Translation Focus Mode. |
+| [`toggle-show-english.cmd`](file:///C:/Users/moham/Documents/myenv/scripts/bar-translator/toggle-show-english.cmd) | Helper script to toggle bilingual display vs Arabic translation only. |
+| [`show-menu.cmd`](file:///C:/Users/moham/Documents/myenv/scripts/bar-translator/show-menu.cmd) | Opens the native desktop settings popup menu with all translator toggles. |
 | [`state.json`](file:///C:/Users/moham/Documents/myenv/scripts/bar-translator/state.json) | Shared state file containing the latest translated text, short preview, and original text. |
 
 ## 🕹️ Usage & Testing
