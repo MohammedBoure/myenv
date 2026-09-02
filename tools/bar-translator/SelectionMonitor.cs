@@ -201,7 +201,7 @@ namespace BarTranslator {
                         lastClickUpPoint = hookStruct.pt;
 
                         if (isDragSelection || isMultiClick) {
-                            if (!IsIgnoredWindow(hookStruct.pt)) {
+                            if (StateManager.AutoCaptureEnabled && !IsIgnoredWindow(hookStruct.pt)) {
                                 TriggerSelectionCapture();
                             }
                         }
@@ -364,9 +364,9 @@ namespace BarTranslator {
                 return;
             }
 
-            // Word count limit: If larger than 10 words, ignore completely (retain last valid translation)
+            // Word count limit: Up to 60 words for quick sentence translation
             string[] words = text.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-            if (words.Length > 10) {
+            if (words.Length > 60) {
                 return;
             }
 

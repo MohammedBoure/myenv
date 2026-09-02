@@ -19,6 +19,10 @@ namespace BarTranslator {
             @"Documents\myenv\scripts\bar-translator\state.json"
         );
 
+        public static bool AutoCaptureEnabled { get; set; } = true;
+        public static bool TranslationMode { get; set; } = false;
+        public static bool ShowEnglish { get; set; } = true;
+
         public static void Initialize() {
             // Ensure directory exists
             string? dir = Path.GetDirectoryName(StateFilePath);
@@ -55,9 +59,6 @@ namespace BarTranslator {
 
         public static string GetCurrentJson() {
             lock (fileLock) {
-                if (!currentData.HasData) {
-                    return "{}";
-                }
                 return JsonSerializer.Serialize(new {
                     @short = currentData.Short,
                     full = currentData.Full,
@@ -66,7 +67,10 @@ namespace BarTranslator {
                     display_short = currentData.DisplayShort,
                     display_full = currentData.DisplayFull,
                     has_data = currentData.HasData,
-                    timestamp = currentData.Timestamp
+                    timestamp = currentData.Timestamp,
+                    auto_capture = AutoCaptureEnabled,
+                    translation_mode = TranslationMode,
+                    show_english = ShowEnglish
                 }, new JsonSerializerOptions {
                     WriteIndented = false,
                     Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
@@ -94,24 +98,24 @@ namespace BarTranslator {
 
         private static void SaveToFile(TranslationData data) {
             try {
-                string json;
-                if (!data.HasData) {
-                    json = "{}";
-                } else {
-                    json = JsonSerializer.Serialize(new {
-                        @short = data.Short,
-                        full = data.Full,
-                        original = data.Original,
-                        original_short = data.OriginalShort,
-                        display_short = data.DisplayShort,
-                        display_full = data.DisplayFull,
-                        has_data = data.HasData,
-                        timestamp = data.Timestamp
-                    }, new JsonSerializerOptions {
-                        WriteIndented = true,
-                        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-                    });
-                }
+                var payload = new {
+                    @short = data.Short,
+                    full = data.Full,
+                    original = data.Original,
+                    original_short = data.OriginalShort,
+                    display_short = data.DisplayShort,
+                    display_full = data.DisplayFull,
+                    has_data = data.HasData,
+                    timestamp = data.Timestamp,
+                    auto_capture = AutoCaptureEnabled,
+                    translation_mode = TranslationMode,
+                    show_english = ShowEnglish
+                };
+
+                string json = JsonSerializer.Serialize(payload, new JsonSerializerOptions {
+                    WriteIndented = true,
+                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                });
 
                 string tmpFile = StateFilePath + ".tmp";
                 File.WriteAllText(tmpFile, json, Encoding.UTF8);
@@ -137,6 +141,16 @@ namespace BarTranslator {
                             HasData = root.TryGetProperty("has_data", out var h) && h.GetBoolean(),
                             Timestamp = root.TryGetProperty("timestamp", out var t) ? t.GetInt64() : 0
                         };
+
+                        if (root.TryGetProperty("auto_capture", out var ac)) {
+                            AutoCaptureEnabled = ac.GetBoolean();
+                        }
+                        if (root.TryGetProperty("translation_mode", out var tm)) {
+                            TranslationMode = tm.GetBoolean();
+                        }
+                        if (root.TryGetProperty("show_english", out var se)) {
+                            ShowEnglish = se.GetBoolean();
+                        }
                     }
                 }
             } catch {}
@@ -189,11 +203,45 @@ namespace BarTranslator {
             } else if (path == "/clear") {
                 ClearState();
                 response.ContentType = "application/json; charset=utf-8";
-                responseBytes = Encoding.UTF8.GetBytes("{\"cleared\":true}");
+                responseBytes = Encoding.UTF8.GetBytes(GetCurrentJson());
             } else if (path == "/copy") {
                 CopyCurrentToClipboard();
                 response.ContentType = "application/json; charset=utf-8";
                 responseBytes = Encoding.UTF8.GetBytes("{\"copied\":true}");
+            } else if (path == "/toggle_auto_capture") {
+                lock (fileLock) {
+                    AutoCaptureEnabled = !AutoCaptureEnabled;
+                    SaveToFile(currentData);
+                }
+                response.ContentType = "application/json; charset=utf-8";
+                responseBytes = Encoding.UTF8.GetBytes(GetCurrentJson());
+            } else if (path == "/toggle_translation_mode") {
+                lock (fileLock) {
+                    TranslationMode = !TranslationMode;
+                    SaveToFile(currentData);
+                }
+                response.ContentType = "application/json; charset=utf-8";
+                responseBytes = Encoding.UTF8.GetBytes(GetCurrentJson());
+            } else if (path == "/toggle_show_english") {
+                lock (fileLock) {
+                    ShowEnglish = !ShowEnglish;
+                    SaveToFile(currentData);
+                }
+                response.ContentType = "application/json; charset=utf-8";
+                responseBytes = Encoding.UTF8.GetBytes(GetCurrentJson());
+            } else if (path == "/set_setting") {
+                string? key = request.QueryString["key"]?.ToLowerInvariant();
+                string? valStr = request.QueryString["value"]?.ToLowerInvariant();
+                bool val = valStr == "true" || valStr == "1";
+
+                lock (fileLock) {
+                    if (key == "auto_capture") AutoCaptureEnabled = val;
+                    else if (key == "translation_mode") TranslationMode = val;
+                    else if (key == "show_english") ShowEnglish = val;
+                    SaveToFile(currentData);
+                }
+                response.ContentType = "application/json; charset=utf-8";
+                responseBytes = Encoding.UTF8.GetBytes(GetCurrentJson());
             } else if (path == "/translate") {
                 string? text = request.QueryString["text"];
                 if (!string.IsNullOrWhiteSpace(text)) {

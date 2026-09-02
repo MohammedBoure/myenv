@@ -52,9 +52,9 @@ namespace BarTranslator {
                 return null;
             }
 
-            // Word count limit: If larger than 10 words, ignore completely (retain last valid translation)
+            // Word count limit: Up to 60 words for quick sentence translation
             string[] origWords = text.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-            if (origWords.Length > 10) {
+            if (origWords.Length > 60) {
                 return null;
             }
 

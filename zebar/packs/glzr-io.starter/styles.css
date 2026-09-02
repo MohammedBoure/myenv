@@ -166,6 +166,13 @@ body,
   top: 3px;
 }
 
+.translator-group {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+  margin-left: 6px;
+}
+
 .translator-widget {
   display: inline-flex;
   align-items: center;
@@ -174,12 +181,15 @@ body,
   border: 1px solid rgba(255, 255, 255, 0.20);
   color: #ffffff;
   padding: 3px 9px;
-  margin-left: 6px;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   border-radius: 0px !important;
-  transition: background 0.15s ease;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .translator-widget:hover {
@@ -189,6 +199,287 @@ body,
 
 .translator-widget i {
   font-size: 13px;
+  color: #58a6ff;
+  flex-shrink: 0;
+}
+
+.translator-menu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.20);
+  border-left: none;
   color: #ffffff;
+  padding: 3px 7px;
+  font-size: 13px;
+  cursor: pointer;
+  border-radius: 0px !important;
+  transition: background 0.15s ease;
+}
+
+.translator-menu-btn:hover,
+.translator-menu-btn.active {
+  background: rgba(88, 166, 255, 0.35);
+  border-color: #58a6ff;
+}
+
+.translator-menu-btn i {
+  margin: 0;
+}
+
+/* 3-Dots Settings Popup Dropdown */
+.translator-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  background: #0d1117;
+  border: 1px solid #30363d;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+  width: 270px;
+  z-index: 1000;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  animation: fadeIn 0.15s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.dropdown-header {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #8b949e;
+  padding: 4px 6px;
+  font-weight: 700;
+  border-bottom: 1px solid #21262d;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dropdown-item {
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.dropdown-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: #30363d;
+}
+
+.item-main-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.item-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: #c9d1d9;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.item-label i {
+  font-size: 12px;
+  margin: 0;
+}
+
+.toggle-badge {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 0px;
+  text-transform: uppercase;
+}
+
+.toggle-badge.on {
+  background: #238636;
+  color: #ffffff;
+}
+
+.toggle-badge.off {
+  background: #21262d;
+  color: #8b949e;
+}
+
+.item-desc {
+  font-size: 9.5px;
+  color: #8b949e;
+  margin-top: 3px;
+  line-height: 1.3;
+}
+
+.dropdown-actions {
+  display: flex;
+  gap: 4px;
+  margin-top: 4px;
+  padding-top: 4px;
+  border-top: 1px solid #21262d;
+}
+
+.action-btn {
+  flex: 1;
+  background: #21262d;
+  border: 1px solid #30363d;
+  color: #c9d1d9;
+  padding: 4px 6px;
+  font-size: 10.5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  transition: background 0.12s ease;
+}
+
+.action-btn:hover {
+  background: #30363d;
+  color: #ffffff;
+}
+
+.action-btn i {
+  margin: 0;
+  font-size: 11px;
+}
+
+/* ==========================================================================
+   Translation Focus Mode (Expanded Sentence Reading)
+   ========================================================================== */
+.app.translation-mode-active {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 2px 1.5vw;
+}
+
+.app.translation-mode-active .left {
+  flex-shrink: 0;
+}
+
+.translation-focus-banner {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(88, 166, 255, 0.10);
+  border: 1px solid rgba(88, 166, 255, 0.35);
+  padding: 4px 14px;
+  min-height: 26px;
+  overflow: hidden;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.translation-focus-banner:hover {
+  background: rgba(88, 166, 255, 0.18);
+  border-color: #58a6ff;
+}
+
+.focus-content {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.focus-en {
+  color: #8b949e;
+  font-size: 12px;
+  font-weight: 500;
+  max-width: 45%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.focus-arrow {
+  color: #58a6ff;
+  font-size: 13px;
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.focus-ar {
+  color: #58a6ff;
+  font-size: 14px;
+  font-weight: 700;
+  direction: rtl;
+  unicode-bidi: isolate;
+  font-family: 'Segoe UI', Tahoma, sans-serif;
+}
+
+.focus-empty {
+  color: #8b949e;
+  font-size: 11.5px;
+  font-style: italic;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.focus-empty i {
+  margin: 0;
+  color: #58a6ff;
+}
+
+.focus-controls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.focus-badge {
+  background: rgba(88, 166, 255, 0.25);
+  border: 1px solid #58a6ff;
+  color: #58a6ff;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 6px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.exit-focus-btn {
+  background: #da3633;
+  border: 1px solid #f85149;
+  color: #ffffff;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: background 0.12s ease;
+}
+
+.exit-focus-btn:hover {
+  background: #b62324;
+}
+
+.exit-focus-btn i {
+  margin: 0;
+  font-size: 11px;
 }
 

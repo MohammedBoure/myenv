@@ -41,6 +41,7 @@
         const [output, setOutput] = useState(providers.outputMap);
         const [translation, setTranslation] = useState(null);
         const [isExpanded, setIsExpanded] = useState(false);
+        const [showMenu, setShowMenu] = useState(false);
 
         useEffect(() => {
           providers.onOutput(() => setOutput(providers.outputMap));
@@ -50,7 +51,7 @@
               const res = await fetch('http://127.0.0.1:49876/state');
               if (res.ok) {
                 const data = await res.json();
-                setTranslation(data.has_data ? data : null);
+                setTranslation(data);
               }
             } catch (e) {}
           };
@@ -58,6 +59,62 @@
           const interval = setInterval(fetchTranslation, 400);
           return () => clearInterval(interval);
         }, []);
+
+        const isTranslationMode = translation?.translation_mode ?? false;
+        const isAutoCapture = translation?.auto_capture ?? true;
+        const isShowEnglish = translation?.show_english ?? true;
+        const hasData = translation?.has_data ?? false;
+
+        const toggleAutoCapture = async (e) => {
+          e?.stopPropagation();
+          try {
+            const res = await fetch('http://127.0.0.1:49876/toggle_auto_capture');
+            if (res.ok) {
+              const data = await res.json();
+              setTranslation(data);
+            }
+          } catch (e) {}
+        };
+
+        const toggleTranslationMode = async (e) => {
+          e?.stopPropagation();
+          try {
+            const res = await fetch('http://127.0.0.1:49876/toggle_translation_mode');
+            if (res.ok) {
+              const data = await res.json();
+              setTranslation(data);
+            }
+          } catch (e) {}
+        };
+
+        const toggleShowEnglish = async (e) => {
+          e?.stopPropagation();
+          try {
+            const res = await fetch('http://127.0.0.1:49876/toggle_show_english');
+            if (res.ok) {
+              const data = await res.json();
+              setTranslation(data);
+            }
+          } catch (e) {}
+        };
+
+        const handleCopy = async (e) => {
+          e?.stopPropagation();
+          try {
+            await fetch('http://127.0.0.1:49876/copy');
+          } catch (e) {}
+        };
+
+        const handleClear = async (e) => {
+          e?.stopPropagation();
+          try {
+            const res = await fetch('http://127.0.0.1:49876/clear');
+            if (res.ok) {
+              const data = await res.json();
+              setTranslation(data);
+            }
+          } catch (e) {}
+        };
 
         // Get icon to show for current network status.
         function getNetworkIcon(networkOutput) {
@@ -134,8 +191,180 @@
           }
         }
 
+        // Formatted display text for compact widget
+        const getCompactDisplayText = () => {
+          if (!hasData) {
+            return isShowEnglish ? "English ➔ العربية" : "العربية";
+          }
+          if (isShowEnglish) {
+            return isExpanded
+              ? (translation.display_full || translation.full)
+              : (translation.display_short || translation.short);
+          }
+          return isExpanded ? translation.full : translation.short;
+        };
+
+        // Render Settings Dropdown
+        const renderSettingsDropdown = () => (
+          <div className="translator-dropdown" onClick={(e) => e.stopPropagation()}>
+            <div className="dropdown-header">
+              <span>Translator Settings</span>
+              <span style={{ fontSize: '9px', color: '#58a6ff' }}>v2.0</span>
+            </div>
+
+            {/* Toggle 1: Auto-Transcription / Selection Capture */}
+            <div className="dropdown-item" onClick={toggleAutoCapture} title="Toggle automatic translation upon mouse text selection">
+              <div className="item-main-row">
+                <span className="item-label">
+                  <i className="nf nf-md-cursor_default_click_outline"></i>
+                  Auto-Select Capture
+                </span>
+                <span className={`toggle-badge ${isAutoCapture ? 'on' : 'off'}`}>
+                  {isAutoCapture ? 'ON' : 'OFF'}
+                </span>
+              </div>
+              <div className="item-desc">
+                {isAutoCapture
+                  ? "Translates highlighted text automatically"
+                  : "Auto-selection OFF: Copy word (Ctrl+C) to translate"}
+              </div>
+            </div>
+
+            {/* Toggle 2: Translation Focus Mode */}
+            <div className="dropdown-item" onClick={toggleTranslationMode} title="Maximize top bar area for full sentence reading">
+              <div className="item-main-row">
+                <span className="item-label">
+                  <i className="nf nf-md-fullscreen"></i>
+                  Translation Mode
+                </span>
+                <span className={`toggle-badge ${isTranslationMode ? 'on' : 'off'}`}>
+                  {isTranslationMode ? 'ON' : 'OFF'}
+                </span>
+              </div>
+              <div className="item-desc">
+                Hides extra widgets, keeping only workspace buttons & wide sentence reader
+              </div>
+            </div>
+
+            {/* Toggle 3: Show English Word */}
+            <div className="dropdown-item" onClick={toggleShowEnglish} title="Toggle bilingual display vs Arabic translation only">
+              <div className="item-main-row">
+                <span className="item-label">
+                  <i className="nf nf-md-format_letter_case"></i>
+                  Show English Text
+                </span>
+                <span className={`toggle-badge ${isShowEnglish ? 'on' : 'off'}`}>
+                  {isShowEnglish ? 'ON' : 'OFF'}
+                </span>
+              </div>
+              <div className="item-desc">
+                {isShowEnglish ? "Displays English ➔ العربية" : "Displays Arabic translation only"}
+              </div>
+            </div>
+
+            {/* Quick Actions */}
+            <div className="dropdown-actions">
+              <button className="action-btn" onClick={handleCopy} title="Copy Arabic translation to clipboard">
+                <i className="nf nf-md-content_copy"></i> Copy
+              </button>
+              <button className="action-btn" onClick={handleClear} title="Clear current translation">
+                <i className="nf nf-md-delete_outline"></i> Clear
+              </button>
+            </div>
+          </div>
+        );
+
+        // ====================================================================
+        // View 1: Translation Focus Mode Layout (Maximizes Bar Space)
+        // ====================================================================
+        if (isTranslationMode) {
+          return (
+            <div className="app translation-mode-active" onClick={() => setShowMenu(false)}>
+              {/* Left: Workspaces Only (for instant navigation between interfaces) */}
+              <div className="left">
+                <i className="logo nf nf-fa-windows"></i>
+                {output.glazewm && (
+                  <div className="workspaces">
+                    {output.glazewm.currentWorkspaces.map(workspace => (
+                      <button
+                        className={`workspace ${workspace.hasFocus && 'focused'} ${workspace.isDisplayed && 'displayed'}`}
+                        onClick={() =>
+                          output.glazewm.runCommand(
+                            `focus --workspace ${workspace.name}`,
+                          )
+                        }
+                        key={workspace.name}
+                      >
+                        {workspace.displayName ?? workspace.name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Center: Full-Width Prominent Sentence Translation Banner */}
+              <div
+                className="translation-focus-banner"
+                onClick={handleCopy}
+                title="[Click to Copy Arabic Translation]"
+              >
+                {hasData ? (
+                  <div className="focus-content">
+                    {isShowEnglish && (
+                      <>
+                        <span className="focus-en">{translation.original}</span>
+                        <i className="nf nf-md-arrow_right_bold focus-arrow"></i>
+                      </>
+                    )}
+                    <span className="focus-ar">{translation.full}</span>
+                  </div>
+                ) : (
+                  <div className="focus-empty">
+                    <i className="nf nf-md-translate"></i>
+                    <span>
+                      {isAutoCapture
+                        ? "Select or copy any English sentence to translate..."
+                        : "Copy any English sentence (Ctrl+C) to translate..."}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Right: Mode Controls & 3-Dots Menu */}
+              <div className="focus-controls">
+                <span className="focus-badge">Translation Mode</span>
+
+                <div className="translator-group">
+                  <button
+                    className={`translator-menu-btn ${showMenu ? 'active' : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowMenu(!showMenu);
+                    }}
+                    title="Translator Settings"
+                  >
+                    <i className="nf nf-md-dots_vertical"></i>
+                  </button>
+                  {showMenu && renderSettingsDropdown()}
+                </div>
+
+                <button
+                  className="exit-focus-btn"
+                  onClick={toggleTranslationMode}
+                  title="Exit Translation Mode and restore full status bar"
+                >
+                  <i className="nf nf-md-close"></i> Exit Mode
+                </button>
+              </div>
+            </div>
+          );
+        }
+
+        // ====================================================================
+        // View 2: Standard Status Bar Layout
+        // ====================================================================
         return (
-          <div className="app">
+          <div className="app" onClick={() => setShowMenu(false)}>
             <div className="left">
               <i className="logo nf nf-fa-windows"></i>
               {output.glazewm && (
@@ -155,18 +384,41 @@
                   ))}
                 </div>
               )}
+
+              {/* Translator Widget + 3-Dots Settings Menu */}
+              <div className="translator-group">
                 <button
                   className="translator-widget"
                   onClick={() => setIsExpanded(!isExpanded)}
                   onContextMenu={(e) => {
                     e.preventDefault();
-                    fetch('http://127.0.0.1:49876/copy');
+                    handleCopy(e);
                   }}
-                  title={translation ? `Original: ${translation.original}\nTranslation: ${translation.full}\n[Left Click: Toggle Full/Short | Right Click: Copy]` : "Select English text anywhere to translate"}
+                  title={
+                    hasData
+                      ? `Original: ${translation.original}\nTranslation: ${translation.full}\n[Left Click: Toggle Full/Short | Right Click: Copy]`
+                      : isAutoCapture
+                      ? "Select or copy English text anywhere to translate"
+                      : "Copy English text (Ctrl+C) to translate"
+                  }
                 >
                   <i className="nf nf-md-translate"></i>
-                  <span>{translation ? (isExpanded ? (translation.display_full || translation.full) : (translation.display_short || translation.short)) : "English ➔ العربية"}</span>
+                  <span>{getCompactDisplayText()}</span>
                 </button>
+
+                <button
+                  className={`translator-menu-btn ${showMenu ? 'active' : ''}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowMenu(!showMenu);
+                  }}
+                  title="Translator Settings"
+                >
+                  <i className="nf nf-md-dots_vertical"></i>
+                </button>
+
+                {showMenu && renderSettingsDropdown()}
+              </div>
             </div>
 
             <div className="center">{output.date?.formatted}</div>
