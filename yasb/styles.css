@@ -70,8 +70,7 @@
 .memory-widget:hover,
 .power-menu-widget:hover,
 .github-widget:hover,
-.microphone-widget:hover,
-.active-window-widget:hover {
+.microphone-widget:hover {
     background-color: rgba(35, 35, 35, 0.85);
     border-color: rgba(255, 255, 255, 0.25);
 }
@@ -350,17 +349,6 @@
 .cpu-popup .cpu-graph,
 .memory-popup .memory-graph {
     color: #ffffff;
-}
-
-/* Active Window Widget */
-.active-window-widget {
-    background-color: rgba(18, 18, 18, 0.50);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.active-window-widget .label {
-    color: #e0e0e0;
-    font-weight: 500;
 }
 
 /* GitHub Menu */

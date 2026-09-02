@@ -245,6 +245,39 @@ namespace BarTranslator {
                 ToggleShowEnglish();
                 response.ContentType = "application/json; charset=utf-8";
                 responseBytes = Encoding.UTF8.GetBytes(GetCurrentJson());
+            } else if (path == "/get_widgets") {
+                var enabled = BarConfigManager.GetEnabledWidgets();
+                var list = BarConfigManager.AllWidgets.Select(w => new {
+                    id = w.Id,
+                    name = w.Name,
+                    section = w.Section,
+                    enabled = enabled.Contains(w.Id)
+                });
+                string json = JsonSerializer.Serialize(list);
+                response.ContentType = "application/json; charset=utf-8";
+                responseBytes = Encoding.UTF8.GetBytes(json);
+            } else if (path == "/toggle_widget") {
+                string? name = request.QueryString["name"]?.ToLowerInvariant();
+                if (!string.IsNullOrEmpty(name)) {
+                    bool state = BarConfigManager.ToggleWidget(name);
+                    response.ContentType = "application/json; charset=utf-8";
+                    responseBytes = Encoding.UTF8.GetBytes($"{{\"widget\":\"{name}\",\"enabled\":{state.ToString().ToLowerInvariant()}}}");
+                } else {
+                    response.StatusCode = 400;
+                    responseBytes = Encoding.UTF8.GetBytes("{\"error\":\"missing_widget_name\"}");
+                }
+            } else if (path == "/set_widget") {
+                string? name = request.QueryString["name"]?.ToLowerInvariant();
+                string? valStr = request.QueryString["visible"]?.ToLowerInvariant();
+                bool val = valStr == "true" || valStr == "1";
+                if (!string.IsNullOrEmpty(name)) {
+                    BarConfigManager.SetWidgetEnabled(name, val);
+                    response.ContentType = "application/json; charset=utf-8";
+                    responseBytes = Encoding.UTF8.GetBytes($"{{\"widget\":\"{name}\",\"enabled\":{val.ToString().ToLowerInvariant()}}}");
+                } else {
+                    response.StatusCode = 400;
+                    responseBytes = Encoding.UTF8.GetBytes("{\"error\":\"missing_widget_name\"}");
+                }
             } else if (path == "/set_setting") {
                 string? key = request.QueryString["key"]?.ToLowerInvariant();
                 string? valStr = request.QueryString["value"]?.ToLowerInvariant();

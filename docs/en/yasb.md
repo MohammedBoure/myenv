@@ -12,23 +12,28 @@ A lightweight, customized top status bar designed with a **Classic Sharp Obsidia
 
 ---
 
-## 🧩 Bar Widgets
+## 🧩 Bar Widgets & Controls
 
 1. **Workspaces Widget**:
    - **Focused Primary Screen Workspace**: Stark White (`#ffffff`, bold black text `#000000`).
    - **Focused Secondary Screen Workspace**: Distinct Gray (`#555555`, white text `#ffffff`).
    - **Inactive Workspaces**: Dark Slate (`rgba(18, 18, 18, 0.65)`).
-2. **System Widgets**:
+2. **Settings & Translation Dropdown Button (`bar_menu`)**:
+   - A single button widget beside workspaces triggering a unified dark dropdown menu with translation settings and dynamic widget visibility toggles.
+3. **Translator Widget**:
+   - Live English ➔ Arabic selection translation with left/right/middle click actions.
+4. **System & Monitor Widgets**:
    - 🌐 **Traffic Widget**: Live download and upload speed (`⬇ Download ⬆ Upload`).
    - 💻 **CPU Widget**: Total CPU usage percentage + current frequency (MHz).
    - 🎮 **GPU Widget**: GPU usage percentage + temperature + VRAM (`mem_used / mem_total`).
    - 🧠 **RAM Memory Widget**: RAM usage percentage + GB used from total (`virtual_mem_percent%`).
-   - 🚫 **Battery Widget**: Removed completely.
+   - 🚫 **Active Window / App Title Widget**: Removed completely.
+   - 🚫 **Battery Widget**: Removed.
    - 🔊 **Audio, Mic, Notifications & Clock**: Master volume controls, media popups, date & clock.
 
 ---
 
 ## 📁 Configuration Files
 
-- **Widgets & Layout Config**: [yasb/config.yaml](file:///%USERPROFILE%/Documents/myenv/yasb/config.yaml)
-- **Styles & CSS Theme**: [yasb/styles.css](file:///%USERPROFILE%/Documents/myenv/yasb/styles.css)
+- **Widgets & Layout Config**: [`yasb/config.yaml`](file:///C:/Users/moham/Documents/myenv/yasb/config.yaml)
+- **Styles & CSS Theme**: [`yasb/styles.css`](file:///C:/Users/moham/Documents/myenv/yasb/styles.css)

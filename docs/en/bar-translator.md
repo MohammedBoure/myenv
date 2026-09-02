@@ -1,22 +1,22 @@
-# 🌐 BarTranslator (Status Bar Real-Time Selection Translator)
+# 🌐 BarTranslator (Status Bar Real-Time Selection Translator & Controls)
 
-An ultra-fast, background selection monitor and status bar translation widget built in **C# (.NET 10)** and integrated directly with **YASB** and **Zebar**.
+An ultra-fast, background selection monitor, translator, and status bar control suite built in **C# (.NET 10)** and integrated directly with **YASB** and **Zebar**.
 
 ---
 
 ## ⚡ Overview & Features
 
-- **Instant Selection Capture (< 25ms)**: Automatically detects when you drag-select or double-click text anywhere (browser, code editor, terminal, PDF viewer, Office apps) without requiring any manual copy (`Ctrl+C`) or hotkey presses.
+- **Consolidated Settings & Dropdown Menu**:
+  - Clicking the settings dropdown button on the top bar triggers a custom dark-mode context menu with 0px sharp corners.
+  - Contains all translation and language toggles: Auto-Select Text Capture, Translation Focus Mode, Show/Hide English text, Copy translation, and Clear translation.
+- **Dynamic Status Bar Container Visibility**:
+  - Checkbox toggles inside the dropdown menu for all widgets on the bar (Workspaces, CPU, GPU, RAM, Network Traffic, Clock/Date, Audio Volume, Microphone, GitHub, Notifications, Home, Power Menu).
+  - Toggling any item immediately updates `yasb/config.yaml`, causing YASB to dynamically show or hide that container in real time.
+  - Quick presets: **Show All Containers** and **Minimalist Preset** (Workspaces & Clock only).
+- **Instant Selection Capture (< 25ms)**:
+  - Automatically detects when you drag-select or double-click text anywhere (browser, code editor, terminal, PDF viewer, Office apps) without requiring any manual copy (`Ctrl+C`) or hotkey presses.
 - **Continuous Bilingual Display**:
   - The top bar permanently displays both the English word/phrase and its Arabic translation side-by-side (e.g. `🌐 compiler ➔ مترجم` or `🌐 deep learning ➔ تعلم…`).
-  - Remains continuously visible on the bar until a new valid text is selected/copied.
-- **10-Word Safety Filter**:
-  - If selected or copied text exceeds **10 words**, it is automatically ignored.
-  - The previous valid translation **remains continuously displayed** on the bar without interruption.
-- **Smart Arabic & English Truncation**:
-  - For phrases longer than 2–3 words, shows the essential English words and first Arabic word (e.g. `🌐 Artificial intelligence… ➔ ذكاء…`).
-  - Left-clicking on the display location toggles to show the full English sentence and full Arabic translation.
-  - Hovering displays a detailed tooltip with the complete bilingual text.
 - **Ultra-Fast Translation Engine**:
   - Low-latency `SocketsHttpHandler` connection pooling and persistent in-memory caching for 0ms instantaneous lookups on repeated queries.
   - YASB polling interval optimized to **120ms** for immediate visual feedback.
@@ -30,9 +30,10 @@ An ultra-fast, background selection monitor and status bar translation widget bu
 
 | Action | Result |
 |---|---|
-| **Left Click** | Toggle between short preview and full translated text (`display_short` ⟷ `display_full`). |
-| **Right Click** | Copy full Arabic translation directly to system clipboard. |
-| **Middle Click** | Clear current translation and reset field to default idle state (`English ➔ العربية`). |
+| **Left Click on Menu Button (`bar_menu`)** | Open unified settings dropdown menu (Translation controls & widget visibility toggles). |
+| **Left Click on Translator Widget** | Toggle between short preview and full translated text (`display_short` ⟷ `display_full`). |
+| **Right Click on Translator Widget** | Copy full Arabic translation directly to system clipboard. |
+| **Middle Click on Translator Widget** | Clear current translation and reset field to default idle state (`English ➔ العربية`). |
 
 ---
 
@@ -41,13 +42,14 @@ An ultra-fast, background selection monitor and status bar translation widget bu
 | Component | Path | Description |
 |---|---|---|
 | **C# Source Code** | [`tools/bar-translator/`](file:///%USERPROFILE%/Documents/myenv/tools/bar-translator) | Background daemon source with Win32 hooks (`WH_MOUSE_LL`). |
+| **Bar Config Manager** | [`tools/bar-translator/BarConfigManager.cs`](file:///%USERPROFILE%/Documents/myenv/tools/bar-translator/BarConfigManager.cs) | Dynamic manager for reading and modifying `yasb/config.yaml` widget lists. |
 | **Published Daemon** | [`scripts/bar-translator/BarTranslator.exe`](file:///%USERPROFILE%/Documents/myenv/scripts/bar-translator/BarTranslator.exe) | Compiled standalone background process. |
 | **Fast CLI Reader** | [`scripts/bar-translator/get-state-reader.exe`](file:///%USERPROFILE%/Documents/myenv/scripts/bar-translator/get-state-reader.exe) | Instant native state reader with continuous display defaults. |
 | **Action Utility** | [`scripts/bar-translator/translator-action.exe`](file:///%USERPROFILE%/Documents/myenv/scripts/bar-translator/translator-action.exe) | Headless utility executing copy and clear callbacks without console windows. |
+| **Menu Wrapper** | [`scripts/bar-translator/show-menu.cmd`](file:///%USERPROFILE%/Documents/myenv/scripts/bar-translator/show-menu.cmd) | Spawns the dark dropdown settings menu at the cursor position. |
 | **State File** | [`scripts/bar-translator/state.json`](file:///%USERPROFILE%/Documents/myenv/scripts/bar-translator/state.json) | Shared state file read by YASB and Zebar. |
-| **YASB Config** | [`yasb/config.yaml`](file:///%USERPROFILE%/Documents/myenv/yasb/config.yaml) | Widget registration under `primary-bar.widgets.center`. |
-| **YASB Styles** | [`yasb/styles.css`](file:///%USERPROFILE%/Documents/myenv/yasb/styles.css) | Sharp dark theme styling for `.translator-widget`. |
-| **Zebar Widget** | [`zebar/packs/glzr-io.starter/`](file:///%USERPROFILE%/Documents/myenv/zebar/packs/glzr-io.starter) | Zebar HTML/React pack with live translation button. |
+| **YASB Config** | [`yasb/config.yaml`](file:///%USERPROFILE%/Documents/myenv/yasb/config.yaml) | Widget registration under `primary-bar.widgets`. |
+| **YASB Styles** | [`yasb/styles.css`](file:///%USERPROFILE%/Documents/myenv/yasb/styles.css) | Sharp dark theme styling for widgets. |
 
 ---
 
