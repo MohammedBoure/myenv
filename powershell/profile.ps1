@@ -13,7 +13,7 @@ if (-not [Console]::IsInputRedirected -and -not [Console]::IsOutputRedirected) {
             Import-Module PSReadLine -ErrorAction SilentlyContinue
             Set-PSReadLineOption -EditMode Windows
             Set-PSReadLineOption -PredictionSource HistoryAndPlugin
-            Set-PSReadLineOption -PredictionViewStyle InlineView
+            Set-PSReadLineOption -PredictionViewStyle ListView
         } catch {}
     }
     if (Get-Module -ListAvailable CompletionPredictor) {

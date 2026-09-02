@@ -24,15 +24,13 @@ try {
     if (-not [Console]::IsInputRedirected -and -not [Console]::IsOutputRedirected) {
         Set-PSReadLineOption -EditMode Windows
         Set-PSReadLineOption -PredictionSource HistoryAndPlugin
-        Set-PSReadLineOption -PredictionViewStyle InlineView
+        Set-PSReadLineOption -PredictionViewStyle ListView
         Set-PSReadLineOption -BellStyle None
         Set-PSReadLineKeyHandler -Key Tab -Function MenuComplete
         Set-PSReadLineKeyHandler -Chord 'Ctrl+Spacebar' -Function MenuComplete
         Set-PSReadLineKeyHandler -Key Ctrl+Backspace -Function BackwardKillWord
         Set-PSReadLineKeyHandler -Key Ctrl+v -Function Paste
         Set-PSReadLineKeyHandler -Key Ctrl+c -Function CopyOrCancelLine
-        Set-PSReadLineKeyHandler -Key UpArrow -Function HistorySearchBackward
-        Set-PSReadLineKeyHandler -Key DownArrow -Function HistorySearchForward
         Set-PSReadLineKeyHandler -Key Ctrl+f -Function ForwardChar
         Set-PSReadLineKeyHandler -Chord 'Ctrl+RightArrow' -Function NextWord
 
