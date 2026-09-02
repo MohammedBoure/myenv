@@ -8,21 +8,24 @@ An ultra-fast, background selection monitor, translator, and status bar control 
 
 - **Consolidated Settings & Dropdown Menu**:
   - Clicking the settings dropdown button on the top bar triggers a custom dark-mode context menu with 0px sharp corners.
-  - Contains all translation and language toggles: Auto-Select Text Capture, Translation Focus Mode, Show/Hide English text, Copy translation, and Clear translation.
+  - Contains all translation and language toggles:
+    - **Auto-Translate Copied Text** (`Ctrl+C` clipboard listener toggle)
+    - **Auto-Select Text Capture** (Mouse selection without `Ctrl+C` toggle)
+    - **Translation Focus Mode**
+    - **Show/Hide English text**
+    - **Copy Arabic translation**
+    - **Clear translation**
 - **Dynamic Status Bar Container Visibility**:
   - Checkbox toggles inside the dropdown menu for all widgets on the bar (Workspaces, CPU, GPU, RAM, Network Traffic, Clock/Date, Audio Volume, Microphone, GitHub, Notifications, Home, Power Menu).
   - Toggling any item immediately updates `yasb/config.yaml`, causing YASB to dynamically show or hide that container in real time.
   - Quick presets: **Show All Containers** and **Minimalist Preset** (Workspaces & Clock only).
-- **Instant Selection Capture (< 25ms)**:
-  - Automatically detects when you drag-select or double-click text anywhere (browser, code editor, terminal, PDF viewer, Office apps) without requiring any manual copy (`Ctrl+C`) or hotkey presses.
+- **Live Background Daemon Synchronization**:
+  - The background daemon uses `FileSystemWatcher` and local HTTP endpoints (`/reload_state`) to instantly synchronize setting changes made from the menu or CLI without restarting.
 - **Continuous Bilingual Display**:
-  - The top bar permanently displays both the English word/phrase and its Arabic translation side-by-side (e.g. `🌐 compiler ➔ مترجم` or `🌐 deep learning ➔ تعلم…`).
+  - The top bar permanently displays both the English word/phrase and its Arabic translation side-by-side (e.g. `🌐 compiler ➔ مترجم`).
 - **Ultra-Fast Translation Engine**:
   - Low-latency `SocketsHttpHandler` connection pooling and persistent in-memory caching for 0ms instantaneous lookups on repeated queries.
   - YASB polling interval optimized to **120ms** for immediate visual feedback.
-- **Bar Integration**:
-  - **YASB**: Placed prominently in `primary-bar.widgets.center` next to the clock; uses native `get-state-reader.exe` (< 3ms execution).
-  - **Zebar**: Integrated into the starter pack with real-time state fetching over localhost HTTP (`http://127.0.0.1:49876/state`).
 
 ---
 

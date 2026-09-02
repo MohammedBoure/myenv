@@ -38,6 +38,12 @@ namespace BarTranslator {
                     return;
                 }
 
+                if (command is "--toggle-clipboard-translate" or "-tct") {
+                    StateManager.ToggleClipboardTranslate();
+                    Console.WriteLine(StateManager.GetCurrentJson());
+                    return;
+                }
+
                 if (command is "--toggle-auto-capture" or "-tac") {
                     StateManager.ToggleAutoCapture();
                     Console.WriteLine(StateManager.GetCurrentJson());
@@ -145,16 +151,29 @@ namespace BarTranslator {
             };
             menu.Items.Add(headerTrans);
 
-            var itemAuto = new ToolStripMenuItem($"Auto-Select Capture: {(StateManager.AutoCaptureEnabled ? "ON" : "OFF")}") {
+            // 1. Auto-Translate Copied Text
+            var itemClip = new ToolStripMenuItem($"Auto-Translate Copied Text: {(StateManager.ClipboardTranslateEnabled ? "ON" : "OFF")}") {
+                Checked = StateManager.ClipboardTranslateEnabled
+            };
+            itemClip.Click += (s, e) => {
+                StateManager.ToggleClipboardTranslate();
+                itemClip.Checked = StateManager.ClipboardTranslateEnabled;
+                itemClip.Text = $"Auto-Translate Copied Text: {(StateManager.ClipboardTranslateEnabled ? "ON" : "OFF")}";
+            };
+            menu.Items.Add(itemClip);
+
+            // 2. Auto-Select Text Capture (Mouse Selection)
+            var itemAuto = new ToolStripMenuItem($"Auto-Select Text Capture: {(StateManager.AutoCaptureEnabled ? "ON" : "OFF")}") {
                 Checked = StateManager.AutoCaptureEnabled
             };
             itemAuto.Click += (s, e) => {
                 StateManager.ToggleAutoCapture();
                 itemAuto.Checked = StateManager.AutoCaptureEnabled;
-                itemAuto.Text = $"Auto-Select Capture: {(StateManager.AutoCaptureEnabled ? "ON" : "OFF")}";
+                itemAuto.Text = $"Auto-Select Text Capture: {(StateManager.AutoCaptureEnabled ? "ON" : "OFF")}";
             };
             menu.Items.Add(itemAuto);
 
+            // 3. Translation Focus Mode
             var itemMode = new ToolStripMenuItem($"Translation Focus Mode: {(StateManager.TranslationMode ? "ON" : "OFF")}") {
                 Checked = StateManager.TranslationMode
             };
@@ -165,6 +184,7 @@ namespace BarTranslator {
             };
             menu.Items.Add(itemMode);
 
+            // 4. Show English Text
             var itemEn = new ToolStripMenuItem($"Show English Text: {(StateManager.ShowEnglish ? "ON" : "OFF")}") {
                 Checked = StateManager.ShowEnglish
             };

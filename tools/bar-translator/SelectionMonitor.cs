@@ -190,12 +190,12 @@ namespace BarTranslator {
                         int totalDist = Math.Abs(hookStruct.pt.x - downPoint.x) + Math.Abs(hookStruct.pt.y - downPoint.y);
 
                         // 1. Drag selection: mouse was moved while holding left button
-                        bool isDragSelection = (totalDist >= 5 || hasMoved) && holdDuration >= 20 && holdDuration < 15000;
+                        bool isDragSelection = (totalDist >= 5 || hasMoved) && holdDuration >= 25 && holdDuration < 15000;
 
                         // 2. Double-click or Triple-click word/paragraph selection
                         int distFromLastClick = Math.Abs(hookStruct.pt.x - lastClickUpPoint.x) + Math.Abs(hookStruct.pt.y - lastClickUpPoint.y);
                         long timeSinceLastClick = now - lastClickUpTime;
-                        bool isMultiClick = (timeSinceLastClick < 500 && distFromLastClick < 8);
+                        bool isMultiClick = (timeSinceLastClick < 550 && distFromLastClick < 10);
 
                         lastClickUpTime = now;
                         lastClickUpPoint = hookStruct.pt;
@@ -253,8 +253,8 @@ namespace BarTranslator {
 
             Task.Run(async () => {
                 try {
-                    // Ultra-fast 25ms delay for target app highlight
-                    await Task.Delay(25, token);
+                    // Small delay for target app highlight to settle
+                    await Task.Delay(40, token);
                     if (token.IsCancellationRequested) return;
 
                     // Skip if modifier keys are being held
@@ -269,10 +269,10 @@ namespace BarTranslator {
                     isSimulatingCopy = true;
                     SendCopyKeystrokes();
 
-                    // Fast polling for clipboard sequence change (8ms interval, up to 250ms)
+                    // Poll for clipboard sequence change (up to 300ms)
                     bool sequenceChanged = false;
-                    for (int i = 0; i < 25; i++) {
-                        await Task.Delay(8, token);
+                    for (int i = 0; i < 30; i++) {
+                        await Task.Delay(10, token);
                         if (token.IsCancellationRequested) return;
 
                         if (GetClipboardSequenceNumber() != seqBefore) {
@@ -281,11 +281,10 @@ namespace BarTranslator {
                         }
                     }
 
-                    // Release simulation flag
                     isSimulatingCopy = false;
 
                     if (!sequenceChanged) {
-                        await Task.Delay(15, token);
+                        await Task.Delay(20, token);
                     }
 
                     if (token.IsCancellationRequested) return;
@@ -307,30 +306,29 @@ namespace BarTranslator {
                 // 1. Ctrl Down
                 inputs[0].type = INPUT_KEYBOARD;
                 inputs[0].u.ki.wVk = VK_CONTROL;
-                inputs[0].u.ki.wScan = 0x1D;
+                inputs[0].u.ki.wScan = 0;
                 inputs[0].u.ki.dwFlags = 0;
 
                 // 2. C Down
                 inputs[1].type = INPUT_KEYBOARD;
                 inputs[1].u.ki.wVk = VK_C;
-                inputs[1].u.ki.wScan = 0x2E;
+                inputs[1].u.ki.wScan = 0;
                 inputs[1].u.ki.dwFlags = 0;
 
                 // 3. C Up
                 inputs[2].type = INPUT_KEYBOARD;
                 inputs[2].u.ki.wVk = VK_C;
-                inputs[2].u.ki.wScan = 0x2E;
+                inputs[2].u.ki.wScan = 0;
                 inputs[2].u.ki.dwFlags = KEYEVENTF_KEYUP;
 
                 // 4. Ctrl Up
                 inputs[3].type = INPUT_KEYBOARD;
                 inputs[3].u.ki.wVk = VK_CONTROL;
-                inputs[3].u.ki.wScan = 0x1D;
+                inputs[3].u.ki.wScan = 0;
                 inputs[3].u.ki.dwFlags = KEYEVENTF_KEYUP;
 
                 uint sent = SendInput(4, inputs, Marshal.SizeOf<INPUT>());
                 if (sent == 0) {
-                    // Fallback to keybd_event
                     keybd_event((byte)VK_CONTROL, 0x1D, 0, UIntPtr.Zero);
                     keybd_event((byte)VK_C, 0x2E, 0, UIntPtr.Zero);
                     keybd_event((byte)VK_C, 0x2E, KEYEVENTF_KEYUP, UIntPtr.Zero);
@@ -346,10 +344,11 @@ namespace BarTranslator {
 
         private static void OnManualClipboardChanged() {
             if (isSimulatingCopy) return;
+            if (!StateManager.ClipboardTranslateEnabled) return;
 
             Task.Run(async () => {
                 try {
-                    await Task.Delay(5);
+                    await Task.Delay(10);
                     string text = ReadClipboardTextWithRetry();
                     await ProcessSelectedTextAsync(text);
                 } catch {}
@@ -371,8 +370,8 @@ namespace BarTranslator {
             }
 
             long now = Environment.TickCount64;
-            // Debounce if the exact same text was processed within the last 500ms
-            if (text.Equals(lastProcessedText, StringComparison.OrdinalIgnoreCase) && (now - lastProcessedTimestamp < 500)) {
+            // Debounce if the exact same text was processed within the last 400ms
+            if (text.Equals(lastProcessedText, StringComparison.OrdinalIgnoreCase) && (now - lastProcessedTimestamp < 400)) {
                 return;
             }
 
@@ -409,7 +408,7 @@ namespace BarTranslator {
                         }
                     }
                 } catch {}
-                Thread.Sleep(20);
+                Thread.Sleep(15);
             }
 
             // Fallback: STA thread WinForms Clipboard

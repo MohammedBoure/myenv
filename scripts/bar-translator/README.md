@@ -14,6 +14,7 @@ Standalone binaries and automation helpers for the status bar real-time English-
 | [`Actions.cs`](file:///C:/Users/moham/Documents/myenv/scripts/bar-translator/Actions.cs) | Source code for `translator-action.exe`. |
 | [`copy-state.cmd`](file:///C:/Users/moham/Documents/myenv/scripts/bar-translator/copy-state.cmd) | Wrapper triggered on bar right-click to copy the full Arabic translation to the clipboard. |
 | [`clear-state.cmd`](file:///C:/Users/moham/Documents/myenv/scripts/bar-translator/clear-state.cmd) | Wrapper triggered on bar middle-click to clear the translation and hide the widget. |
+| [`toggle-clipboard-translate.cmd`](file:///C:/Users/moham/Documents/myenv/scripts/bar-translator/toggle-clipboard-translate.cmd) | Helper script to toggle automatic translation of copied text on or off. |
 | [`toggle-auto-capture.cmd`](file:///C:/Users/moham/Documents/myenv/scripts/bar-translator/toggle-auto-capture.cmd) | Helper script to toggle automatic mouse text selection capture on or off. |
 | [`toggle-translation-mode.cmd`](file:///C:/Users/moham/Documents/myenv/scripts/bar-translator/toggle-translation-mode.cmd) | Helper script to enter or exit dedicated full sentence reading Translation Focus Mode. |
 | [`toggle-show-english.cmd`](file:///C:/Users/moham/Documents/myenv/scripts/bar-translator/toggle-show-english.cmd) | Helper script to toggle bilingual display vs Arabic translation only. |
@@ -25,6 +26,10 @@ Standalone binaries and automation helpers for the status bar real-time English-
 - **Open settings dropdown menu**:
   ```powershell
   .\show-menu.cmd
+  ```
+- **Toggle copied text translation**:
+  ```powershell
+  .\BarTranslator.exe --toggle-clipboard-translate
   ```
 - **List and toggle bar widgets**:
   ```powershell

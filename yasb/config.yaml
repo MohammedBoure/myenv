@@ -36,21 +36,16 @@ bars:
       right: 4
     widgets:
       left:
-      - home
       - glazewm_workspaces
       - bar_menu
       center:
       - translator
       - clock
       right:
-      - traffic
       - cpu
       - gpu
+      - memory
       - volume
-      - microphone
-      - github
-      - notifications
-      - power_menu
 widgets:
   home:
     type: yasb.home.HomeWidget

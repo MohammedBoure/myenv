@@ -12,7 +12,9 @@ namespace BarTranslator {
         private static readonly object fileLock = new();
         private static TranslationData currentData = new();
         private static HttpListener? httpListener;
+        private static FileSystemWatcher? fileWatcher;
         private static readonly int port = 49876;
+        private static volatile bool isInternalSaving = false;
 
         public static string StateFilePath { get; } = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.UserProfile),
@@ -20,6 +22,7 @@ namespace BarTranslator {
         );
 
         public static bool AutoCaptureEnabled { get; set; } = true;
+        public static bool ClipboardTranslateEnabled { get; set; } = true;
         public static bool TranslationMode { get; set; } = false;
         public static bool ShowEnglish { get; set; } = true;
 
@@ -33,8 +36,34 @@ namespace BarTranslator {
             // Load existing state if available
             LoadState();
 
+            // Set up FileSystemWatcher so background daemon immediately reflects changes made by the menu process
+            SetupFileWatcher();
+
             // Start HTTP listener for Zebar and local utilities
             StartHttpServer();
+        }
+
+        private static void SetupFileWatcher() {
+            try {
+                string? dir = Path.GetDirectoryName(StateFilePath);
+                if (!string.IsNullOrEmpty(dir) && Directory.Exists(dir)) {
+                    fileWatcher = new FileSystemWatcher(dir, Path.GetFileName(StateFilePath)) {
+                        NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size | NotifyFilters.FileName,
+                        EnableRaisingEvents = true
+                    };
+                    fileWatcher.Changed += (s, e) => OnExternalStateFileModified();
+                    fileWatcher.Created += (s, e) => OnExternalStateFileModified();
+                }
+            } catch {}
+        }
+
+        private static void OnExternalStateFileModified() {
+            if (isInternalSaving) return;
+            try {
+                // Short sleep to allow file write to finish
+                Thread.Sleep(30);
+                LoadState();
+            } catch {}
         }
 
         public static void UpdateState(TranslationData data) {
@@ -62,6 +91,15 @@ namespace BarTranslator {
                 AutoCaptureEnabled = !AutoCaptureEnabled;
                 SaveToFile(currentData);
             }
+            NotifyDaemonReload();
+        }
+
+        public static void ToggleClipboardTranslate() {
+            lock (fileLock) {
+                ClipboardTranslateEnabled = !ClipboardTranslateEnabled;
+                SaveToFile(currentData);
+            }
+            NotifyDaemonReload();
         }
 
         public static void ToggleTranslationMode() {
@@ -69,6 +107,7 @@ namespace BarTranslator {
                 TranslationMode = !TranslationMode;
                 SaveToFile(currentData);
             }
+            NotifyDaemonReload();
         }
 
         public static void ToggleShowEnglish() {
@@ -80,6 +119,17 @@ namespace BarTranslator {
                 }
                 SaveToFile(currentData);
             }
+            NotifyDaemonReload();
+        }
+
+        private static void NotifyDaemonReload() {
+            // Send quick non-blocking request to daemon HTTP server to reload settings immediately
+            Task.Run(async () => {
+                try {
+                    using var client = new System.Net.Http.HttpClient { Timeout = TimeSpan.FromMilliseconds(200) };
+                    await client.GetAsync($"http://127.0.0.1:{port}/reload_state");
+                } catch {}
+            });
         }
 
         public static string GetCurrentJson() {
@@ -94,6 +144,7 @@ namespace BarTranslator {
                     has_data = currentData.HasData,
                     timestamp = currentData.Timestamp,
                     auto_capture = AutoCaptureEnabled,
+                    clipboard_translate = ClipboardTranslateEnabled,
                     translation_mode = TranslationMode,
                     show_english = ShowEnglish
                 }, new JsonSerializerOptions {
@@ -123,6 +174,7 @@ namespace BarTranslator {
 
         private static void SaveToFile(TranslationData data) {
             try {
+                isInternalSaving = true;
                 var payload = new {
                     @short = data.Short,
                     full = data.Full,
@@ -133,6 +185,7 @@ namespace BarTranslator {
                     has_data = data.HasData,
                     timestamp = data.Timestamp,
                     auto_capture = AutoCaptureEnabled,
+                    clipboard_translate = ClipboardTranslateEnabled,
                     translation_mode = TranslationMode,
                     show_english = ShowEnglish
                 };
@@ -146,35 +199,42 @@ namespace BarTranslator {
                 File.WriteAllText(tmpFile, json, Encoding.UTF8);
                 File.Copy(tmpFile, StateFilePath, true);
                 try { File.Delete(tmpFile); } catch {}
-            } catch {}
+            } catch {} finally {
+                Task.Delay(50).ContinueWith(_ => { isInternalSaving = false; });
+            }
         }
 
-        private static void LoadState() {
+        public static void LoadState() {
             try {
                 if (File.Exists(StateFilePath)) {
                     string json = File.ReadAllText(StateFilePath, Encoding.UTF8);
                     if (!string.IsNullOrWhiteSpace(json) && json.Trim() != "{}") {
                         using var doc = JsonDocument.Parse(json);
                         var root = doc.RootElement;
-                        currentData = new TranslationData {
-                            Short = root.TryGetProperty("short", out var s) ? s.GetString() ?? "" : "",
-                            Full = root.TryGetProperty("full", out var f) ? f.GetString() ?? "" : "",
-                            Original = root.TryGetProperty("original", out var o) ? o.GetString() ?? "" : "",
-                            OriginalShort = root.TryGetProperty("original_short", out var os) ? os.GetString() ?? "" : "",
-                            DisplayShort = root.TryGetProperty("display_short", out var ds) ? ds.GetString() ?? "" : "",
-                            DisplayFull = root.TryGetProperty("display_full", out var df) ? df.GetString() ?? "" : "",
-                            HasData = root.TryGetProperty("has_data", out var h) && h.GetBoolean(),
-                            Timestamp = root.TryGetProperty("timestamp", out var t) ? t.GetInt64() : 0
-                        };
+                        lock (fileLock) {
+                            currentData = new TranslationData {
+                                Short = root.TryGetProperty("short", out var s) ? s.GetString() ?? "" : "",
+                                Full = root.TryGetProperty("full", out var f) ? f.GetString() ?? "" : "",
+                                Original = root.TryGetProperty("original", out var o) ? o.GetString() ?? "" : "",
+                                OriginalShort = root.TryGetProperty("original_short", out var os) ? os.GetString() ?? "" : "",
+                                DisplayShort = root.TryGetProperty("display_short", out var ds) ? ds.GetString() ?? "" : "",
+                                DisplayFull = root.TryGetProperty("display_full", out var df) ? df.GetString() ?? "" : "",
+                                HasData = root.TryGetProperty("has_data", out var h) && h.GetBoolean(),
+                                Timestamp = root.TryGetProperty("timestamp", out var t) ? t.GetInt64() : 0
+                            };
 
-                        if (root.TryGetProperty("auto_capture", out var ac)) {
-                            AutoCaptureEnabled = ac.GetBoolean();
-                        }
-                        if (root.TryGetProperty("translation_mode", out var tm)) {
-                            TranslationMode = tm.GetBoolean();
-                        }
-                        if (root.TryGetProperty("show_english", out var se)) {
-                            ShowEnglish = se.GetBoolean();
+                            if (root.TryGetProperty("auto_capture", out var ac)) {
+                                AutoCaptureEnabled = ac.GetBoolean();
+                            }
+                            if (root.TryGetProperty("clipboard_translate", out var ct)) {
+                                ClipboardTranslateEnabled = ct.GetBoolean();
+                            }
+                            if (root.TryGetProperty("translation_mode", out var tm)) {
+                                TranslationMode = tm.GetBoolean();
+                            }
+                            if (root.TryGetProperty("show_english", out var se)) {
+                                ShowEnglish = se.GetBoolean();
+                            }
                         }
                     }
                 }
@@ -225,6 +285,10 @@ namespace BarTranslator {
                 response.ContentType = "application/json; charset=utf-8";
                 string json = GetCurrentJson();
                 responseBytes = Encoding.UTF8.GetBytes(json);
+            } else if (path == "/reload_state") {
+                LoadState();
+                response.ContentType = "application/json; charset=utf-8";
+                responseBytes = Encoding.UTF8.GetBytes(GetCurrentJson());
             } else if (path == "/clear") {
                 ClearState();
                 response.ContentType = "application/json; charset=utf-8";
@@ -235,6 +299,10 @@ namespace BarTranslator {
                 responseBytes = Encoding.UTF8.GetBytes("{\"copied\":true}");
             } else if (path == "/toggle_auto_capture") {
                 ToggleAutoCapture();
+                response.ContentType = "application/json; charset=utf-8";
+                responseBytes = Encoding.UTF8.GetBytes(GetCurrentJson());
+            } else if (path == "/toggle_clipboard_translate") {
+                ToggleClipboardTranslate();
                 response.ContentType = "application/json; charset=utf-8";
                 responseBytes = Encoding.UTF8.GetBytes(GetCurrentJson());
             } else if (path == "/toggle_translation_mode") {
@@ -285,6 +353,7 @@ namespace BarTranslator {
 
                 lock (fileLock) {
                     if (key == "auto_capture") AutoCaptureEnabled = val;
+                    else if (key == "clipboard_translate") ClipboardTranslateEnabled = val;
                     else if (key == "translation_mode") TranslationMode = val;
                     else if (key == "show_english") ShowEnglish = val;
                     SaveToFile(currentData);
