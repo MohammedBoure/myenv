@@ -1,12 +1,12 @@
 # Notepad: Lightweight Professional Text Editor
 
-A fast, lightweight, and keyboard-driven text and code editor built natively for the **MyEnv** Windows desktop environment. Designed with an obsidian dark interface, 0px sharp rectangular aesthetics, classic uncluttered menu bar (`File`, `Edit`, `View`, `Tools`), bottom status bar, instant launch readiness, terminal-style fast saving, and robust Arabic RTL support.
+A fast, lightweight, and keyboard-driven text and code editor built natively for the MyEnv Windows desktop environment. Designed with an obsidian dark interface, 0px sharp rectangular aesthetics, classic uncluttered menu bar (`File`, `Edit`, `View`, `Tools`), bottom status bar, instant launch readiness, terminal-style fast saving, and robust Arabic RTL support.
 
 ---
 
-## 🚀 Overview & Key Highlights
+## Overview and Key Highlights
 
-- **Instant Launch & Direct Typing**: Ready to type immediately upon opening (<20ms) — keyboard focus is acquired instantly with zero mouse interaction required.
+- **Instant Launch & Direct Typing**: Ready to type immediately upon opening (<20ms) - keyboard focus is acquired instantly with zero mouse interaction required.
 - **Terminal-Style Fast Keyboard Saving (`Ctrl + S` / `Ctrl + Shift + S` / `F2`)**:
   - Interactive keyboard path input bar embedded directly in the window (no slow OS dialog lag).
   - **Tab Auto-Completion**: Autocompletes folder and file paths interactively.
@@ -29,7 +29,7 @@ A fast, lightweight, and keyboard-driven text and code editor built natively for
 
 ---
 
-## ⚡ Launching Notepad
+## Launching Notepad
 
 | Launch Method | Command / Shortcut | Description |
 |---|---|---|
@@ -41,7 +41,7 @@ A fast, lightweight, and keyboard-driven text and code editor built natively for
 
 ---
 
-## ⌨️ Keyboard Shortcuts Reference
+## Keyboard Shortcuts Reference
 
 ### File Management & Fast Saving
 | Shortcut | Action |
@@ -58,7 +58,7 @@ A fast, lightweight, and keyboard-driven text and code editor built natively for
 ### Arabic & Direction Controls
 | Shortcut | Action |
 |---|---|
-| `Ctrl + Shift + R` | Toggle Right-to-Left (RTL / عربي) and Left-to-Right (LTR) text direction |
+| `Ctrl + Shift + R` | Toggle Right-to-Left (RTL) and Left-to-Right (LTR) text direction |
 | Click `[LTR]` / `[RTL]` in Status Bar | Switch text flow direction |
 
 ### Text Editing & Formatting
@@ -69,7 +69,7 @@ A fast, lightweight, and keyboard-driven text and code editor built natively for
 | `Ctrl + A` | Select All |
 | `Ctrl + D` | Duplicate current line |
 | `Ctrl + Shift + K` | Delete current line |
-| `Alt + ↑` / `Alt + ↓` | Move active line Up / Down |
+| `Alt + Up` / `Alt + Down` | Move active line Up / Down |
 | `Ctrl + /` | Toggle single-line comment |
 | `Ctrl + Shift + J` | Format / Beautify JSON |
 | `Ctrl + Shift + U` / `Ctrl + U` | Transform selection to UPPERCASE / lowercase |
@@ -96,7 +96,7 @@ A fast, lightweight, and keyboard-driven text and code editor built natively for
 
 ---
 
-## 🛠️ Source & Executable
+## Source & Executable
 
 - **Source Directory**: [`tools/nightpad/`](file:///%USERPROFILE%/Documents/myenv/tools/nightpad)
 - **Executable**: [`scripts/nightpad/NightPad.exe`](file:///%USERPROFILE%/Documents/myenv/scripts/nightpad/NightPad.exe)

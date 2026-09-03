@@ -1,26 +1,26 @@
-# 🌳 len (ProjectLens) CLI Tool Documentation
+# len (ProjectLens) CLI Tool Documentation
 
 **len (ProjectLens)** is a fast, lightweight, and customizable command-line tool designed to generate clean directory trees, manage persistent file/folder blocklists, control traversal depth, analyze detailed code statistics, and quickly copy results to your clipboard.
 
 ---
 
-## 🚀 Key Features
+## Key Features
 
-- 🌳 **Visual Directory Tree**: Instant hierarchical visualization of projects and subdirectories.
-- 🔢 **Customizable Depth**: Limit traversal depth easily (e.g. `len 3`, `len ./src 2`, or `len -d 3`).
-- 🚫 **Persistent Blocklist Management**:
+- **Visual Directory Tree**: Instant hierarchical visualization of projects and subdirectories.
+- **Customizable Depth**: Limit traversal depth easily (e.g. `len 3`, `len ./src 2`, or `len -d 3`).
+- **Persistent Blocklist Management**:
   - Add blocked files: `len -f [file_or_pattern]`
   - Add blocked folders: `len -F [folder_or_pattern]`
   - Remove blocked files: `len -rf [file_or_pattern]`
   - Remove blocked folders: `len -rF [folder_or_pattern]`
   - List blocked items: `len -l` or `len --list-blocked`
-- 📋 **Copy to Clipboard (`-c`)**: Direct clipboard copy of clean tree output for pasting into LLMs or docs.
-- 📊 **Code & File Statistics (`-s`, `-e`)**: Inline line counts, file sizes, extensions summary, and test/doc coverage.
-- 🔄 **Automated Remote Installation & Updates**: Managed directly via `scripts/install-len.ps1` from the remote repository [`https://github.com/MohammedBoure/len.git`](https://github.com/MohammedBoure/len.git).
+- **Copy to Clipboard (`-c`)**: Direct clipboard copy of clean tree output for pasting into LLMs or docs.
+- **Code & File Statistics (`-s`, `-e`)**: Inline line counts, file sizes, extensions summary, and test/doc coverage.
+- **Automated Remote Installation & Updates**: Managed directly via `scripts/install-len.ps1` from the remote repository [`https://github.com/MohammedBoure/len.git`](https://github.com/MohammedBoure/len.git).
 
 ---
 
-## 📦 Installation & Automated Updates
+## Installation & Automated Updates
 
 The `myenv` environment manages `len` automatically from the remote GitHub repository:
 
@@ -32,7 +32,7 @@ powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\Documents\myenv\scrip
 ### 2. Smart Update Detection
 - Queries the remote GitHub repository for the latest `HEAD` commit.
 - Checks the currently installed package (`projectlens`) in Python.
-- If already installed at the latest commit, it performs **no action** and exits immediately.
+- If already installed at the latest commit, it performs no action and exits immediately.
 - If not installed, outdated, or in local editable mode, it automatically upgrades to the latest remote version.
 
 ### 3. Master Setup Integration
@@ -40,7 +40,7 @@ powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\Documents\myenv\scrip
 
 ---
 
-## 💻 Usage & Examples
+## Usage & Examples
 
 ### 1. Basic Tree View
 ```bash
@@ -98,7 +98,7 @@ len -s -e
 
 ---
 
-## 🛠️ CLI Options Reference
+## CLI Options Reference
 
 | Option / Flag | Alias | Description |
 |---|---|---|

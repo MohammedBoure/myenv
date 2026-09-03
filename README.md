@@ -7,23 +7,23 @@ A high-performance, keyboard-driven tiling desktop environment for Windows devel
 
 ---
 
-## 📚 Documentation Hub / مركز التوثيق الشامل
+## Documentation Hub
 
-يمكنك الوصول لكافة أدلة التوثيق الخاصة بمكونات البيئة من الجدول التالي:
+Access all system documentation guides directly:
 
-| Component / المكون | English Documentation (EN) | Arabic Documentation (AR / التوثيق العربي) |
-|---|---|---|
-| 💻 **Command Prompt (CMD)** | 🇺🇸 [docs/en/cmd.md](file:///%USERPROFILE%/Documents/myenv/docs/en/cmd.md) | 🇸🇦 [docs/ar/cmd.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/cmd.md) |
-| ⚡ **PowerShell Environment** | 🇺🇸 [docs/en/powershell.md](file:///%USERPROFILE%/Documents/myenv/docs/en/powershell.md) | 🇸🇦 [docs/ar/powershell.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/powershell.md) |
-| 🪟 **GlazeWM (Tiling Window Manager)** | 🇺🇸 [docs/en/glazewm.md](file:///%USERPROFILE%/Documents/myenv/docs/en/glazewm.md) | 🇸🇦 [docs/ar/glazewm.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/glazewm.md) |
-| 📊 **YASB Status Bar** | 🇺🇸 [docs/en/yasb.md](file:///%USERPROFILE%/Documents/myenv/docs/en/yasb.md) | 🇸🇦 [docs/ar/yasb.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/yasb.md) |
-| 🔠 **QuickTranslate Tool** | 🇺🇸 [docs/en/quick-translate.md](file:///%USERPROFILE%/Documents/myenv/docs/en/quick-translate.md) | 🇸🇦 [docs/ar/quick-translate.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/quick-translate.md) |
-| 🌐 **BarTranslator (Top Bar Translator)** | 🇺🇸 [docs/en/bar-translator.md](file:///%USERPROFILE%/Documents/myenv/docs/en/bar-translator.md) | 🇸🇦 [docs/ar/bar-translator.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/bar-translator.md) |
-| 🌙 **NightPad (Night Mode Editor)** | 🇺🇸 [docs/en/night-pad.md](file:///%USERPROFILE%/Documents/myenv/docs/en/night-pad.md) | 🇸🇦 [docs/ar/night-pad.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/night-pad.md) |
-| 🌐 **NetLimiter (Bandwidth Control)** | 🇺🇸 [docs/en/netlimiter.md](file:///%USERPROFILE%/Documents/myenv/docs/en/netlimiter.md) | 🇸🇦 [docs/ar/netlimiter.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/netlimiter.md) |
-| 🤖 **Gemini Antigravity (AI)** | 🇺🇸 [docs/en/gemini-antigravity.md](file:///%USERPROFILE%/Documents/myenv/docs/en/gemini-antigravity.md) | 🇸🇦 [docs/ar/gemini-antigravity.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/gemini-antigravity.md) |
-| 🌳 **len (ProjectLens Tree Tool)** | 🇺🇸 [docs/en/len.md](file:///%USERPROFILE%/Documents/myenv/docs/en/len.md) | 🇸🇦 [docs/ar/len.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/len.md) |
-| ⚙️ **Automation Scripts** | 🇺🇸 [docs/en/automation-scripts.md](file:///%USERPROFILE%/Documents/myenv/docs/en/automation-scripts.md) | 🇸🇦 [docs/ar/automation-scripts.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/automation-scripts.md) |
+| Component | Documentation Guide |
+|---|---|
+| Command Prompt (CMD) | [`docs/cmd.md`](file:///%USERPROFILE%/Documents/myenv/docs/cmd.md) |
+| PowerShell Environment | [`docs/powershell.md`](file:///%USERPROFILE%/Documents/myenv/docs/powershell.md) |
+| GlazeWM (Tiling Window Manager) | [`docs/glazewm.md`](file:///%USERPROFILE%/Documents/myenv/docs/glazewm.md) |
+| YASB Status Bar | [`docs/yasb.md`](file:///%USERPROFILE%/Documents/myenv/docs/yasb.md) |
+| QuickTranslate Tool | [`docs/quick-translate.md`](file:///%USERPROFILE%/Documents/myenv/docs/quick-translate.md) |
+| BarTranslator (Status Bar Translator) | [`docs/bar-translator.md`](file:///%USERPROFILE%/Documents/myenv/docs/bar-translator.md) |
+| NightPad (Editor) | [`docs/night-pad.md`](file:///%USERPROFILE%/Documents/myenv/docs/night-pad.md) |
+| NetLimiter (Bandwidth Control) | [`docs/netlimiter.md`](file:///%USERPROFILE%/Documents/myenv/docs/netlimiter.md) |
+| Gemini Antigravity (AI) | [`docs/gemini-antigravity.md`](file:///%USERPROFILE%/Documents/myenv/docs/gemini-antigravity.md) |
+| len (ProjectLens Tree Tool) | [`docs/len.md`](file:///%USERPROFILE%/Documents/myenv/docs/len.md) |
+| Automation Scripts | [`docs/automation-scripts.md`](file:///%USERPROFILE%/Documents/myenv/docs/automation-scripts.md) |
 
 ---
 
@@ -217,11 +217,11 @@ powershell -ExecutionPolicy Bypass -File "C:\Users\moham\Documents\myenv\scripts
 
 ---
 
-## 🛠️ Development & Build Guide / دليل التطوير وإعادة البناء
+## Development and Build Guide
 
-خارطة طريق سريعة لإعادة تجميع الأدوات وتعديل إعدادات البيئة:
+Quick roadmap for recompiling tools and customizing environment configurations:
 
-### 1. تجميع وتطوير أدوات C# (Compilation)
+### 1. C# Tool Compilation
 - **QuickTranslate (`tools/quick-translate/`)**:
   ```powershell
   cd "$env:USERPROFILE\Documents\myenv\tools\quick-translate"
@@ -232,11 +232,11 @@ powershell -ExecutionPolicy Bypass -File "C:\Users\moham\Documents\myenv\scripts
   C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe /target:exe /out:"$env:USERPROFILE\Documents\myenv\scripts\open-terminal-here.exe" "$env:USERPROFILE\Documents\myenv\scripts\OpenTerminalHere.cs"
   ```
 
-### 2. تعديل إعدادات سجل النظام (Registry Modifications)
-- **CMD AutoRun**: مسجلة في `HKCU:\Software\Microsoft\Command Processor\AutoRun` وتوجه لـ [scripts/cmd-init.cmd](file:///%USERPROFILE%/Documents/myenv/scripts/cmd-init.cmd).
-- **Taskbar AutoHide**: مفعلة عبر `HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\StuckRects3` و `MMStuckRects3` (قيمة `3`).
-- **Alt+Shift Toggle**: مسجلة في `HKCU:\Keyboard Layout\Toggle` (قيمة `3` لتعطيل التغيير العشوائي للغة).
+### 2. Registry Settings and Automation
+- **CMD AutoRun**: Registered in `HKCU:\Software\Microsoft\Command Processor\AutoRun` pointing to [scripts/cmd-init.cmd](file:///%USERPROFILE%/Documents/myenv/scripts/cmd-init.cmd).
+- **Taskbar AutoHide**: Configured via `HKCU:\Software\Microsoft\Windows\CurrentVersion\Explorer\StuckRects3` and `MMStuckRects3` (value `3`).
+- **Alt+Shift Toggle**: Configured in `HKCU:\Keyboard Layout\Toggle` (value `3` to disable accidental language switching).
 
-### 3. مجلد النسخ الاحتياطية (`_legacy_originals/`)
-- يضم النسخ الأصلية والإعدادات السابقة قبل مركزتها داخل `myenv`.
-- يُحفظ كأرشيف آمن للرجوع للوراث (Rollback) عند الحاجة فقط دون التعديل عليه مباشر.
+### 3. Legacy Originals Directory (`_legacy_originals/`)
+- Contains original configurations prior to centralization inside `myenv`.
+- Maintained as a historical rollback archive; do not modify directly.

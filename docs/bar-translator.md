@@ -1,10 +1,10 @@
-# 🌐 BarTranslator (Status Bar Real-Time Selection Translator & Controls)
+# BarTranslator (Status Bar Real-Time Selection Translator & Controls)
 
-An ultra-fast, background selection monitor, translator, and status bar control suite built in **C# (.NET 10)** and integrated directly with **YASB** and **Zebar**.
+An ultra-fast, background selection monitor, translator, and status bar control suite built in C# (.NET 10) and integrated directly with YASB and Zebar.
 
 ---
 
-## ⚡ Overview & Features
+## Overview and Features
 
 - **Consolidated Settings & Dropdown Menu**:
   - Clicking the settings dropdown button on the top bar triggers a custom dark-mode context menu with 0px sharp corners.
@@ -22,25 +22,25 @@ An ultra-fast, background selection monitor, translator, and status bar control 
 - **Live Background Daemon Synchronization**:
   - The background daemon uses `FileSystemWatcher` and local HTTP endpoints (`/reload_state`) to instantly synchronize setting changes made from the menu or CLI without restarting.
 - **Continuous Bilingual Display**:
-  - The top bar permanently displays both the English word/phrase and its Arabic translation side-by-side (e.g. `🌐 compiler ➔ مترجم`).
+  - The top bar permanently displays both the English word/phrase and its Arabic translation side-by-side (e.g. `compiler -> مترجم`).
 - **Ultra-Fast Translation Engine**:
   - Low-latency `SocketsHttpHandler` connection pooling and persistent in-memory caching for 0ms instantaneous lookups on repeated queries.
   - YASB polling interval optimized to **120ms** for immediate visual feedback.
 
 ---
 
-## ⌨️ Mouse Controls on Top Bar
+## Mouse Controls on Top Bar
 
 | Action | Result |
 |---|---|
 | **Left Click on Menu Button (`bar_menu`)** | Open unified settings dropdown menu (Translation controls & widget visibility toggles). |
-| **Left Click on Translator Widget** | Toggle between short preview and full translated text (`display_short` ⟷ `display_full`). |
+| **Left Click on Translator Widget** | Toggle between short preview and full translated text (`display_short` <-> `display_full`). |
 | **Right Click on Translator Widget** | Copy full Arabic translation directly to system clipboard. |
-| **Middle Click on Translator Widget** | Clear current translation and reset field to default idle state (`English ➔ العربية`). |
+| **Middle Click on Translator Widget** | Clear current translation and reset field to default idle state (`English -> Arabic`). |
 
 ---
 
-## 📂 Project Architecture
+## Project Architecture
 
 | Component | Path | Description |
 |---|---|---|
@@ -56,7 +56,7 @@ An ultra-fast, background selection monitor, translator, and status bar control 
 
 ---
 
-## 🛠️ Compilation & Rebuild Guide
+## Compilation and Rebuild Guide
 
 From project directory:
 ```powershell

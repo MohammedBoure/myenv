@@ -1,10 +1,10 @@
-# 🤖 Gemini Antigravity Environment Configuration
+# Gemini Antigravity Environment Configuration
 
-Centralized, version-controlled global configuration, guidelines, rules, custom skills, and MCP server integrations for **Google Antigravity (AGY)** within MyEnv.
+Centralized, version-controlled global configuration, guidelines, rules, custom skills, and MCP server integrations for Google Antigravity (AGY) within MyEnv.
 
 ---
 
-## 📂 Architecture & Directory Junction
+## Architecture & Directory Junction
 
 To ensure that your Antigravity agent guidelines, MCP tools, and skills are completely backed up in Git and automatically restored on new machine setups, MyEnv links the global configuration directory via an NTFS directory junction:
 
@@ -14,7 +14,7 @@ To ensure that your Antigravity agent guidelines, MCP tools, and skills are comp
 
 ---
 
-## 🛠️ Files & Configuration Hierarchy
+## Files & Configuration Hierarchy
 
 ```
 myenv/
@@ -44,7 +44,7 @@ Configures external MCP servers to extend the AI agent with external APIs, datab
 
 ---
 
-## 🚀 Setup & Automation
+## Setup & Automation
 
 To create or verify the Gemini Antigravity directory junction:
 ```powershell

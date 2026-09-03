@@ -6,7 +6,7 @@ $docsDir = Join-Path $env:USERPROFILE "Documents\myenv\docs"
 
 function Show-Header {
     Write-Host "==========================================================" -ForegroundColor DarkGray
-    Write-Host " MyEnv Documentation & Shortcut Guide (Bilingual / مزدوج) " -ForegroundColor Cyan
+    Write-Host "         MyEnv Documentation & Shortcut Guide             " -ForegroundColor Cyan
     Write-Host "==========================================================" -ForegroundColor DarkGray
 }
 
