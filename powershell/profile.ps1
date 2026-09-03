@@ -38,26 +38,26 @@ $myenvDir = Join-Path $userProfile "Documents\myenv"
 
 # Central development environment paths.
 $pathsToAdd = @(
-    "$userProfile\AppData\Local\agy\bin",
-    "$userProfile\.local\bin",
-    "$userProfile\AppData\Local\Microsoft\WindowsApps",
-    "$myenvDir\scripts",
-    "$myenvDir\scripts\nightpad",
-    'C:\Program Files\dotnet',
-    "$userProfile\development\flutter\bin",
-    "$userProfile\development\jdk-17.0.19+10\bin",
-    "$userProfile\AppData\Local\Android\Sdk\cmdline-tools\latest\bin",
-    "$userProfile\AppData\Local\Android\Sdk\platform-tools",
-    "$userProfile\AppData\Local\Android\Sdk\emulator",
-    'C:\Windows\System32\WindowsPowerShell\v1.0',
-    "$userProfile\development\kotlin\bin",
-    "$userProfile\AppData\Local\Programs\Python\Python314",
-    "$userProfile\AppData\Local\Programs\Python\Python314\Scripts",
     "$userProfile\development\msys64\ucrt64\bin",
     "$userProfile\development\php",
     "$userProfile\AppData\Roaming\Composer\vendor\bin",
     "$userProfile\development\nodejs",
-    "$userProfile\AppData\Roaming\npm"
+    "$userProfile\AppData\Roaming\npm",
+    "$userProfile\development\kotlin\bin",
+    "$userProfile\AppData\Local\Android\Sdk\cmdline-tools\latest\bin",
+    "$userProfile\AppData\Local\Android\Sdk\platform-tools",
+    "$userProfile\AppData\Local\Android\Sdk\emulator",
+    "$userProfile\development\flutter\bin",
+    "$userProfile\development\jdk-17.0.19+10\bin",
+    'C:\Program Files\dotnet',
+    'C:\Windows\System32\WindowsPowerShell\v1.0',
+    "$userProfile\AppData\Local\Microsoft\WindowsApps",
+    "$userProfile\.local\bin",
+    "$userProfile\AppData\Local\agy\bin",
+    "$userProfile\AppData\Local\Programs\Python\Python314",
+    "$userProfile\AppData\Local\Programs\Python\Python314\Scripts",
+    "$myenvDir\scripts\nightpad",
+    "$myenvDir\scripts"
 )
 foreach ($p in $pathsToAdd) {
     if (Test-Path -LiteralPath $p) {

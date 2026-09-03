@@ -33,8 +33,8 @@ doskey notepad="%USERPROFILE%\Documents\myenv\scripts\nightpad\NightPad.exe" $*
 :: Prompt Styling
 prompt $E[36m$T[0..5]$E[0m $E[32m%USERNAME%@%COMPUTERNAME%$E[0m $E[34m$P$E[0m $E[35m$+$E[0m$G 
 
-:: Add Clink, MyEnv Tools (fzf), Scripts & NightPad to PATH & Inject Clink for History Auto-Suggestions
-set "PATH=%USERPROFILE%\Documents\myenv\scripts;%USERPROFILE%\Documents\myenv\scripts\nightpad;%USERPROFILE%\Documents\myenv\tools\fzf;%LOCALAPPDATA%\clink\bin;%PATH%"
+:: Add Clink, Python, MyEnv Tools (fzf), Scripts & NightPad to PATH & Inject Clink for History Auto-Suggestions
+set "PATH=%USERPROFILE%\Documents\myenv\scripts;%USERPROFILE%\Documents\myenv\scripts\nightpad;%LOCALAPPDATA%\Programs\Python\Python314\Scripts;%LOCALAPPDATA%\Programs\Python\Python314;%USERPROFILE%\Documents\myenv\tools\fzf;%LOCALAPPDATA%\clink\bin;%PATH%"
 if exist "%LOCALAPPDATA%\clink\bin\clink.exe" (
     "%LOCALAPPDATA%\clink\bin\clink.exe" inject --quiet
 ) else (

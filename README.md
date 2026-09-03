@@ -22,6 +22,7 @@ A high-performance, keyboard-driven tiling desktop environment for Windows devel
 | 🌙 **NightPad (Night Mode Editor)** | 🇺🇸 [docs/en/night-pad.md](file:///%USERPROFILE%/Documents/myenv/docs/en/night-pad.md) | 🇸🇦 [docs/ar/night-pad.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/night-pad.md) |
 | 🌐 **NetLimiter (Bandwidth Control)** | 🇺🇸 [docs/en/netlimiter.md](file:///%USERPROFILE%/Documents/myenv/docs/en/netlimiter.md) | 🇸🇦 [docs/ar/netlimiter.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/netlimiter.md) |
 | 🤖 **Gemini Antigravity (AI)** | 🇺🇸 [docs/en/gemini-antigravity.md](file:///%USERPROFILE%/Documents/myenv/docs/en/gemini-antigravity.md) | 🇸🇦 [docs/ar/gemini-antigravity.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/gemini-antigravity.md) |
+| 🌳 **len (ProjectLens Tree Tool)** | 🇺🇸 [docs/en/len.md](file:///%USERPROFILE%/Documents/myenv/docs/en/len.md) | 🇸🇦 [docs/ar/len.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/len.md) |
 | ⚙️ **Automation Scripts** | 🇺🇸 [docs/en/automation-scripts.md](file:///%USERPROFILE%/Documents/myenv/docs/en/automation-scripts.md) | 🇸🇦 [docs/ar/automation-scripts.md](file:///%USERPROFILE%/Documents/myenv/docs/ar/automation-scripts.md) |
 
 ---
@@ -127,6 +128,7 @@ A high-performance, keyboard-driven tiling desktop environment for Windows devel
 | **`install-clink.ps1`** | [scripts/install-clink.ps1](file:///%USERPROFILE%/Documents/myenv/scripts/install-clink.ps1) | Installs Clink via `winget`, enables Clink AutoRun, and applies `clink_settings` from `myenv`. |
 | **`app-launcher.ps1`** | [scripts/app-launcher.ps1](file:///%USERPROFILE%/Documents/myenv/scripts/app-launcher.ps1) | Fast WPF application launcher search dialog (`Alt + Q`). |
 | **`cb.cmd`** | [scripts/cb.cmd](file:///%USERPROFILE%/Documents/myenv/scripts/cb.cmd) | Runs a command, outputs results directly to terminal, and copies output to system clipboard. |
+| **`install-len.ps1`** | [scripts/install-len.ps1](file:///%USERPROFILE%/Documents/myenv/scripts/install-len.ps1) | Automated installer and smart commit-based updater for `len` CLI tool from remote GitHub repository. |
 | **`open-terminal-here.exe`** | [scripts/open-terminal-here.exe](file:///%USERPROFILE%/Documents/myenv/scripts/open-terminal-here.exe) | Instant native launcher (< 10ms, 0% window flash) to open CMD or PS at active File Explorer path. |
 
 
