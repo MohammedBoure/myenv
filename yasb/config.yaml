@@ -42,6 +42,7 @@ bars:
       - translator
       - clock
       right:
+      - traffic
       - cpu
       - gpu
       - memory

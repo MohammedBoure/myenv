@@ -109,14 +109,26 @@
             } catch (e) {}
           };
           fetchTranslation();
-          const interval = setInterval(fetchTranslation, 400);
+          const interval = setInterval(fetchTranslation, 350);
           return () => clearInterval(interval);
         }, []);
 
         const isTranslationMode = translation?.translation_mode ?? false;
         const isAutoCapture = translation?.auto_capture ?? true;
+        const isClipboardTranslate = translation?.clipboard_translate ?? true;
         const isShowEnglish = translation?.show_english ?? true;
         const hasData = translation?.has_data ?? false;
+
+        const toggleClipboardTranslate = async (e) => {
+          e?.stopPropagation();
+          try {
+            const res = await fetch('http://127.0.0.1:49876/toggle_clipboard_translate');
+            if (res.ok) {
+              const data = await res.json();
+              setTranslation(data);
+            }
+          } catch (e) {}
+        };
 
         const toggleAutoCapture = async (e) => {
           e?.stopPropagation();
@@ -283,7 +295,25 @@
 
             {menuTab === 'translator' ? (
               <div className="dropdown-items-scroll">
-                {/* Toggle 1: Auto-Transcription / Selection Capture */}
+                {/* Toggle 1: Auto-Translate Copied Text (Ctrl+C / Copy) */}
+                <div className="dropdown-item" onClick={toggleClipboardTranslate} title="Toggle automatic translation upon copying text (Ctrl+C)">
+                  <div className="item-main-row">
+                    <span className="item-label">
+                      <i className="nf nf-md-clipboard_text_outline"></i>
+                      Auto-Translate Copied Text
+                    </span>
+                    <span className={`toggle-badge ${isClipboardTranslate ? 'on' : 'off'}`}>
+                      {isClipboardTranslate ? 'ON' : 'OFF'}
+                    </span>
+                  </div>
+                  <div className="item-desc">
+                    {isClipboardTranslate
+                      ? "Translates copied text automatically (Ctrl+C / Copy)"
+                      : "Manual copy translation OFF"}
+                  </div>
+                </div>
+
+                {/* Toggle 2: Auto-Select Text Capture (Mouse Selection) */}
                 <div className="dropdown-item" onClick={toggleAutoCapture} title="Toggle automatic translation upon mouse text selection">
                   <div className="item-main-row">
                     <span className="item-label">
@@ -296,28 +326,30 @@
                   </div>
                   <div className="item-desc">
                     {isAutoCapture
-                      ? "Translates highlighted text automatically"
-                      : "Auto-selection OFF: Copy word (Ctrl+C) to translate"}
+                      ? "Translates highlighted text automatically upon selection"
+                      : "Mouse auto-selection OFF (Copy text with Ctrl+C to translate)"}
                   </div>
                 </div>
 
-                {/* Toggle 2: Translation Focus Mode */}
+                {/* Toggle 3: Translation Focus Mode */}
                 <div className="dropdown-item" onClick={toggleTranslationMode} title="Maximize top bar area for full sentence reading">
                   <div className="item-main-row">
                     <span className="item-label">
                       <i className="nf nf-md-fullscreen"></i>
-                      Translation Mode
+                      Translation Focus Mode
                     </span>
                     <span className={`toggle-badge ${isTranslationMode ? 'on' : 'off'}`}>
                       {isTranslationMode ? 'ON' : 'OFF'}
                     </span>
                   </div>
                   <div className="item-desc">
-                    Hides extra widgets, keeping only workspace buttons & wide sentence reader
+                    {isTranslationMode
+                      ? "Wide sentence reader active (Hides extra widgets)"
+                      : "Standard compact bar layout"}
                   </div>
                 </div>
 
-                {/* Toggle 3: Show English Word */}
+                {/* Toggle 4: Show English Word (Bilingual) */}
                 <div className="dropdown-item" onClick={toggleShowEnglish} title="Toggle bilingual display vs Arabic translation only">
                   <div className="item-main-row">
                     <span className="item-label">
@@ -454,8 +486,8 @@
                     <i className="nf nf-md-translate"></i>
                     <span>
                       {isAutoCapture
-                        ? "Select or copy any English sentence to translate..."
-                        : "Copy any English sentence (Ctrl+C) to translate..."}
+                        ? "Select or copy any text to translate..."
+                        : "Copy any text (Ctrl+C) to translate..."}
                     </span>
                   </div>
                 )}
@@ -504,7 +536,7 @@
               {/* Three Squares Menu Button beside Workspaces Navigation */}
               {renderMenuButton()}
 
-              {/* Standalone Translator Widget (No 3-dots needed) */}
+              {/* Standalone Translator Widget */}
               {visibility.translator && (
                 <button
                   className="translator-widget"
@@ -516,9 +548,7 @@
                   title={
                     hasData
                       ? `Original: ${translation.original}\nTranslation: ${translation.full}\n[Left Click: Toggle Full/Short | Right Click: Copy]`
-                      : isAutoCapture
-                      ? "Select or copy English text anywhere to translate"
-                      : "Copy English text (Ctrl+C) to translate"
+                      : `Status Bar Translator\n• Auto-Copy: ${isClipboardTranslate ? 'ON' : 'OFF'}\n• Auto-Select: ${isAutoCapture ? 'ON' : 'OFF'}\n\n[Select or copy English text to translate]`
                   }
                 >
                   <i className="nf nf-md-translate"></i>

@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Text;
 using System.Text.Json;
@@ -10,7 +11,7 @@ using System.Windows.Forms;
 namespace BarTranslator {
     public static class StateManager {
         private static readonly object fileLock = new();
-        private static TranslationData currentData = new();
+        private static TranslationData currentData = CreateDefaultData();
         private static HttpListener? httpListener;
         private static FileSystemWatcher? fileWatcher;
         private static readonly int port = 49876;
@@ -25,6 +26,19 @@ namespace BarTranslator {
         public static bool ClipboardTranslateEnabled { get; set; } = true;
         public static bool TranslationMode { get; set; } = false;
         public static bool ShowEnglish { get; set; } = true;
+
+        private static TranslationData CreateDefaultData() {
+            return new TranslationData {
+                HasData = false,
+                Short = "العربية",
+                Full = "حدد أو انسخ أي نص بالإنجليزية ليتم ترجمته فوراً",
+                Original = "English",
+                OriginalShort = "English",
+                DisplayShort = ShowEnglish ? "English ➔ العربية" : "العربية",
+                DisplayFull = ShowEnglish ? "English ➔ العربية (حدد أو انسخ نصاً للترجمة)" : "العربية (حدد أو انسخ نصاً للترجمة)",
+                Timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+            };
+        }
 
         public static void Initialize() {
             // Ensure directory exists
@@ -75,15 +89,11 @@ namespace BarTranslator {
 
         public static void ClearState() {
             lock (fileLock) {
-                currentData = new TranslationData {
-                    HasData = false,
-                    Short = "",
-                    Full = "",
-                    Original = "",
-                    Timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
-                };
+                currentData = CreateDefaultData();
                 SaveToFile(currentData);
             }
+            SelectionMonitor.ClearLastProcessed();
+            NotifyDaemonReload();
         }
 
         public static void ToggleAutoCapture() {
@@ -116,6 +126,9 @@ namespace BarTranslator {
                 if (currentData.HasData) {
                     currentData.DisplayShort = ShowEnglish ? $"{currentData.OriginalShort} ➔ {currentData.Short}" : currentData.Short;
                     currentData.DisplayFull = ShowEnglish ? $"{currentData.Original} ➔ {currentData.Full}" : currentData.Full;
+                } else {
+                    currentData.DisplayShort = ShowEnglish ? "English ➔ العربية" : "العربية";
+                    currentData.DisplayFull = ShowEnglish ? "English ➔ العربية (حدد أو انسخ نصاً للترجمة)" : "العربية (حدد أو انسخ نصاً للترجمة)";
                 }
                 SaveToFile(currentData);
             }
@@ -157,7 +170,7 @@ namespace BarTranslator {
         public static void CopyCurrentToClipboard() {
             string textToCopy;
             lock (fileLock) {
-                textToCopy = currentData.Full;
+                textToCopy = currentData.HasData ? currentData.Full : currentData.Short;
             }
 
             if (!string.IsNullOrWhiteSpace(textToCopy)) {
@@ -212,16 +225,13 @@ namespace BarTranslator {
                         using var doc = JsonDocument.Parse(json);
                         var root = doc.RootElement;
                         lock (fileLock) {
-                            currentData = new TranslationData {
-                                Short = root.TryGetProperty("short", out var s) ? s.GetString() ?? "" : "",
-                                Full = root.TryGetProperty("full", out var f) ? f.GetString() ?? "" : "",
-                                Original = root.TryGetProperty("original", out var o) ? o.GetString() ?? "" : "",
-                                OriginalShort = root.TryGetProperty("original_short", out var os) ? os.GetString() ?? "" : "",
-                                DisplayShort = root.TryGetProperty("display_short", out var ds) ? ds.GetString() ?? "" : "",
-                                DisplayFull = root.TryGetProperty("display_full", out var df) ? df.GetString() ?? "" : "",
-                                HasData = root.TryGetProperty("has_data", out var h) && h.GetBoolean(),
-                                Timestamp = root.TryGetProperty("timestamp", out var t) ? t.GetInt64() : 0
-                            };
+                            bool hasData = root.TryGetProperty("has_data", out var h) && h.GetBoolean();
+                            string shortText = root.TryGetProperty("short", out var s) ? s.GetString() ?? "" : "";
+                            string fullText = root.TryGetProperty("full", out var f) ? f.GetString() ?? "" : "";
+                            string origText = root.TryGetProperty("original", out var o) ? o.GetString() ?? "" : "";
+                            string origShort = root.TryGetProperty("original_short", out var os) ? os.GetString() ?? "" : "";
+                            string dispShort = root.TryGetProperty("display_short", out var ds) ? ds.GetString() ?? "" : "";
+                            string dispFull = root.TryGetProperty("display_full", out var df) ? df.GetString() ?? "" : "";
 
                             if (root.TryGetProperty("auto_capture", out var ac)) {
                                 AutoCaptureEnabled = ac.GetBoolean();
@@ -235,8 +245,35 @@ namespace BarTranslator {
                             if (root.TryGetProperty("show_english", out var se)) {
                                 ShowEnglish = se.GetBoolean();
                             }
+
+                            if (!hasData && string.IsNullOrWhiteSpace(dispShort)) {
+                                dispShort = ShowEnglish ? "English ➔ العربية" : "العربية";
+                                dispFull = ShowEnglish ? "English ➔ العربية (حدد أو انسخ نصاً للترجمة)" : "العربية (حدد أو انسخ نصاً للترجمة)";
+                                shortText = "العربية";
+                                fullText = "حدد أو انسخ أي نص بالإنجليزية ليتم ترجمته فوراً";
+                                origText = "English";
+                                origShort = "English";
+                            }
+
+                            currentData = new TranslationData {
+                                Short = shortText,
+                                Full = fullText,
+                                Original = origText,
+                                OriginalShort = origShort,
+                                DisplayShort = dispShort,
+                                DisplayFull = dispFull,
+                                HasData = hasData,
+                                Timestamp = root.TryGetProperty("timestamp", out var t) ? t.GetInt64() : 0
+                            };
                         }
+                        return;
                     }
+                }
+
+                // If file doesn't exist, create it with defaults
+                lock (fileLock) {
+                    currentData = CreateDefaultData();
+                    SaveToFile(currentData);
                 }
             } catch {}
         }
@@ -363,7 +400,7 @@ namespace BarTranslator {
             } else if (path == "/translate") {
                 string? text = request.QueryString["text"];
                 if (!string.IsNullOrWhiteSpace(text)) {
-                    var data = await TranslationEngine.TranslateToEnglishArabicAsync(text);
+                    var data = await TranslationEngine.TranslateAsync(text);
                     if (data != null) {
                         UpdateState(data);
                         response.ContentType = "application/json; charset=utf-8";

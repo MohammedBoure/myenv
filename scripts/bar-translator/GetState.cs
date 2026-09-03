@@ -17,16 +17,16 @@ namespace BarTranslator {
                         content = sr.ReadToEnd();
                     }
 
-                    if (!string.IsNullOrWhiteSpace(content) && content.Contains("\"has_data\": true")) {
+                    if (!string.IsNullOrWhiteSpace(content) && content.Trim().StartsWith("{") && content.Trim().EndsWith("}")) {
                         Console.Write(content);
                         return;
                     }
                 }
 
-                // Default idle state so the field is always visible on the bar
-                Console.Write("{\"short\":\"العربية\",\"full\":\"حدد أي كلمة أو جملة بالإنجليزية ليتم ترجمتها هنا تلقائياً\",\"original\":\"English\",\"original_short\":\"English\",\"display_short\":\"English ➔ العربية\",\"display_full\":\"English ➔ العربية (حدد نصاً للترجمة)\",\"has_data\":false,\"timestamp\":0}");
+                // Default idle state fallback
+                Console.Write("{\"short\":\"العربية\",\"full\":\"حدد أو انسخ أي نص بالإنجليزية ليتم ترجمته فوراً\",\"original\":\"English\",\"original_short\":\"English\",\"display_short\":\"English ➔ العربية\",\"display_full\":\"English ➔ العربية (حدد نصاً للترجمة)\",\"has_data\":false,\"timestamp\":0,\"auto_capture\":true,\"clipboard_translate\":true,\"translation_mode\":false,\"show_english\":true}");
             } catch {
-                Console.Write("{\"short\":\"العربية\",\"full\":\"حدد أي كلمة أو جملة بالإنجليزية ليتم ترجمتها هنا تلقائياً\",\"original\":\"English\",\"original_short\":\"English\",\"display_short\":\"English ➔ العربية\",\"display_full\":\"English ➔ العربية (حدد نصاً للترجمة)\",\"has_data\":false,\"timestamp\":0}");
+                Console.Write("{\"short\":\"العربية\",\"full\":\"حدد أو انسخ أي نص بالإنجليزية ليتم ترجمته فوراً\",\"original\":\"English\",\"original_short\":\"English\",\"display_short\":\"English ➔ العربية\",\"display_full\":\"English ➔ العربية (حدد نصاً للترجمة)\",\"has_data\":false,\"timestamp\":0,\"auto_capture\":true,\"clipboard_translate\":true,\"translation_mode\":false,\"show_english\":true}");
             }
         }
     }

@@ -1,13 +1,14 @@
 ﻿{
-  "short": "عملية…",
-  "full": "عملية الدفع أريد أيضًا دعم الدفع بالفضة المطحونة أيضًا والتأكد من استغلال المساحة وبساطة الواجهة وفعالية الأزرار الموجودة في مربع الحوار.",
-  "original": "Payment process I want to also support payment in crushed silver as well and make sure of the utilization of space, the simplicity of the interface and the effectiveness of the buttons in the dialog.",
-  "original_short": "Payment process…",
-  "display_short": "عملية…",
-  "display_full": "عملية الدفع أريد أيضًا دعم الدفع بالفضة المطحونة أيضًا والتأكد من استغلال المساحة وبساطة الواجهة وفعالية الأزرار الموجودة في مربع الحوار.",
+  "short": "᱀ቄ",
+  "full": "᱀ቄ",
+  "original": "᱀ቄǼ",
+  "original_short": "᱀ቄǼ",
+  "display_short": "᱀ቄǼ ➔ ᱀ቄ",
+  "display_full": "᱀ቄǼ ➔ ᱀ቄ",
   "has_data": true,
-  "timestamp": 1788359255,
+  "timestamp": 1788436572,
   "auto_capture": true,
+  "clipboard_translate": true,
   "translation_mode": false,
-  "show_english": false
+  "show_english": true
 }

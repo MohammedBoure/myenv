@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -8,13 +9,49 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace BarTranslator {
+    public class ClipboardListenerWindow : NativeWindow {
+        private const int WM_CLIPBOARDUPDATE = 0x031D;
+        private static readonly IntPtr HWND_MESSAGE = new IntPtr(-3);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern bool AddClipboardFormatListener(IntPtr hwnd);
+
+        [DllImport("user32.dll", SetLastError = true)]
+        private static extern bool RemoveClipboardFormatListener(IntPtr hwnd);
+
+        public event Action? ClipboardUpdated;
+
+        public void Init() {
+            var cp = new CreateParams {
+                Parent = HWND_MESSAGE
+            };
+            CreateHandle(cp);
+            AddClipboardFormatListener(Handle);
+        }
+
+        public void Cleanup() {
+            if (Handle != IntPtr.Zero) {
+                try {
+                    RemoveClipboardFormatListener(Handle);
+                    DestroyHandle();
+                } catch {}
+            }
+        }
+
+        protected override void WndProc(ref Message m) {
+            if (m.Msg == WM_CLIPBOARDUPDATE) {
+                ClipboardUpdated?.Invoke();
+            }
+            base.WndProc(ref m);
+        }
+    }
+
     public static class SelectionMonitor {
         private const int WH_MOUSE_LL = 14;
         private const int WM_LBUTTONDOWN = 0x0201;
         private const int WM_LBUTTONUP = 0x0202;
         private const int WM_MOUSEMOVE = 0x0200;
         private const int WM_RBUTTONDOWN = 0x0204;
-        private const int WM_CLIPBOARDUPDATE = 0x031D;
 
         private const ushort VK_CONTROL = 0x11;
         private const ushort VK_C = 0x43;
@@ -25,6 +62,7 @@ namespace BarTranslator {
 
         private static LowLevelMouseProc? mouseProc;
         private static IntPtr hookId = IntPtr.Zero;
+        private static ClipboardListenerWindow? listenerWindow;
 
         private static bool isMouseDown = false;
         private static POINT downPoint;
@@ -90,9 +128,6 @@ namespace BarTranslator {
         [DllImport("kernel32.dll")]
         private static extern bool GlobalUnlock(IntPtr hMem);
 
-        [DllImport("user32.dll", SetLastError = true)]
-        private static extern bool AddClipboardFormatListener(IntPtr hwnd);
-
         [StructLayout(LayoutKind.Sequential)]
         private struct POINT {
             public int x;
@@ -148,14 +183,13 @@ namespace BarTranslator {
         }
 
         public static void Start() {
+            listenerWindow = new ClipboardListenerWindow();
+            listenerWindow.ClipboardUpdated += OnClipboardUpdate;
+            listenerWindow.Init();
+
             mouseProc = HookCallback;
             IntPtr hMod = GetModuleHandle(null);
             hookId = SetWindowsHookEx(WH_MOUSE_LL, mouseProc, hMod, 0);
-
-            // Message-only window for manual clipboard listener
-            var msgWindow = new ClipboardMessageWindow();
-            msgWindow.ClipboardChanged += OnManualClipboardChanged;
-            AddClipboardFormatListener(msgWindow.Handle);
         }
 
         public static void Stop() {
@@ -163,6 +197,34 @@ namespace BarTranslator {
                 UnhookWindowsHookEx(hookId);
                 hookId = IntPtr.Zero;
             }
+            if (listenerWindow != null) {
+                listenerWindow.ClipboardUpdated -= OnClipboardUpdate;
+                listenerWindow.Cleanup();
+                listenerWindow = null;
+            }
+        }
+
+        public static void ClearLastProcessed() {
+            lastProcessedText = string.Empty;
+            lastProcessedTimestamp = 0;
+        }
+
+        public static void OnClipboardUpdate() {
+            if (isSimulatingCopy) return;
+            if (!StateManager.ClipboardTranslateEnabled) return;
+
+            Task.Run(async () => {
+                try {
+                    // Delay to allow copying application to release clipboard lock
+                    await Task.Delay(40);
+                    if (isSimulatingCopy) return;
+
+                    string text = ReadClipboardTextWithRetry();
+                    if (!string.IsNullOrWhiteSpace(text)) {
+                        await ProcessSelectedTextAsync(text);
+                    }
+                } catch {}
+            });
         }
 
         private static IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam) {
@@ -197,8 +259,8 @@ namespace BarTranslator {
                         long timeSinceLastClick = now - lastClickUpTime;
                         bool isMultiClick = (timeSinceLastClick < 550 && distFromLastClick < 10);
 
-                        lastClickUpTime = now;
                         lastClickUpPoint = hookStruct.pt;
+                        lastClickUpTime = now;
 
                         if (isDragSelection || isMultiClick) {
                             if (StateManager.AutoCaptureEnabled && !IsIgnoredWindow(hookStruct.pt)) {
@@ -254,10 +316,10 @@ namespace BarTranslator {
             Task.Run(async () => {
                 try {
                     // Small delay for target app highlight to settle
-                    await Task.Delay(40, token);
+                    await Task.Delay(45, token);
                     if (token.IsCancellationRequested) return;
 
-                    // Skip if modifier keys are being held
+                    // Skip if modifier keys (Ctrl/Alt) are being held
                     if ((GetAsyncKeyState((int)VK_CONTROL) & 0x8000) != 0 || (GetAsyncKeyState((int)VK_MENU) & 0x8000) != 0) {
                         return;
                     }
@@ -267,31 +329,37 @@ namespace BarTranslator {
 
                     // Send Ctrl+C
                     isSimulatingCopy = true;
-                    SendCopyKeystrokes();
+                    try {
+                        SendCopyKeystrokes();
 
-                    // Poll for clipboard sequence change (up to 300ms)
-                    bool sequenceChanged = false;
-                    for (int i = 0; i < 30; i++) {
-                        await Task.Delay(10, token);
+                        // Poll for clipboard sequence change (up to 250ms)
+                        bool sequenceChanged = false;
+                        for (int i = 0; i < 25; i++) {
+                            await Task.Delay(10, token);
+                            if (token.IsCancellationRequested) return;
+
+                            if (GetClipboardSequenceNumber() != seqBefore) {
+                                sequenceChanged = true;
+                                break;
+                            }
+                        }
+
+                        if (!sequenceChanged) {
+                            await Task.Delay(20, token);
+                        }
+
                         if (token.IsCancellationRequested) return;
 
-                        if (GetClipboardSequenceNumber() != seqBefore) {
-                            sequenceChanged = true;
-                            break;
+                        // Only process if the sequence actually changed (text was selected and copied)
+                        if (sequenceChanged) {
+                            string text = ReadClipboardTextWithRetry();
+                            if (!string.IsNullOrWhiteSpace(text)) {
+                                await ProcessSelectedTextAsync(text);
+                            }
                         }
-                    }
-
-                    isSimulatingCopy = false;
-
-                    if (!sequenceChanged) {
-                        await Task.Delay(20, token);
-                    }
-
-                    if (token.IsCancellationRequested) return;
-
-                    string text = ReadClipboardTextWithRetry();
-                    if (!string.IsNullOrWhiteSpace(text)) {
-                        await ProcessSelectedTextAsync(text);
+                    } finally {
+                        await Task.Delay(40);
+                        isSimulatingCopy = false;
                     }
                 } catch {
                     isSimulatingCopy = false;
@@ -342,24 +410,11 @@ namespace BarTranslator {
             }
         }
 
-        private static void OnManualClipboardChanged() {
-            if (isSimulatingCopy) return;
-            if (!StateManager.ClipboardTranslateEnabled) return;
-
-            Task.Run(async () => {
-                try {
-                    await Task.Delay(10);
-                    string text = ReadClipboardTextWithRetry();
-                    await ProcessSelectedTextAsync(text);
-                } catch {}
-            });
-        }
-
         private static async Task ProcessSelectedTextAsync(string text) {
             if (string.IsNullOrWhiteSpace(text)) return;
 
             text = TranslationEngine.SanitizeText(text);
-            if (string.IsNullOrWhiteSpace(text) || !TranslationEngine.ContainsEnglish(text)) {
+            if (string.IsNullOrWhiteSpace(text) || !TranslationEngine.ContainsValidText(text)) {
                 return;
             }
 
@@ -370,22 +425,22 @@ namespace BarTranslator {
             }
 
             long now = Environment.TickCount64;
-            // Debounce if the exact same text was processed within the last 400ms
-            if (text.Equals(lastProcessedText, StringComparison.OrdinalIgnoreCase) && (now - lastProcessedTimestamp < 400)) {
+            // Debounce if the exact same text was processed within the last 350ms
+            if (text.Equals(lastProcessedText, StringComparison.OrdinalIgnoreCase) && (now - lastProcessedTimestamp < 350)) {
                 return;
             }
 
             lastProcessedText = text;
             lastProcessedTimestamp = now;
 
-            var result = await TranslationEngine.TranslateToEnglishArabicAsync(text);
+            var result = await TranslationEngine.TranslateAsync(text);
             if (result != null) {
                 StateManager.UpdateState(result);
             }
         }
 
         private static string ReadClipboardTextWithRetry() {
-            for (int i = 0; i < 6; i++) {
+            for (int i = 0; i < 12; i++) {
                 try {
                     if (OpenClipboard(IntPtr.Zero)) {
                         try {
@@ -408,37 +463,25 @@ namespace BarTranslator {
                         }
                     }
                 } catch {}
-                Thread.Sleep(15);
+                Thread.Sleep(20);
             }
 
             // Fallback: STA thread WinForms Clipboard
             string fallback = string.Empty;
-            Thread t = new Thread(() => {
-                try {
-                    if (Clipboard.ContainsText()) {
-                        fallback = Clipboard.GetText();
-                    }
-                } catch {}
-            });
-            t.SetApartmentState(ApartmentState.STA);
-            t.Start();
-            t.Join(120);
+            try {
+                Thread t = new Thread(() => {
+                    try {
+                        if (Clipboard.ContainsText()) {
+                            fallback = Clipboard.GetText();
+                        }
+                    } catch {}
+                });
+                t.SetApartmentState(ApartmentState.STA);
+                t.Start();
+                t.Join(150);
+            } catch {}
+
             return fallback;
-        }
-
-        private class ClipboardMessageWindow : NativeWindow {
-            public event Action? ClipboardChanged;
-
-            public ClipboardMessageWindow() {
-                CreateHandle(new CreateParams());
-            }
-
-            protected override void WndProc(ref Message m) {
-                if (m.Msg == WM_CLIPBOARDUPDATE) {
-                    ClipboardChanged?.Invoke();
-                }
-                base.WndProc(ref m);
-            }
         }
     }
 }

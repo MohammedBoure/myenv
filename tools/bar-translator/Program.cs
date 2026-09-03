@@ -100,7 +100,7 @@ namespace BarTranslator {
                     string query = string.Join(" ", args.Skip(1));
                     if (!string.IsNullOrWhiteSpace(query)) {
                         try {
-                            var result = TranslationEngine.TranslateToEnglishArabicAsync(query).GetAwaiter().GetResult();
+                            var result = TranslationEngine.TranslateAsync(query).GetAwaiter().GetResult();
                             if (result != null) {
                                 StateManager.UpdateState(result);
                                 Console.WriteLine(StateManager.GetCurrentJson());
@@ -123,7 +123,7 @@ namespace BarTranslator {
             try {
                 SelectionMonitor.Start();
 
-                // Run application message loop to receive Windows hooks and messages
+                // Run application message loop
                 Application.Run();
             } finally {
                 SelectionMonitor.Stop();
@@ -152,24 +152,24 @@ namespace BarTranslator {
             menu.Items.Add(headerTrans);
 
             // 1. Auto-Translate Copied Text
-            var itemClip = new ToolStripMenuItem($"Auto-Translate Copied Text: {(StateManager.ClipboardTranslateEnabled ? "ON" : "OFF")}") {
+            var itemClip = new ToolStripMenuItem($"Auto-Translate Copied Text (Ctrl+C): {(StateManager.ClipboardTranslateEnabled ? "ON" : "OFF")}") {
                 Checked = StateManager.ClipboardTranslateEnabled
             };
             itemClip.Click += (s, e) => {
                 StateManager.ToggleClipboardTranslate();
                 itemClip.Checked = StateManager.ClipboardTranslateEnabled;
-                itemClip.Text = $"Auto-Translate Copied Text: {(StateManager.ClipboardTranslateEnabled ? "ON" : "OFF")}";
+                itemClip.Text = $"Auto-Translate Copied Text (Ctrl+C): {(StateManager.ClipboardTranslateEnabled ? "ON" : "OFF")}";
             };
             menu.Items.Add(itemClip);
 
             // 2. Auto-Select Text Capture (Mouse Selection)
-            var itemAuto = new ToolStripMenuItem($"Auto-Select Text Capture: {(StateManager.AutoCaptureEnabled ? "ON" : "OFF")}") {
+            var itemAuto = new ToolStripMenuItem($"Auto-Select Text Capture (Mouse): {(StateManager.AutoCaptureEnabled ? "ON" : "OFF")}") {
                 Checked = StateManager.AutoCaptureEnabled
             };
             itemAuto.Click += (s, e) => {
                 StateManager.ToggleAutoCapture();
                 itemAuto.Checked = StateManager.AutoCaptureEnabled;
-                itemAuto.Text = $"Auto-Select Text Capture: {(StateManager.AutoCaptureEnabled ? "ON" : "OFF")}";
+                itemAuto.Text = $"Auto-Select Text Capture (Mouse): {(StateManager.AutoCaptureEnabled ? "ON" : "OFF")}";
             };
             menu.Items.Add(itemAuto);
 
@@ -185,13 +185,13 @@ namespace BarTranslator {
             menu.Items.Add(itemMode);
 
             // 4. Show English Text
-            var itemEn = new ToolStripMenuItem($"Show English Text: {(StateManager.ShowEnglish ? "ON" : "OFF")}") {
+            var itemEn = new ToolStripMenuItem($"Show English Text (Bilingual): {(StateManager.ShowEnglish ? "ON" : "OFF")}") {
                 Checked = StateManager.ShowEnglish
             };
             itemEn.Click += (s, e) => {
                 StateManager.ToggleShowEnglish();
                 itemEn.Checked = StateManager.ShowEnglish;
-                itemEn.Text = $"Show English Text: {(StateManager.ShowEnglish ? "ON" : "OFF")}";
+                itemEn.Text = $"Show English Text (Bilingual): {(StateManager.ShowEnglish ? "ON" : "OFF")}";
             };
             menu.Items.Add(itemEn);
 

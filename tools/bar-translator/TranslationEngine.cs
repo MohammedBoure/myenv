@@ -31,14 +31,25 @@ namespace BarTranslator {
                 EnableMultipleHttp2Connections = true
             };
             client = new HttpClient(handler) {
-                Timeout = TimeSpan.FromSeconds(2.5)
+                Timeout = TimeSpan.FromSeconds(3.0)
             };
-            client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36");
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36");
+        }
+
+        public static bool ContainsValidText(string text) {
+            if (string.IsNullOrWhiteSpace(text)) return false;
+            // Must contain at least one letter (Unicode letter category)
+            return Regex.IsMatch(text, @"[\p{L}]");
         }
 
         public static bool ContainsEnglish(string text) {
             if (string.IsNullOrWhiteSpace(text)) return false;
             return Regex.IsMatch(text, @"[a-zA-Z]");
+        }
+
+        public static bool ContainsArabic(string text) {
+            if (string.IsNullOrWhiteSpace(text)) return false;
+            return Regex.IsMatch(text, @"[\u0600-\u06FF]");
         }
 
         public static string SanitizeText(string text) {
@@ -47,8 +58,12 @@ namespace BarTranslator {
         }
 
         public static async Task<TranslationData?> TranslateToEnglishArabicAsync(string rawText) {
+            return await TranslateAsync(rawText);
+        }
+
+        public static async Task<TranslationData?> TranslateAsync(string rawText) {
             string text = SanitizeText(rawText);
-            if (string.IsNullOrWhiteSpace(text) || !ContainsEnglish(text)) {
+            if (string.IsNullOrWhiteSpace(text) || !ContainsValidText(text)) {
                 return null;
             }
 
@@ -63,76 +78,83 @@ namespace BarTranslator {
                 return cachedData;
             }
 
-            string translatedArabic = string.Empty;
+            // Determine translation direction
+            bool isSourceEnglish = ContainsEnglish(text);
+            string targetLang = isSourceEnglish ? "ar" : (ContainsArabic(text) ? "en" : "ar");
+            string sourceLang = isSourceEnglish ? "en" : "auto";
 
-            // Engine 1: Google Free Single API (translate.googleapis.com)
+            string translatedText = string.Empty;
+
+            // Engine 1: Google Dict Client API (clients5.google.com) - Ultra reliable & fast
             try {
-                string url = $"https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ar&dt=t&q={Uri.EscapeDataString(text)}";
+                string url = $"https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl={sourceLang}&tl={targetLang}&q={Uri.EscapeDataString(text)}";
                 using var response = await client.GetAsync(url);
                 if (response.IsSuccessStatusCode) {
                     string json = await response.Content.ReadAsStringAsync();
-                    using var doc = JsonDocument.Parse(json);
-                    var root = doc.RootElement;
-                    if (root.ValueKind == JsonValueKind.Array && root.GetArrayLength() > 0) {
-                        var sentences = root[0];
-                        if (sentences.ValueKind == JsonValueKind.Array) {
-                            foreach (var item in sentences.EnumerateArray()) {
-                                if (item.ValueKind == JsonValueKind.Array && item.GetArrayLength() > 0 && item[0].ValueKind == JsonValueKind.String) {
-                                    translatedArabic += item[0].GetString();
-                                }
-                            }
-                        }
-                    }
+                    translatedText = ParseGoogleClientResponse(json);
                 }
             } catch {}
 
-            // Engine 2: Google Dict API Fallback (clients5.google.com)
-            if (string.IsNullOrWhiteSpace(translatedArabic)) {
+            // Engine 2: Google Translate API (translate.googleapis.com) with dict-chrome-ex client
+            if (string.IsNullOrWhiteSpace(translatedText)) {
                 try {
-                    string url = $"https://clients5.google.com/translate_a/t?client=dict-chrome-ex&sl=en&tl=ar&q={Uri.EscapeDataString(text)}";
+                    string url = $"https://translate.googleapis.com/translate_a/t?client=dict-chrome-ex&sl={sourceLang}&tl={targetLang}&q={Uri.EscapeDataString(text)}";
+                    using var response = await client.GetAsync(url);
+                    if (response.IsSuccessStatusCode) {
+                        string json = await response.Content.ReadAsStringAsync();
+                        translatedText = ParseGoogleClientResponse(json);
+                    }
+                } catch {}
+            }
+
+            // Engine 3: MyMemory API Fallback
+            if (string.IsNullOrWhiteSpace(translatedText)) {
+                try {
+                    string url = $"https://api.mymemory.translated.net/get?q={Uri.EscapeDataString(text)}&langpair={(isSourceEnglish ? "en" : "auto")}|{targetLang}";
                     using var response = await client.GetAsync(url);
                     if (response.IsSuccessStatusCode) {
                         string json = await response.Content.ReadAsStringAsync();
                         using var doc = JsonDocument.Parse(json);
                         var root = doc.RootElement;
-                        if (root.ValueKind == JsonValueKind.Array && root.GetArrayLength() > 0 && root[0].ValueKind == JsonValueKind.String) {
-                            translatedArabic = root[0].GetString() ?? string.Empty;
+                        if (root.TryGetProperty("responseData", out var respData) &&
+                            respData.TryGetProperty("translatedText", out var transTextProp)) {
+                            translatedText = transTextProp.GetString() ?? string.Empty;
                         }
                     }
                 } catch {}
             }
 
-            if (string.IsNullOrWhiteSpace(translatedArabic)) {
+            if (string.IsNullOrWhiteSpace(translatedText)) {
                 return null;
             }
 
-            // Clean Arabic text
-            translatedArabic = WebUtility.HtmlDecode(translatedArabic).Trim();
-            translatedArabic = Regex.Replace(translatedArabic, @"\s+", " ");
+            // Clean translated text
+            translatedText = WebUtility.HtmlDecode(translatedText).Trim();
+            translatedText = Regex.Replace(translatedText, @"\s+", " ");
 
-            // Generate short form for Arabic (first word / part)
-            string shortArabic = GenerateShortArabic(translatedArabic);
+            // Generate short form for translated text
+            string shortTranslated = GenerateShortText(translatedText, targetLang == "ar");
 
-            // Generate short form for original English
-            string shortEnglish = GenerateShortEnglish(origWords);
+            // Generate short form for original text
+            string shortOriginal = GenerateShortText(text, !isSourceEnglish);
 
-            // Continuous bilingual display formats (respecting ShowEnglish setting)
-            string displayShort = StateManager.ShowEnglish ? $"{shortEnglish} ➔ {shortArabic}" : shortArabic;
-            string displayFull = StateManager.ShowEnglish ? $"{text} ➔ {translatedArabic}" : translatedArabic;
+            // Display formats respecting ShowEnglish setting
+            string displayShort = StateManager.ShowEnglish ? $"{shortOriginal} ➔ {shortTranslated}" : shortTranslated;
+            string displayFull = StateManager.ShowEnglish ? $"{text} ➔ {translatedText}" : translatedText;
 
             var result = new TranslationData {
                 Original = text,
-                OriginalShort = shortEnglish,
-                Full = translatedArabic,
-                Short = shortArabic,
+                OriginalShort = shortOriginal,
+                Full = translatedText,
+                Short = shortTranslated,
                 DisplayShort = displayShort,
                 DisplayFull = displayFull,
                 HasData = true,
                 Timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
             };
 
-            // Cache up to 600 entries
-            if (cache.Count > 600) {
+            // Cache up to 1000 entries
+            if (cache.Count > 1000) {
                 cache.Clear();
             }
             cache[text] = result;
@@ -140,27 +162,52 @@ namespace BarTranslator {
             return result;
         }
 
-        private static string GenerateShortArabic(string arabicText) {
-            if (string.IsNullOrWhiteSpace(arabicText)) return string.Empty;
+        private static string ParseGoogleClientResponse(string json) {
+            if (string.IsNullOrWhiteSpace(json)) return string.Empty;
+            try {
+                using var doc = JsonDocument.Parse(json);
+                var root = doc.RootElement;
 
-            string[] words = arabicText.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
-            if (words.Length <= 1) {
-                return arabicText;
-            }
-
-            // If the first word is a short particle/preposition (e.g. في, من, لا), keep first two words
-            if (words[0].Length <= 3 && words.Length >= 2) {
-                return $"{words[0]} {words[1]}…";
-            }
-
-            return $"{words[0]}…";
+                // Format 1: ["Translated text"]
+                if (root.ValueKind == JsonValueKind.Array && root.GetArrayLength() > 0) {
+                    var first = root[0];
+                    if (first.ValueKind == JsonValueKind.String) {
+                        return first.GetString() ?? string.Empty;
+                    }
+                    // Format 2: [["Translated text", "en"]]
+                    if (first.ValueKind == JsonValueKind.Array && first.GetArrayLength() > 0) {
+                        var nested = first[0];
+                        if (nested.ValueKind == JsonValueKind.String) {
+                            return nested.GetString() ?? string.Empty;
+                        }
+                    }
+                } else if (root.ValueKind == JsonValueKind.String) {
+                    return root.GetString() ?? string.Empty;
+                }
+            } catch {}
+            return string.Empty;
         }
 
-        private static string GenerateShortEnglish(string[] origWords) {
-            if (origWords.Length <= 2) {
-                return string.Join(" ", origWords);
+        private static string GenerateShortText(string text, bool isArabic) {
+            if (string.IsNullOrWhiteSpace(text)) return string.Empty;
+
+            string[] words = text.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+            if (words.Length <= 1) {
+                return text;
             }
-            return $"{origWords[0]} {origWords[1]}…";
+
+            if (isArabic) {
+                // If the first word is a short particle/preposition (e.g. في, من, لا, عن), keep first two words
+                if (words[0].Length <= 3 && words.Length >= 2) {
+                    return $"{words[0]} {words[1]}…";
+                }
+                return $"{words[0]}…";
+            }
+
+            if (words.Length <= 2) {
+                return string.Join(" ", words);
+            }
+            return $"{words[0]} {words[1]}…";
         }
     }
 }
