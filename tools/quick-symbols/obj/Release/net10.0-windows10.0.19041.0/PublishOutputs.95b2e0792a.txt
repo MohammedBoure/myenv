@@ -1,0 +1,7 @@
+C:\Users\moham\Documents\myenv\scripts\quick-symbols\QuickSymbols.exe
+C:\Users\moham\Documents\myenv\scripts\quick-symbols\QuickSymbols.dll
+C:\Users\moham\Documents\myenv\scripts\quick-symbols\QuickSymbols.deps.json
+C:\Users\moham\Documents\myenv\scripts\quick-symbols\QuickSymbols.runtimeconfig.json
+C:\Users\moham\Documents\myenv\scripts\quick-symbols\QuickSymbols.pdb
+C:\Users\moham\Documents\myenv\scripts\quick-symbols\Microsoft.Windows.SDK.NET.dll
+C:\Users\moham\Documents\myenv\scripts\quick-symbols\WinRT.Runtime.dll

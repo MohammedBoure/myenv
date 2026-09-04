@@ -99,7 +99,7 @@
                         <MenuItem Header="Toggle Comment" InputGestureText="Ctrl+/" Click="MenuToggleComment_Click" />
                         <Separator Background="{StaticResource BorderDarkBrush}" />
                         <MenuItem Header="Time / _Date" InputGestureText="F5" Click="MenuInsertDateTime_Click" />
-                        <MenuItem Header="Quick Symbols &amp; _Words..." InputGestureText="Ctrl+." Click="MenuQuickSymbols_Click" />
+                        <MenuItem Header="Quick Symbols &amp; _Words..." InputGestureText="Win+Shift+W" Click="MenuQuickSymbols_Click" />
                     </MenuItem>
 
                     <MenuItem Header="_View" Style="{StaticResource TopMenuItemStyle}">
@@ -138,7 +138,7 @@
                         <MenuItem Header="URL Encode" Click="MenuUrlEncode_Click" />
                         <MenuItem Header="URL Decode" Click="MenuUrlDecode_Click" />
                         <Separator Background="{StaticResource BorderDarkBrush}" />
-                        <MenuItem Header="Quick Symbols &amp; _Words..." InputGestureText="Ctrl+." Click="MenuQuickSymbols_Click" />
+                        <MenuItem Header="Quick Symbols &amp; _Words..." InputGestureText="Win+Shift+W" Click="MenuQuickSymbols_Click" />
                     </MenuItem>
                 </Menu>
 
@@ -148,7 +148,7 @@
                 <!-- Col 3: Right Header Actions & Window Controls -->
                 <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
                     <!-- Quick Symbols & Frequent Words Palette Button -->
-                    <Button x:Name="BtnHeaderQuickSymbols" Style="{StaticResource StatusButton}" Content="🔣 Symbols" ToolTip="Quick Symbols &amp; Words (Ctrl+. or F4)" Padding="8,3" Margin="0,0,6,0" Foreground="{StaticResource AccentBlueBrush}" Click="MenuQuickSymbols_Click" />
+                    <Button x:Name="BtnHeaderQuickSymbols" Style="{StaticResource StatusButton}" Content="🔣 Symbols" ToolTip="Quick Symbols &amp; Words (Win+Shift+W / Ctrl+.)" Padding="8,3" Margin="0,0,6,0" Foreground="{StaticResource AccentBlueBrush}" Click="MenuQuickSymbols_Click" />
 
                     <!-- Prominent Markdown Review / Live Preview Toggle Button -->
                     <Button x:Name="BtnHeaderMarkdownPreview" Style="{StaticResource StatusButton}" Content="👁️ Markdown Preview" ToolTip="Toggle Side-by-Side Markdown Live Preview (Ctrl+Shift+M / Alt+M)" Padding="8,3" Margin="0,0,8,0" Foreground="{StaticResource AccentBlueBrush}" Click="BtnToggleMarkdownPreview_Click" />

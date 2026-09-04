@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "jnt4igVBKa8=",
+  "success": true,
+  "projectFilePath": "C:\\Users\\moham\\Documents\\myenv\\tools\\quick-symbols\\QuickSymbols.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\moham\\.nuget\\packages\\microsoft.windows.sdk.net.ref\\10.0.19041.57\\microsoft.windows.sdk.net.ref.10.0.19041.57.nupkg.sha512"
+  ],
+  "logs": []
+}

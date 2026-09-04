@@ -13,6 +13,7 @@ Central documentation repository for the MyEnv environment architecture, core co
 | [`yasb.md`](file:///C:/Users/moham/Documents/myenv/docs/yasb.md) | YASB status bar configuration, widgets, and sharp dark styling. |
 | [`night-pad.md`](file:///C:/Users/moham/Documents/myenv/docs/night-pad.md) | NightPad text and code editor usage, features, and keybindings. |
 | [`quick-translate.md`](file:///C:/Users/moham/Documents/myenv/docs/quick-translate.md) | QuickTranslate screen OCR and instant translation tool. |
+| [`quick-symbols.md`](file:///C:/Users/moham/Documents/myenv/docs/quick-symbols.md) | QuickSymbols global keyboard-driven symbol and word palette. |
 | [`bar-translator.md`](file:///C:/Users/moham/Documents/myenv/docs/bar-translator.md) | BarTranslator real-time status bar selection monitor and translator daemon. |
 | [`netlimiter.md`](file:///C:/Users/moham/Documents/myenv/docs/netlimiter.md) | Network bandwidth limiter setup and per-application rules. |
 | [`gemini-antigravity.md`](file:///C:/Users/moham/Documents/myenv/docs/gemini-antigravity.md) | Gemini Antigravity instructions, skills, rules, and MCP setup. |

@@ -2040,6 +2040,18 @@ public partial class MainWindow : Window
             if (key is Key.OemPeriod or Key.Decimal) { e.Handled = true; ShowQuickSymbols(); return; }
         }
 
+        // Check Windows + Shift combinations (e.g. Win + Shift + W)
+        bool isWinPressed = Keyboard.IsKeyDown(Key.LWin) || Keyboard.IsKeyDown(Key.RWin);
+        if (isWinPressed && modifiers.HasFlag(ModifierKeys.Shift))
+        {
+            if (key == Key.W)
+            {
+                e.Handled = true;
+                ShowQuickSymbols();
+                return;
+            }
+        }
+
         // Check Alt combinations (using resolved key)
         if (modifiers.HasFlag(ModifierKeys.Alt) && !modifiers.HasFlag(ModifierKeys.Control) && !modifiers.HasFlag(ModifierKeys.Shift))
         {

@@ -104,6 +104,9 @@ window_rules:
       # QuickTranslate floating overlay rules
       - window_process: { regex: '(?i)^QuickTranslate$' }
       - window_title: { regex: '(?i).*QuickTranslate.*' }
+      # QuickSymbols global floating overlay rules
+      - window_process: { regex: '(?i)^QuickSymbols$' }
+      - window_title: { regex: '(?i).*Quick Symbols & Words.*' }
       # Ignores the centered myenv application launcher.
       - window_title: { regex: '.*myenv-app-launcher.*' }
 
@@ -224,6 +227,10 @@ keybindings:
   # Quick Type & Paste Translation (Win+Shift+X or Alt+Shift+E)
   - commands: ['shell-exec %USERPROFILE%\Documents\myenv\scripts\quick-translate\QuickTranslate.exe --type']
     bindings: ['win+shift+x', 'alt+shift+e']
+
+  # Global Quick Symbols & Frequent Words Palette (Win+Shift+W or Alt+Shift+W)
+  - commands: ['shell-exec %USERPROFILE%\Documents\myenv\scripts\quick-symbols\QuickSymbols.exe']
+    bindings: ['win+shift+w', 'alt+shift+w']
 
   # Direct Full Screenshot (Alt+Shift+S)
   - commands: ['shell-exec powershell.exe -sta -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File %USERPROFILE%\Documents\myenv\scripts\capture-screenshot.ps1']
