@@ -21,7 +21,7 @@ High-performance, ultra-fast background daemon and selection monitor that automa
 | [`Program.cs`](file:///C:/Users/moham/Documents/myenv/tools/bar-translator/Program.cs) | Application entry point, single-instance mutex (`MyEnv_BarTranslator_Daemon`), CLI dispatcher, dark context menu renderer, and Win32 message loop. |
 | [`BarConfigManager.cs`](file:///C:/Users/moham/Documents/myenv/tools/bar-translator/BarConfigManager.cs) | Status bar configuration manager reading and dynamically updating `yasb/config.yaml` widget sections (`left`, `center`, `right`). |
 | [`SelectionMonitor.cs`](file:///C:/Users/moham/Documents/myenv/tools/bar-translator/SelectionMonitor.cs) | Low-level mouse hook (`WH_MOUSE_LL`) tracking drag/double-click selection, window filtering, safe text capture, and clipboard translation gating. |
-| [`TranslationEngine.cs`](file:///C:/Users/moham/Documents/myenv/tools/bar-translator/TranslationEngine.cs) | Async Google Translate client with fallback, caching, English detection, sentence support up to 60 words, and smart Arabic truncation. |
+| [`TranslationEngine.cs`](file:///C:/Users/moham/Documents/myenv/tools/bar-translator/TranslationEngine.cs) | Async Google Translate client with fallback, caching, bilingual detection, sentence support up to 60 words, and equal divided priority text truncation. |
 | [`StateManager.cs`](file:///C:/Users/moham/Documents/myenv/tools/bar-translator/StateManager.cs) | Manages atomic state & settings persistence to `state.json`, FileSystemWatcher sync, and local HTTP server on port 49876 with REST API. |
 
 ## 🛠️ Build & Publish

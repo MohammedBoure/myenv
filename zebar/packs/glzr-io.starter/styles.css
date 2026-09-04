@@ -227,17 +227,20 @@ body,
   background: rgba(255, 255, 255, 0.10);
   border: 1px solid rgba(255, 255, 255, 0.20);
   color: #ffffff;
-  padding: 3px 9px;
+  padding: 3px 8px;
   height: 22px;
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
   border-radius: 0px !important;
   transition: background 0.15s ease, border-color 0.15s ease;
-  max-width: 320px;
+  max-width: 360px;
+  min-width: 140px;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+}
+
+.translator-widget.expanded {
+  max-width: 520px;
 }
 
 .translator-widget:hover {
@@ -250,6 +253,58 @@ body,
   color: #58a6ff;
   flex-shrink: 0;
   margin-right: 0;
+}
+
+/* Divided 50/50 Equal Priority Translator Container */
+.translator-divided {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.translator-divided .part-en {
+  flex: 0 1 auto;
+  max-width: calc(50% - 8px);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+.translator-divided .part-sep {
+  flex: 0 0 auto;
+  color: #58a6ff;
+  font-size: 11px;
+  opacity: 0.85;
+  user-select: none;
+}
+
+.translator-divided .part-ar {
+  flex: 0 1 auto;
+  max-width: calc(50% - 8px);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  direction: rtl;
+  unicode-bidi: isolate;
+  text-align: right;
+  font-family: 'Segoe UI', Tahoma, 'Cairo', sans-serif;
+}
+
+.translator-widget .part-ar-only {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  direction: rtl;
+  unicode-bidi: isolate;
+  font-family: 'Segoe UI', Tahoma, 'Cairo', sans-serif;
 }
 
 /* Top Bar Settings & Items Dropdown */
@@ -471,38 +526,49 @@ body,
 }
 
 .focus-content {
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  justify-content: center;
   gap: 12px;
+  width: 100%;
   max-width: 100%;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.focus-en {
+  flex: 0 1 auto;
+  max-width: calc(50% - 16px);
+  min-width: 0;
+  color: #c9d1d9;
+  font-size: 12.5px;
+  font-weight: 500;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.focus-en {
-  color: #8b949e;
-  font-size: 12px;
-  font-weight: 500;
-  max-width: 45%;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 .focus-arrow {
+  flex: 0 0 auto;
   color: #58a6ff;
   font-size: 13px;
   margin: 0;
-  flex-shrink: 0;
 }
 
 .focus-ar {
+  flex: 0 1 auto;
+  max-width: calc(50% - 16px);
+  min-width: 0;
   color: #58a6ff;
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 700;
   direction: rtl;
   unicode-bidi: isolate;
-  font-family: 'Segoe UI', Tahoma, sans-serif;
+  text-align: right;
+  font-family: 'Segoe UI', Tahoma, 'Cairo', sans-serif;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .focus-empty {

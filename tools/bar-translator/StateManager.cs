@@ -34,8 +34,12 @@ namespace BarTranslator {
                 Full = "حدد أو انسخ أي نص بالإنجليزية ليتم ترجمته فوراً",
                 Original = "English",
                 OriginalShort = "English",
+                English = "English",
+                EnglishShort = "English",
+                Arabic = "العربية",
+                ArabicShort = "العربية",
                 DisplayShort = ShowEnglish ? "English ➔ العربية" : "العربية",
-                DisplayFull = ShowEnglish ? "English ➔ العربية (حدد أو انسخ نصاً للترجمة)" : "العربية (حدد أو انسخ نصاً للترجمة)",
+                DisplayFull = ShowEnglish ? "English ➔ العربية" : "العربية",
                 Timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
             };
         }
@@ -124,11 +128,18 @@ namespace BarTranslator {
             lock (fileLock) {
                 ShowEnglish = !ShowEnglish;
                 if (currentData.HasData) {
-                    currentData.DisplayShort = ShowEnglish ? $"{currentData.OriginalShort} ➔ {currentData.Short}" : currentData.Short;
-                    currentData.DisplayFull = ShowEnglish ? $"{currentData.Original} ➔ {currentData.Full}" : currentData.Full;
+                    string enShort = !string.IsNullOrEmpty(currentData.EnglishShort) ? currentData.EnglishShort : currentData.OriginalShort;
+                    string arShort = !string.IsNullOrEmpty(currentData.ArabicShort) ? currentData.ArabicShort : currentData.Short;
+                    string enFull = !string.IsNullOrEmpty(currentData.English) ? currentData.English : currentData.Original;
+                    string arFull = !string.IsNullOrEmpty(currentData.Arabic) ? currentData.Arabic : currentData.Full;
+
+                    currentData.DisplayShort = ShowEnglish ? $"{enShort} ➔ {arShort}" : arShort;
+                    string balancedEn = TranslationEngine.TruncateAtWordBoundary(enFull, 42);
+                    string balancedAr = TranslationEngine.TruncateAtWordBoundary(arFull, 42);
+                    currentData.DisplayFull = ShowEnglish ? $"{balancedEn} ➔ {balancedAr}" : arFull;
                 } else {
                     currentData.DisplayShort = ShowEnglish ? "English ➔ العربية" : "العربية";
-                    currentData.DisplayFull = ShowEnglish ? "English ➔ العربية (حدد أو انسخ نصاً للترجمة)" : "العربية (حدد أو انسخ نصاً للترجمة)";
+                    currentData.DisplayFull = ShowEnglish ? "English ➔ العربية" : "العربية";
                 }
                 SaveToFile(currentData);
             }
@@ -152,6 +163,10 @@ namespace BarTranslator {
                     full = currentData.Full,
                     original = currentData.Original,
                     original_short = currentData.OriginalShort,
+                    english = currentData.English,
+                    english_short = currentData.EnglishShort,
+                    arabic = currentData.Arabic,
+                    arabic_short = currentData.ArabicShort,
                     display_short = currentData.DisplayShort,
                     display_full = currentData.DisplayFull,
                     has_data = currentData.HasData,
@@ -193,6 +208,10 @@ namespace BarTranslator {
                     full = data.Full,
                     original = data.Original,
                     original_short = data.OriginalShort,
+                    english = data.English,
+                    english_short = data.EnglishShort,
+                    arabic = data.Arabic,
+                    arabic_short = data.ArabicShort,
                     display_short = data.DisplayShort,
                     display_full = data.DisplayFull,
                     has_data = data.HasData,
@@ -230,6 +249,10 @@ namespace BarTranslator {
                             string fullText = root.TryGetProperty("full", out var f) ? f.GetString() ?? "" : "";
                             string origText = root.TryGetProperty("original", out var o) ? o.GetString() ?? "" : "";
                             string origShort = root.TryGetProperty("original_short", out var os) ? os.GetString() ?? "" : "";
+                            string enText = root.TryGetProperty("english", out var et) ? et.GetString() ?? "" : origText;
+                            string enShort = root.TryGetProperty("english_short", out var es) ? es.GetString() ?? "" : origShort;
+                            string arText = root.TryGetProperty("arabic", out var at) ? at.GetString() ?? "" : fullText;
+                            string arShort = root.TryGetProperty("arabic_short", out var @as) ? @as.GetString() ?? "" : shortText;
                             string dispShort = root.TryGetProperty("display_short", out var ds) ? ds.GetString() ?? "" : "";
                             string dispFull = root.TryGetProperty("display_full", out var df) ? df.GetString() ?? "" : "";
 
@@ -248,11 +271,15 @@ namespace BarTranslator {
 
                             if (!hasData && string.IsNullOrWhiteSpace(dispShort)) {
                                 dispShort = ShowEnglish ? "English ➔ العربية" : "العربية";
-                                dispFull = ShowEnglish ? "English ➔ العربية (حدد أو انسخ نصاً للترجمة)" : "العربية (حدد أو انسخ نصاً للترجمة)";
+                                dispFull = ShowEnglish ? "English ➔ العربية" : "العربية";
                                 shortText = "العربية";
                                 fullText = "حدد أو انسخ أي نص بالإنجليزية ليتم ترجمته فوراً";
                                 origText = "English";
                                 origShort = "English";
+                                enText = "English";
+                                enShort = "English";
+                                arText = "العربية";
+                                arShort = "العربية";
                             }
 
                             currentData = new TranslationData {
@@ -260,6 +287,10 @@ namespace BarTranslator {
                                 Full = fullText,
                                 Original = origText,
                                 OriginalShort = origShort,
+                                English = enText,
+                                EnglishShort = enShort,
+                                Arabic = arText,
+                                ArabicShort = arShort,
                                 DisplayShort = dispShort,
                                 DisplayFull = dispFull,
                                 HasData = hasData,

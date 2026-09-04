@@ -21,8 +21,8 @@ An ultra-fast, background selection monitor, translator, and status bar control 
   - Quick presets: **Show All Containers** and **Minimalist Preset** (Workspaces & Clock only).
 - **Live Background Daemon Synchronization**:
   - The background daemon uses `FileSystemWatcher` and local HTTP endpoints (`/reload_state`) to instantly synchronize setting changes made from the menu or CLI without restarting.
-- **Continuous Bilingual Display**:
-  - The top bar permanently displays both the English word/phrase and its Arabic translation side-by-side (e.g. `compiler -> مترجم`).
+- **Continuous Bilingual Display with Divided 50/50 Equal Priority**:
+  - The top bar displays both English and Arabic texts in a divided layout with equal 50/50 space allocation and symmetric word truncation, ensuring neither language overpowers or hides the other.
 - **Ultra-Fast Translation Engine**:
   - Low-latency `SocketsHttpHandler` connection pooling and persistent in-memory caching for 0ms instantaneous lookups on repeated queries.
   - YASB polling interval optimized to **120ms** for immediate visual feedback.

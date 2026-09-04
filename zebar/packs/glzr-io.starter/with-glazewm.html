@@ -475,11 +475,21 @@
                   <div className="focus-content">
                     {isShowEnglish && (
                       <>
-                        <span className="focus-en">{translation.original}</span>
+                        <span
+                          className="focus-en"
+                          title={translation.english || translation.original}
+                        >
+                          {translation.english || translation.original}
+                        </span>
                         <i className="nf nf-md-arrow_right_bold focus-arrow"></i>
                       </>
                     )}
-                    <span className="focus-ar">{translation.full}</span>
+                    <span
+                      className="focus-ar"
+                      title={translation.arabic || translation.full}
+                    >
+                      {translation.arabic || translation.full}
+                    </span>
                   </div>
                 ) : (
                   <div className="focus-empty">
@@ -539,7 +549,7 @@
               {/* Standalone Translator Widget */}
               {visibility.translator && (
                 <button
-                  className="translator-widget"
+                  className={`translator-widget ${isExpanded ? 'expanded' : ''}`}
                   onClick={() => setIsExpanded(!isExpanded)}
                   onContextMenu={(e) => {
                     e.preventDefault();
@@ -547,12 +557,47 @@
                   }}
                   title={
                     hasData
-                      ? `Original: ${translation.original}\nTranslation: ${translation.full}\n[Left Click: Toggle Full/Short | Right Click: Copy]`
-                      : `Status Bar Translator\n• Auto-Copy: ${isClipboardTranslate ? 'ON' : 'OFF'}\n• Auto-Select: ${isAutoCapture ? 'ON' : 'OFF'}\n\n[Select or copy English text to translate]`
+                      ? `English: ${translation.english || translation.original}\nArabic: ${translation.arabic || translation.full}\n[Left Click: Toggle Full/Short | Right Click: Copy]`
+                      : `Status Bar Translator\n• Auto-Copy: ${isClipboardTranslate ? 'ON' : 'OFF'}\n• Auto-Select: ${isAutoCapture ? 'ON' : 'OFF'}\n\n[Select or copy text to translate]`
                   }
                 >
                   <i className="nf nf-md-translate"></i>
-                  <span>{getCompactDisplayText()}</span>
+                  {isShowEnglish ? (
+                    <div className="translator-divided">
+                      <span
+                        className="part-en"
+                        title={hasData ? (translation.english || translation.original) : "English"}
+                      >
+                        {hasData
+                          ? (isExpanded
+                              ? (translation.english || translation.original)
+                              : (translation.english_short || translation.original_short || translation.english || translation.original))
+                          : "English"}
+                      </span>
+                      <span className="part-sep">➔</span>
+                      <span
+                        className="part-ar"
+                        title={hasData ? (translation.arabic || translation.full) : "العربية"}
+                      >
+                        {hasData
+                          ? (isExpanded
+                              ? (translation.arabic || translation.full)
+                              : (translation.arabic_short || translation.short || translation.arabic || translation.full))
+                          : "العربية"}
+                      </span>
+                    </div>
+                  ) : (
+                    <span
+                      className="part-ar-only"
+                      title={hasData ? (translation.arabic || translation.full) : "العربية"}
+                    >
+                      {hasData
+                        ? (isExpanded
+                            ? (translation.arabic || translation.full)
+                            : (translation.arabic_short || translation.short || translation.arabic || translation.full))
+                        : "العربية"}
+                    </span>
+                  )}
                 </button>
               )}
             </div>

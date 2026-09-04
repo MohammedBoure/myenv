@@ -24,9 +24,9 @@ namespace BarTranslator {
                 }
 
                 // Default idle state fallback
-                Console.Write("{\"short\":\"العربية\",\"full\":\"حدد أو انسخ أي نص بالإنجليزية ليتم ترجمته فوراً\",\"original\":\"English\",\"original_short\":\"English\",\"display_short\":\"English ➔ العربية\",\"display_full\":\"English ➔ العربية (حدد نصاً للترجمة)\",\"has_data\":false,\"timestamp\":0,\"auto_capture\":true,\"clipboard_translate\":true,\"translation_mode\":false,\"show_english\":true}");
+                Console.Write("{\"short\":\"العربية\",\"full\":\"حدد أو انسخ أي نص بالإنجليزية ليتم ترجمته فوراً\",\"original\":\"English\",\"original_short\":\"English\",\"english\":\"English\",\"english_short\":\"English\",\"arabic\":\"العربية\",\"arabic_short\":\"العربية\",\"display_short\":\"English ➔ العربية\",\"display_full\":\"English ➔ العربية\",\"has_data\":false,\"timestamp\":0,\"auto_capture\":true,\"clipboard_translate\":true,\"translation_mode\":false,\"show_english\":true}");
             } catch {
-                Console.Write("{\"short\":\"العربية\",\"full\":\"حدد أو انسخ أي نص بالإنجليزية ليتم ترجمته فوراً\",\"original\":\"English\",\"original_short\":\"English\",\"display_short\":\"English ➔ العربية\",\"display_full\":\"English ➔ العربية (حدد نصاً للترجمة)\",\"has_data\":false,\"timestamp\":0,\"auto_capture\":true,\"clipboard_translate\":true,\"translation_mode\":false,\"show_english\":true}");
+                Console.Write("{\"short\":\"العربية\",\"full\":\"حدد أو انسخ أي نص بالإنجليزية ليتم ترجمته فوراً\",\"original\":\"English\",\"original_short\":\"English\",\"english\":\"English\",\"english_short\":\"English\",\"arabic\":\"العربية\",\"arabic_short\":\"العربية\",\"display_short\":\"English ➔ العربية\",\"display_full\":\"English ➔ العربية\",\"has_data\":false,\"timestamp\":0,\"auto_capture\":true,\"clipboard_translate\":true,\"translation_mode\":false,\"show_english\":true}");
             }
         }
     }

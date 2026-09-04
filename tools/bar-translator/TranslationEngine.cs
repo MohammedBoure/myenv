@@ -12,6 +12,10 @@ namespace BarTranslator {
         public string OriginalShort { get; set; } = string.Empty;
         public string Full { get; set; } = string.Empty;
         public string Short { get; set; } = string.Empty;
+        public string English { get; set; } = string.Empty;
+        public string EnglishShort { get; set; } = string.Empty;
+        public string Arabic { get; set; } = string.Empty;
+        public string ArabicShort { get; set; } = string.Empty;
         public string DisplayShort { get; set; } = string.Empty;
         public string DisplayFull { get; set; } = string.Empty;
         public bool HasData { get; set; } = false;
@@ -132,21 +136,32 @@ namespace BarTranslator {
             translatedText = WebUtility.HtmlDecode(translatedText).Trim();
             translatedText = Regex.Replace(translatedText, @"\s+", " ");
 
-            // Generate short form for translated text
-            string shortTranslated = GenerateShortText(translatedText, targetLang == "ar");
+            // Generate balanced short form for both texts equally
+            string shortTranslated = GenerateShortText(translatedText);
+            string shortOriginal = GenerateShortText(text);
 
-            // Generate short form for original text
-            string shortOriginal = GenerateShortText(text, !isSourceEnglish);
+            string englishText = isSourceEnglish ? text : translatedText;
+            string englishShort = isSourceEnglish ? shortOriginal : shortTranslated;
+            string arabicText = isSourceEnglish ? translatedText : text;
+            string arabicShort = isSourceEnglish ? shortTranslated : shortOriginal;
 
-            // Display formats respecting ShowEnglish setting
-            string displayShort = StateManager.ShowEnglish ? $"{shortOriginal} ➔ {shortTranslated}" : shortTranslated;
-            string displayFull = StateManager.ShowEnglish ? $"{text} ➔ {translatedText}" : translatedText;
+            // Balanced display texts with equal priority (50/50 division)
+            string displayShort = StateManager.ShowEnglish ? $"{englishShort} ➔ {arabicShort}" : arabicShort;
+
+            // Equal representation for full bar display (truncated at word boundaries if long)
+            string balancedEnFull = TruncateAtWordBoundary(englishText, 42);
+            string balancedArFull = TruncateAtWordBoundary(arabicText, 42);
+            string displayFull = StateManager.ShowEnglish ? $"{balancedEnFull} ➔ {balancedArFull}" : arabicText;
 
             var result = new TranslationData {
                 Original = text,
                 OriginalShort = shortOriginal,
                 Full = translatedText,
                 Short = shortTranslated,
+                English = englishText,
+                EnglishShort = englishShort,
+                Arabic = arabicText,
+                ArabicShort = arabicShort,
                 DisplayShort = displayShort,
                 DisplayFull = displayFull,
                 HasData = true,
@@ -188,7 +203,19 @@ namespace BarTranslator {
             return string.Empty;
         }
 
-        private static string GenerateShortText(string text, bool isArabic) {
+        public static string TruncateAtWordBoundary(string text, int maxChars) {
+            if (string.IsNullOrWhiteSpace(text) || text.Length <= maxChars) {
+                return text ?? string.Empty;
+            }
+
+            int lastSpace = text.LastIndexOf(' ', Math.Min(text.Length - 1, maxChars));
+            if (lastSpace > maxChars / 2) {
+                return text.Substring(0, lastSpace).TrimEnd(',', '.', ';', ':', '،', '-') + "…";
+            }
+            return text.Substring(0, maxChars).TrimEnd() + "…";
+        }
+
+        public static string GenerateShortText(string text) {
             if (string.IsNullOrWhiteSpace(text)) return string.Empty;
 
             string[] words = text.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
@@ -196,17 +223,21 @@ namespace BarTranslator {
                 return text;
             }
 
-            if (isArabic) {
-                // If the first word is a short particle/preposition (e.g. في, من, لا, عن), keep first two words
-                if (words[0].Length <= 3 && words.Length >= 2) {
-                    return $"{words[0]} {words[1]}…";
-                }
-                return $"{words[0]}…";
+            // Up to 2 words: always show in full for equal representation
+            if (words.Length == 2) {
+                return $"{words[0]} {words[1]}";
             }
 
-            if (words.Length <= 2) {
-                return string.Join(" ", words);
+            // 3 words: show in full if concise (<= 24 characters)
+            if (words.Length == 3 && text.Length <= 24) {
+                return text;
             }
+
+            // If first 2 words are short (<= 12 characters combined), include 3rd word before ellipsis
+            if (words.Length >= 3 && (words[0].Length + words[1].Length) <= 12) {
+                return $"{words[0]} {words[1]} {words[2]}…";
+            }
+
             return $"{words[0]} {words[1]}…";
         }
     }
