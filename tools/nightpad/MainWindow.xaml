@@ -25,10 +25,10 @@
 
     <Grid>
         <Grid.RowDefinitions>
-            <!-- Row 0: Clean Window TitleBar -->
-            <RowDefinition Height="32" />
-            <!-- Row 1: Classic Menu Bar (File, Edit, View, Tools) -->
-            <RowDefinition Height="28" />
+            <!-- Row 0: Clean Unified TitleBar & MenuBar -->
+            <RowDefinition Height="34" />
+            <!-- Row 1: External File Modification Banner (Collapsible) -->
+            <RowDefinition Height="Auto" />
             <!-- Row 2: Fast Terminal-Style Quick Save Panel (Collapsible) -->
             <RowDefinition Height="Auto" />
             <!-- Row 3: Search & Replace Panel (Collapsible) -->
@@ -41,23 +41,111 @@
             <RowDefinition Height="24" />
         </Grid.RowDefinitions>
 
-        <!-- ROW 0: CLEAN WINDOW TITLEBAR -->
+        <!-- ROW 0: CLEAN UNIFIED TITLEBAR & MENU BAR -->
         <Border Grid.Row="0" Background="{StaticResource BgDarkBrush}" BorderBrush="{StaticResource BorderLightBrush}" BorderThickness="0,0,0,1" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
             <Grid>
                 <Grid.ColumnDefinitions>
-                    <!-- Window Title -->
+                    <!-- Col 0: App Branding & Document Title -->
+                    <ColumnDefinition Width="Auto" />
+                    <!-- Col 1: Integrated Menu (File, Edit, View, Tools) -->
+                    <ColumnDefinition Width="Auto" />
+                    <!-- Col 2: Draggable Spacer -->
                     <ColumnDefinition Width="*" />
-                    <!-- Right Actions & Controls -->
+                    <!-- Col 3: Right Header Actions & Window Controls -->
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <!-- Document Title -->
-                <TextBlock x:Name="TxtWindowTitle" Grid.Column="0" Text="Untitled - Notepad" FontSize="12" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="12,0,0,0" />
+                <!-- Col 0: Document Title / App Branding -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,6,0">
+                    <TextBlock Text="📝" FontSize="12" Margin="0,0,6,0" VerticalAlignment="Center" />
+                    <TextBlock x:Name="TxtWindowTitle" Text="Untitled - Notepad" FontSize="12" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" />
+                    <Border Width="1" Height="14" Background="{StaticResource BorderDarkBrush}" Margin="10,0,4,0" VerticalAlignment="Center" />
+                </StackPanel>
 
-                <!-- Header Actions & Window Controls -->
-                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                <!-- Col 1: Integrated Menu Bar -->
+                <Menu Grid.Column="1" Background="Transparent" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center">
+                    <MenuItem Header="_File" Style="{StaticResource TopMenuItemStyle}">
+                        <MenuItem Header="_New" InputGestureText="Ctrl+N" Click="MenuNew_Click" />
+                        <MenuItem Header="_Open..." InputGestureText="Ctrl+O" Click="MenuOpen_Click" />
+                        <MenuItem Header="_Save" InputGestureText="Ctrl+S" Click="MenuSave_Click" />
+                        <MenuItem Header="Save _As (Quick)..." InputGestureText="Ctrl+Shift+S" Click="MenuSaveAsQuick_Click" />
+                        <MenuItem Header="Save As (_Dialog)..." InputGestureText="Ctrl+Alt+S" Click="MenuSaveAsDialog_Click" />
+                        <Separator Background="{StaticResource BorderDarkBrush}" />
+                        <MenuItem Header="E_xit" InputGestureText="Alt+F4" Click="MenuExit_Click" />
+                    </MenuItem>
+
+                    <MenuItem Header="_Edit" Style="{StaticResource TopMenuItemStyle}">
+                        <MenuItem Header="_Undo" InputGestureText="Ctrl+Z" Click="MenuUndo_Click" />
+                        <MenuItem Header="_Redo" InputGestureText="Ctrl+Y" Click="MenuRedo_Click" />
+                        <Separator Background="{StaticResource BorderDarkBrush}" />
+                        <MenuItem Header="Cu_t" InputGestureText="Ctrl+X" Click="MenuCut_Click" />
+                        <MenuItem Header="_Copy" InputGestureText="Ctrl+C" Click="MenuCopy_Click" />
+                        <MenuItem Header="_Paste" InputGestureText="Ctrl+V" Click="MenuPaste_Click" />
+                        <MenuItem Header="Delete" InputGestureText="Del" Click="MenuDelete_Click" />
+                        <MenuItem Header="Select _All" InputGestureText="Ctrl+A" Click="MenuSelectAll_Click" />
+                        <Separator Background="{StaticResource BorderDarkBrush}" />
+                        <MenuItem Header="Open Image / Link Externally" InputGestureText="Alt+O" Click="MenuOpenLink_Click" />
+                        <Separator Background="{StaticResource BorderDarkBrush}" />
+                        <MenuItem Header="_Find..." InputGestureText="Ctrl+F" Click="MenuFind_Click" />
+                        <MenuItem Header="Find _Next" InputGestureText="F3" Click="MenuFindNext_Click" />
+                        <MenuItem Header="Find _Previous" InputGestureText="Shift+F3" Click="MenuFindPrev_Click" />
+                        <MenuItem Header="_Replace..." InputGestureText="Ctrl+H" Click="MenuReplace_Click" />
+                        <MenuItem Header="_Go to Line..." InputGestureText="Ctrl+G" Click="MenuGoToLine_Click" />
+                        <Separator Background="{StaticResource BorderDarkBrush}" />
+                        <MenuItem Header="_Duplicate Line" InputGestureText="Ctrl+D" Click="MenuDuplicateLine_Click" />
+                        <MenuItem Header="Delete Line" InputGestureText="Ctrl+Shift+K" Click="MenuDeleteLine_Click" />
+                        <MenuItem Header="Move Line Up" InputGestureText="Alt+Up" Click="MenuMoveLineUp_Click" />
+                        <MenuItem Header="Move Line Down" InputGestureText="Alt+Down" Click="MenuMoveLineDown_Click" />
+                        <MenuItem Header="Toggle Comment" InputGestureText="Ctrl+/" Click="MenuToggleComment_Click" />
+                        <Separator Background="{StaticResource BorderDarkBrush}" />
+                        <MenuItem Header="Time / _Date" InputGestureText="F5" Click="MenuInsertDateTime_Click" />
+                    </MenuItem>
+
+                    <MenuItem Header="_View" Style="{StaticResource TopMenuItemStyle}">
+                        <MenuItem x:Name="MenuMarkdownPreview" Header="Markdown Live _Preview" InputGestureText="Ctrl+Shift+M" IsCheckable="True" Click="MenuMarkdownPreview_Click" />
+                        <Separator Background="{StaticResource BorderDarkBrush}" />
+                        <MenuItem x:Name="MenuWordWrap" Header="_Word Wrap" InputGestureText="Alt+Z" IsCheckable="True" IsChecked="True" Click="MenuWordWrap_Click" />
+                        <MenuItem x:Name="MenuLineNumbers" Header="Show _Line Numbers" InputGestureText="Ctrl+Shift+L" IsCheckable="True" IsChecked="True" Click="MenuLineNumbers_Click" />
+                        <MenuItem x:Name="MenuStatusBarToggle" Header="_Status Bar" IsCheckable="True" IsChecked="True" Click="MenuStatusBarToggle_Click" />
+                        <Separator Background="{StaticResource BorderDarkBrush}" />
+                        <MenuItem x:Name="MenuRtlDirection" Header="Right-to-Left Direction (_RTL / عربي)" InputGestureText="Ctrl+Shift+R" IsCheckable="True" Click="MenuRtlDirection_Click" />
+                        <MenuItem x:Name="MenuAutoArabicDetect" Header="_Auto-Detect Arabic Direction" IsCheckable="True" IsChecked="True" Click="MenuAutoArabicDetect_Click" />
+                        <Separator Background="{StaticResource BorderDarkBrush}" />
+                        <MenuItem Header="Zoom _In" InputGestureText="Ctrl++" Click="MenuZoomIn_Click" />
+                        <MenuItem Header="Zoom _Out" InputGestureText="Ctrl+-" Click="MenuZoomOut_Click" />
+                        <MenuItem Header="_Restore Default Zoom" InputGestureText="Ctrl+0" Click="MenuZoomReset_Click" />
+                        <Separator Background="{StaticResource BorderDarkBrush}" />
+                        <MenuItem x:Name="MenuSyntaxParent" Header="_Syntax Highlighting" />
+                    </MenuItem>
+
+                    <MenuItem Header="_Tools" Style="{StaticResource TopMenuItemStyle}">
+                        <MenuItem Header="UPPERCASE" InputGestureText="Ctrl+Shift+U" Click="MenuUpper_Click" />
+                        <MenuItem Header="lowercase" InputGestureText="Ctrl+U" Click="MenuLower_Click" />
+                        <MenuItem Header="Title Case" Click="MenuTitleCase_Click" />
+                        <Separator Background="{StaticResource BorderDarkBrush}" />
+                        <MenuItem Header="Format JSON" InputGestureText="Ctrl+Shift+J" Click="MenuFormatJson_Click" />
+                        <MenuItem Header="Minify JSON" Click="MenuMinifyJson_Click" />
+                        <Separator Background="{StaticResource BorderDarkBrush}" />
+                        <MenuItem Header="Sort Lines Ascending" Click="MenuSortAsc_Click" />
+                        <MenuItem Header="Sort Lines Descending" Click="MenuSortDesc_Click" />
+                        <MenuItem Header="Remove Duplicate Lines" Click="MenuRemoveDuplicates_Click" />
+                        <MenuItem Header="Remove Empty Lines" Click="MenuRemoveEmptyLines_Click" />
+                        <MenuItem Header="Trim Trailing Whitespace" Click="MenuTrimWhitespace_Click" />
+                        <Separator Background="{StaticResource BorderDarkBrush}" />
+                        <MenuItem Header="Base64 Encode" Click="MenuBase64Encode_Click" />
+                        <MenuItem Header="Base64 Decode" Click="MenuBase64Decode_Click" />
+                        <MenuItem Header="URL Encode" Click="MenuUrlEncode_Click" />
+                        <MenuItem Header="URL Decode" Click="MenuUrlDecode_Click" />
+                    </MenuItem>
+                </Menu>
+
+                <!-- Col 2: Draggable Window Spacer -->
+                <Grid Grid.Column="2" Background="Transparent" />
+
+                <!-- Col 3: Right Header Actions & Window Controls -->
+                <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center">
                     <!-- Prominent Markdown Review / Live Preview Toggle Button -->
-                    <Button x:Name="BtnHeaderMarkdownPreview" Style="{StaticResource StatusButton}" Content="👁️ Markdown Preview" ToolTip="Toggle Side-by-Side Markdown Live Preview (Ctrl+Shift+M / Alt+M)" Padding="8,3" Margin="0,0,12,0" Foreground="{StaticResource AccentBlueBrush}" Click="BtnToggleMarkdownPreview_Click" />
+                    <Button x:Name="BtnHeaderMarkdownPreview" Style="{StaticResource StatusButton}" Content="👁️ Markdown Preview" ToolTip="Toggle Side-by-Side Markdown Live Preview (Ctrl+Shift+M / Alt+M)" Padding="8,3" Margin="0,0,8,0" Foreground="{StaticResource AccentBlueBrush}" Click="BtnToggleMarkdownPreview_Click" />
 
                     <!-- Window Control Buttons -->
                     <Button Style="{StaticResource WindowControlButton}" Content="─" Click="BtnMinimize_Click" ToolTip="Minimize" />
@@ -78,81 +166,22 @@
             </Grid>
         </Border>
 
-        <!-- ROW 1: CLEAN MENU BAR (File, Edit, View, Tools) -->
-        <Border Grid.Row="1" Background="{StaticResource BgSurfaceBrush}" BorderBrush="{StaticResource BorderLightBrush}" BorderThickness="0,0,0,1">
-            <Menu Background="Transparent" Foreground="{StaticResource TextPrimaryBrush}" VerticalAlignment="Center" Margin="4,0">
-                <MenuItem Header="_File" Style="{StaticResource TopMenuItemStyle}">
-                    <MenuItem Header="_New" InputGestureText="Ctrl+N" Click="MenuNew_Click" />
-                    <MenuItem Header="_Open..." InputGestureText="Ctrl+O" Click="MenuOpen_Click" />
-                    <MenuItem Header="_Save" InputGestureText="Ctrl+S" Click="MenuSave_Click" />
-                    <MenuItem Header="Save _As (Quick)..." InputGestureText="Ctrl+Shift+S" Click="MenuSaveAsQuick_Click" />
-                    <MenuItem Header="Save As (_Dialog)..." InputGestureText="Ctrl+Alt+S" Click="MenuSaveAsDialog_Click" />
-                    <Separator Background="{StaticResource BorderDarkBrush}" />
-                    <MenuItem Header="E_xit" InputGestureText="Alt+F4" Click="MenuExit_Click" />
-                </MenuItem>
-
-                <MenuItem Header="_Edit" Style="{StaticResource TopMenuItemStyle}">
-                    <MenuItem Header="_Undo" InputGestureText="Ctrl+Z" Click="MenuUndo_Click" />
-                    <MenuItem Header="_Redo" InputGestureText="Ctrl+Y" Click="MenuRedo_Click" />
-                    <Separator Background="{StaticResource BorderDarkBrush}" />
-                    <MenuItem Header="Cu_t" InputGestureText="Ctrl+X" Click="MenuCut_Click" />
-                    <MenuItem Header="_Copy" InputGestureText="Ctrl+C" Click="MenuCopy_Click" />
-                    <MenuItem Header="_Paste" InputGestureText="Ctrl+V" Click="MenuPaste_Click" />
-                    <MenuItem Header="Delete" InputGestureText="Del" Click="MenuDelete_Click" />
-                    <MenuItem Header="Select _All" InputGestureText="Ctrl+A" Click="MenuSelectAll_Click" />
-                    <Separator Background="{StaticResource BorderDarkBrush}" />
-                    <MenuItem Header="_Find..." InputGestureText="Ctrl+F" Click="MenuFind_Click" />
-                    <MenuItem Header="Find _Next" InputGestureText="F3" Click="MenuFindNext_Click" />
-                    <MenuItem Header="Find _Previous" InputGestureText="Shift+F3" Click="MenuFindPrev_Click" />
-                    <MenuItem Header="_Replace..." InputGestureText="Ctrl+H" Click="MenuReplace_Click" />
-                    <MenuItem Header="_Go to Line..." InputGestureText="Ctrl+G" Click="MenuGoToLine_Click" />
-                    <Separator Background="{StaticResource BorderDarkBrush}" />
-                    <MenuItem Header="_Duplicate Line" InputGestureText="Ctrl+D" Click="MenuDuplicateLine_Click" />
-                    <MenuItem Header="Delete Line" InputGestureText="Ctrl+Shift+K" Click="MenuDeleteLine_Click" />
-                    <MenuItem Header="Move Line Up" InputGestureText="Alt+Up" Click="MenuMoveLineUp_Click" />
-                    <MenuItem Header="Move Line Down" InputGestureText="Alt+Down" Click="MenuMoveLineDown_Click" />
-                    <MenuItem Header="Toggle Comment" InputGestureText="Ctrl+/" Click="MenuToggleComment_Click" />
-                    <Separator Background="{StaticResource BorderDarkBrush}" />
-                    <MenuItem Header="Time / _Date" InputGestureText="F5" Click="MenuInsertDateTime_Click" />
-                </MenuItem>
-
-                <MenuItem Header="_View" Style="{StaticResource TopMenuItemStyle}">
-                    <MenuItem x:Name="MenuMarkdownPreview" Header="Markdown Live _Preview" InputGestureText="Ctrl+Shift+M" IsCheckable="True" Click="MenuMarkdownPreview_Click" />
-                    <Separator Background="{StaticResource BorderDarkBrush}" />
-                    <MenuItem x:Name="MenuWordWrap" Header="_Word Wrap" InputGestureText="Alt+Z" IsCheckable="True" Click="MenuWordWrap_Click" />
-                    <MenuItem x:Name="MenuLineNumbers" Header="Show _Line Numbers" InputGestureText="Ctrl+Shift+L" IsCheckable="True" IsChecked="True" Click="MenuLineNumbers_Click" />
-                    <MenuItem x:Name="MenuStatusBarToggle" Header="_Status Bar" IsCheckable="True" IsChecked="True" Click="MenuStatusBarToggle_Click" />
-                    <Separator Background="{StaticResource BorderDarkBrush}" />
-                    <MenuItem x:Name="MenuRtlDirection" Header="Right-to-Left Direction (_RTL / عربي)" InputGestureText="Ctrl+Shift+R" IsCheckable="True" Click="MenuRtlDirection_Click" />
-                    <MenuItem x:Name="MenuAutoArabicDetect" Header="_Auto-Detect Arabic Direction" IsCheckable="True" IsChecked="True" Click="MenuAutoArabicDetect_Click" />
-                    <Separator Background="{StaticResource BorderDarkBrush}" />
-                    <MenuItem Header="Zoom _In" InputGestureText="Ctrl++" Click="MenuZoomIn_Click" />
-                    <MenuItem Header="Zoom _Out" InputGestureText="Ctrl+-" Click="MenuZoomOut_Click" />
-                    <MenuItem Header="_Restore Default Zoom" InputGestureText="Ctrl+0" Click="MenuZoomReset_Click" />
-                    <Separator Background="{StaticResource BorderDarkBrush}" />
-                    <MenuItem x:Name="MenuSyntaxParent" Header="_Syntax Highlighting" />
-                </MenuItem>
-
-                <MenuItem Header="_Tools" Style="{StaticResource TopMenuItemStyle}">
-                    <MenuItem Header="UPPERCASE" InputGestureText="Ctrl+Shift+U" Click="MenuUpper_Click" />
-                    <MenuItem Header="lowercase" InputGestureText="Ctrl+U" Click="MenuLower_Click" />
-                    <MenuItem Header="Title Case" Click="MenuTitleCase_Click" />
-                    <Separator Background="{StaticResource BorderDarkBrush}" />
-                    <MenuItem Header="Format JSON" InputGestureText="Ctrl+Shift+J" Click="MenuFormatJson_Click" />
-                    <MenuItem Header="Minify JSON" Click="MenuMinifyJson_Click" />
-                    <Separator Background="{StaticResource BorderDarkBrush}" />
-                    <MenuItem Header="Sort Lines Ascending" Click="MenuSortAsc_Click" />
-                    <MenuItem Header="Sort Lines Descending" Click="MenuSortDesc_Click" />
-                    <MenuItem Header="Remove Duplicate Lines" Click="MenuRemoveDuplicates_Click" />
-                    <MenuItem Header="Remove Empty Lines" Click="MenuRemoveEmptyLines_Click" />
-                    <MenuItem Header="Trim Trailing Whitespace" Click="MenuTrimWhitespace_Click" />
-                    <Separator Background="{StaticResource BorderDarkBrush}" />
-                    <MenuItem Header="Base64 Encode" Click="MenuBase64Encode_Click" />
-                    <MenuItem Header="Base64 Decode" Click="MenuBase64Decode_Click" />
-                    <MenuItem Header="URL Encode" Click="MenuUrlEncode_Click" />
-                    <MenuItem Header="URL Decode" Click="MenuUrlDecode_Click" />
-                </MenuItem>
-            </Menu>
+        <!-- ROW 1: EXTERNAL FILE MODIFICATION BANNER (Collapsible) -->
+        <Border x:Name="ExternalChangeBanner" Grid.Row="1" Background="#2A1B14" BorderBrush="#D29922" BorderThickness="0,0,0,1" Padding="12,6" Visibility="Collapsed">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                    <TextBlock Text="⚠️" FontSize="12" Margin="0,0,8,0" VerticalAlignment="Center" />
+                    <TextBlock x:Name="TxtExternalChangeMessage" Text="File has been modified outside Notepad." Foreground="{StaticResource TextPrimaryBrush}" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center" />
+                </StackPanel>
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Style="{StaticResource NightButton}" Content="🔄 Reload" FontWeight="SemiBold" Foreground="{StaticResource AccentBlueBrush}" Padding="10,2" Margin="0,0,6,0" Click="BtnReloadExternal_Click" ToolTip="Reload latest file content from disk" />
+                    <Button Style="{StaticResource StatusButton}" Content="Keep Mine" Padding="8,2" Click="BtnIgnoreExternal_Click" ToolTip="Keep current editor buffer and ignore external modification" />
+                </StackPanel>
+            </Grid>
         </Border>
 
         <!-- ROW 2: FAST TERMINAL-STYLE QUICK SAVE PANEL (Collapsible) -->
@@ -291,7 +320,7 @@
                                    FontFamily="Cascadia Code, Segoe UI, Cairo, Tahoma, Consolas, Arial"
                                    FontSize="14"
                                    ShowLineNumbers="True"
-                                   WordWrap="False"
+                                   WordWrap="True"
                                    HorizontalScrollBarVisibility="Auto"
                                    VerticalScrollBarVisibility="Auto"
                                    BorderThickness="0"

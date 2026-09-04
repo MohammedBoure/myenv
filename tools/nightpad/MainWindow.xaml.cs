@@ -5,10 +5,12 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using ICSharpCode.AvalonEdit;
 using ICSharpCode.AvalonEdit.Document;
 using ICSharpCode.AvalonEdit.Editing;
@@ -33,6 +35,12 @@ public partial class MainWindow : Window
     private string _completionOriginalInput = string.Empty;
     private bool _suppressTextChange;
 
+    // Lightweight external file change monitoring (FileSystemWatcher)
+    private FileSystemWatcher? _fileWatcher;
+    private DateTime _lastKnownWriteTimeUtc = DateTime.MinValue;
+    private bool _isSavingInternal;
+    private bool _hasPendingExternalChange;
+
     public MainWindow()
     {
         InitializeComponent();
@@ -49,6 +57,25 @@ public partial class MainWindow : Window
 
     private void MainWindow_Activated(object? sender, EventArgs e)
     {
+        if (_hasPendingExternalChange)
+        {
+            ShowExternalChangeNotification();
+        }
+        else if (!string.IsNullOrEmpty(_currentFilePath) && File.Exists(_currentFilePath))
+        {
+            try
+            {
+                var currentWrite = File.GetLastWriteTimeUtc(_currentFilePath);
+                if (currentWrite > _lastKnownWriteTimeUtc.AddMilliseconds(200))
+                {
+                    _lastKnownWriteTimeUtc = currentWrite;
+                    _hasPendingExternalChange = true;
+                    ShowExternalChangeNotification();
+                }
+            }
+            catch { }
+        }
+
         if (QuickSavePanel.Visibility != Visibility.Visible &&
             SearchPanel.Visibility != Visibility.Visible &&
             GoToLinePanel.Visibility != Visibility.Visible)
@@ -85,11 +112,20 @@ public partial class MainWindow : Window
         MainEditor.Options.HighlightCurrentLine = true;
         MainEditor.Options.EnableRectangularSelection = true;
         MainEditor.Options.EnableTextDragDrop = true;
+        MainEditor.Options.AllowScrollBelowDocument = true;
+        MainEditor.Options.InheritWordWrapIndentation = true;
+
+        MainEditor.WordWrap = true;
+        MenuWordWrap.IsChecked = true;
 
         MainEditor.LineNumbersForeground = (SolidColorBrush)FindResource("TextSecondaryBrush");
         MainEditor.TextArea.SelectionBrush = new SolidColorBrush(Color.FromArgb(90, 31, 111, 235));
         MainEditor.TextArea.SelectionBorder = null;
         MainEditor.TextArea.SelectionCornerRadius = 0;
+
+        DataObject.AddPastingHandler(MainEditor, OnEditorPasting);
+        MainEditor.ContextMenuOpening += MainEditor_ContextMenuOpening;
+        MainEditor.TextArea.PreviewMouseLeftButtonDown += TextArea_PreviewMouseLeftButtonDown;
 
         MainEditor.TextChanged += (s, e) =>
         {
@@ -126,35 +162,80 @@ public partial class MainWindow : Window
             }
         };
 
-        // Smart Python indentation & Enter handling
+        // Smart Line Insertion (Ctrl+Enter, Ctrl+Shift+Enter) & Python indentation
         MainEditor.TextArea.PreviewKeyDown += (s, e) =>
         {
             var key = e.Key == Key.System ? e.SystemKey : e.Key;
-            if (key == Key.Enter && Keyboard.Modifiers == ModifierKeys.None)
+            var modifiers = Keyboard.Modifiers;
+
+            if (key == Key.Enter)
             {
-                var curLine = MainEditor.Document.GetLineByNumber(MainEditor.TextArea.Caret.Line);
-                string lineText = MainEditor.Document.GetText(curLine.Offset, MainEditor.CaretOffset - curLine.Offset);
-
-                int leadingSpaces = 0;
-                while (leadingSpaces < lineText.Length && lineText[leadingSpaces] == ' ')
-                {
-                    leadingSpaces++;
-                }
-
-                // If line ends in colon (Python block), indent extra 4 spaces
-                if (lineText.TrimEnd().EndsWith(':'))
-                {
-                    leadingSpaces += 4;
-                }
-
-                if (leadingSpaces > 0)
+                // Ctrl+Shift+Enter: insert new line ABOVE
+                if (modifiers.HasFlag(ModifierKeys.Control) && modifiers.HasFlag(ModifierKeys.Shift))
                 {
                     e.Handled = true;
-                    string indent = Environment.NewLine + new string(' ', leadingSpaces);
-                    MainEditor.Document.Insert(MainEditor.CaretOffset, indent);
+                    var curLine = MainEditor.Document.GetLineByNumber(MainEditor.TextArea.Caret.Line);
+                    string indent = GetLineIndentation(curLine);
+                    MainEditor.Document.Insert(curLine.Offset, indent + Environment.NewLine);
+                    MainEditor.CaretOffset = curLine.Offset + indent.Length;
+                    return;
+                }
+
+                // Ctrl+Enter: insert new line BELOW without splitting current line
+                if (modifiers == ModifierKeys.Control && !modifiers.HasFlag(ModifierKeys.Shift))
+                {
+                    e.Handled = true;
+                    var curLine = MainEditor.Document.GetLineByNumber(MainEditor.TextArea.Caret.Line);
+                    string indent = GetLineIndentation(curLine);
+                    string lineText = MainEditor.Document.GetText(curLine.Offset, curLine.Length);
+                    if (lineText.TrimEnd().EndsWith(':'))
+                    {
+                        indent += "    ";
+                    }
+
+                    string toInsert = Environment.NewLine + indent;
+                    MainEditor.Document.Insert(curLine.EndOffset, toInsert);
+                    MainEditor.CaretOffset = curLine.EndOffset + toInsert.Length;
+                    return;
+                }
+
+                // Normal Enter: preserve auto-indent and python block indent
+                if (modifiers == ModifierKeys.None)
+                {
+                    var curLine = MainEditor.Document.GetLineByNumber(MainEditor.TextArea.Caret.Line);
+                    string lineText = MainEditor.Document.GetText(curLine.Offset, MainEditor.CaretOffset - curLine.Offset);
+
+                    int leadingSpaces = 0;
+                    while (leadingSpaces < lineText.Length && lineText[leadingSpaces] == ' ')
+                    {
+                        leadingSpaces++;
+                    }
+
+                    if (lineText.TrimEnd().EndsWith(':'))
+                    {
+                        leadingSpaces += 4;
+                    }
+
+                    if (leadingSpaces > 0)
+                    {
+                        e.Handled = true;
+                        string indent = Environment.NewLine + new string(' ', leadingSpaces);
+                        MainEditor.Document.Insert(MainEditor.CaretOffset, indent);
+                    }
                 }
             }
         };
+    }
+
+    private string GetLineIndentation(DocumentLine line)
+    {
+        string text = MainEditor.Document.GetText(line.Offset, line.Length);
+        int spaces = 0;
+        while (spaces < text.Length && (text[spaces] == ' ' || text[spaces] == '\t'))
+        {
+            spaces++;
+        }
+        return text[..spaces];
     }
 
     private void UpdateTitle()
@@ -236,6 +317,10 @@ public partial class MainWindow : Window
             UpdateTitle();
             UpdateStatusBar();
 
+            SetupFileWatcher(_currentFilePath);
+            _hasPendingExternalChange = false;
+            ExternalChangeBanner.Visibility = Visibility.Collapsed;
+
             if (PreviewContainer.Visibility == Visibility.Visible)
             {
                 UpdateMarkdownPreview();
@@ -262,6 +347,10 @@ public partial class MainWindow : Window
         ApplySyntax(_currentSyntaxName);
         UpdateSyntaxMenuSelection();
 
+        DisposeFileWatcher();
+        _hasPendingExternalChange = false;
+        ExternalChangeBanner.Visibility = Visibility.Collapsed;
+
         SetTextDirection(FlowDirection.LeftToRight);
         UpdateTitle();
         UpdateStatusBar();
@@ -285,6 +374,7 @@ public partial class MainWindow : Window
             return false;
         }
 
+        _isSavingInternal = true;
         try
         {
             string? dir = Path.GetDirectoryName(_currentFilePath);
@@ -295,6 +385,11 @@ public partial class MainWindow : Window
 
             File.WriteAllText(_currentFilePath, MainEditor.Document.Text, new UTF8Encoding(false));
             _isModified = false;
+            _lastKnownWriteTimeUtc = File.GetLastWriteTimeUtc(_currentFilePath);
+            _hasPendingExternalChange = false;
+            ExternalChangeBanner.Visibility = Visibility.Collapsed;
+            SetupFileWatcher(_currentFilePath);
+
             UpdateTitle();
             UpdateStatusBar();
             return true;
@@ -303,6 +398,10 @@ public partial class MainWindow : Window
         {
             MessageBox.Show($"Could not save file:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             return false;
+        }
+        finally
+        {
+            Task.Delay(300).ContinueWith(_ => _isSavingInternal = false);
         }
     }
 
@@ -529,6 +628,7 @@ public partial class MainWindow : Window
             targetPath = Path.Combine(targetPath, SuggestDefaultFileName());
         }
 
+        _isSavingInternal = true;
         try
         {
             PathCompletionService.EnsureDirectoryExists(targetPath);
@@ -536,6 +636,10 @@ public partial class MainWindow : Window
 
             _currentFilePath = Path.GetFullPath(targetPath);
             _isModified = false;
+            _lastKnownWriteTimeUtc = File.GetLastWriteTimeUtc(_currentFilePath);
+            _hasPendingExternalChange = false;
+            ExternalChangeBanner.Visibility = Visibility.Collapsed;
+            SetupFileWatcher(_currentFilePath);
 
             _currentSyntaxName = SyntaxService.GetLanguageByExtension(_currentFilePath);
             _isAutoDetectMode = (_currentSyntaxName == "Plain Text");
@@ -549,6 +653,10 @@ public partial class MainWindow : Window
         catch (Exception ex)
         {
             MessageBox.Show($"Could not save file to '{targetPath}':\n{ex.Message}", "Save Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+        finally
+        {
+            Task.Delay(300).ContinueWith(_ => _isSavingInternal = false);
         }
     }
 
@@ -578,6 +686,7 @@ public partial class MainWindow : Window
 
         if (dlg.ShowDialog(this) == true)
         {
+            _isSavingInternal = true;
             try
             {
                 string? dir = Path.GetDirectoryName(dlg.FileName);
@@ -589,6 +698,10 @@ public partial class MainWindow : Window
                 File.WriteAllText(dlg.FileName, MainEditor.Document.Text, new UTF8Encoding(false));
                 _currentFilePath = dlg.FileName;
                 _isModified = false;
+                _lastKnownWriteTimeUtc = File.GetLastWriteTimeUtc(_currentFilePath);
+                _hasPendingExternalChange = false;
+                ExternalChangeBanner.Visibility = Visibility.Collapsed;
+                SetupFileWatcher(_currentFilePath);
 
                 _currentSyntaxName = SyntaxService.GetLanguageByExtension(_currentFilePath);
                 _isAutoDetectMode = (_currentSyntaxName == "Plain Text");
@@ -604,6 +717,10 @@ public partial class MainWindow : Window
             {
                 MessageBox.Show($"Could not save file:\n{ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 return false;
+            }
+            finally
+            {
+                Task.Delay(300).ContinueWith(_ => _isSavingInternal = false);
             }
         }
         return false;
@@ -678,7 +795,8 @@ public partial class MainWindow : Window
     private void UpdateMarkdownPreview()
     {
         bool isRtl = MainEditor.FlowDirection == FlowDirection.RightToLeft;
-        MarkdownViewer.Document = MarkdownRenderService.Render(MainEditor.Document.Text, isRtl);
+        string? baseDir = !string.IsNullOrEmpty(_currentFilePath) ? Path.GetDirectoryName(_currentFilePath) : null;
+        MarkdownViewer.Document = MarkdownRenderService.Render(MainEditor.Document.Text, isRtl, baseDir);
     }
 
     private void BtnToggleMarkdownPreview_Click(object sender, RoutedEventArgs e) => ToggleMarkdownPreview();
@@ -1167,7 +1285,495 @@ public partial class MainWindow : Window
     private void MenuRedo_Click(object sender, RoutedEventArgs e) => MainEditor.Redo();
     private void MenuCut_Click(object sender, RoutedEventArgs e) => MainEditor.Cut();
     private void MenuCopy_Click(object sender, RoutedEventArgs e) => MainEditor.Copy();
-    private void MenuPaste_Click(object sender, RoutedEventArgs e) => MainEditor.Paste();
+    private void MenuPaste_Click(object sender, RoutedEventArgs e)
+    {
+        if (Clipboard.ContainsImage() || HasImageFileInClipboard())
+        {
+            ExecuteImagePaste();
+        }
+        else
+        {
+            MainEditor.Paste();
+        }
+    }
+
+    #region Image Pasting & External Resource Opening
+
+    private static bool HasImageFileInClipboard()
+    {
+        try
+        {
+            if (!Clipboard.ContainsFileDropList()) return false;
+            var files = Clipboard.GetFileDropList();
+            if (files == null || files.Count == 0) return false;
+            string first = files[0] ?? "";
+            string ext = Path.GetExtension(first).ToLowerInvariant();
+            return ext is ".png" or ".jpg" or ".jpeg" or ".gif" or ".webp" or ".bmp" or ".svg";
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private void OnEditorPasting(object sender, DataObjectPastingEventArgs e)
+    {
+        if (Clipboard.ContainsImage() || HasImageFileInClipboard())
+        {
+            e.CancelCommand();
+            ExecuteImagePaste();
+        }
+    }
+
+    private void ExecuteImagePaste()
+    {
+        try
+        {
+            BitmapSource? bitmap = null;
+
+            if (Clipboard.ContainsImage())
+            {
+                bitmap = Clipboard.GetImage();
+            }
+            else if (Clipboard.ContainsFileDropList())
+            {
+                var files = Clipboard.GetFileDropList();
+                if (files != null && files.Count > 0)
+                {
+                    string filePath = files[0]!;
+                    if (File.Exists(filePath))
+                    {
+                        var bi = new BitmapImage();
+                        bi.BeginInit();
+                        bi.UriSource = new Uri(filePath, UriKind.Absolute);
+                        bi.CacheOption = BitmapCacheOption.OnLoad;
+                        bi.EndInit();
+                        bi.Freeze();
+                        bitmap = bi;
+                    }
+                }
+            }
+
+            if (bitmap == null)
+            {
+                MainEditor.Paste();
+                return;
+            }
+
+            string assetsDir;
+            string relativeDir;
+
+            if (!string.IsNullOrEmpty(_currentFilePath))
+            {
+                string docDir = Path.GetDirectoryName(_currentFilePath)!;
+                assetsDir = Path.Combine(docDir, "assets");
+                relativeDir = "assets";
+            }
+            else
+            {
+                assetsDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "NightPad", "assets");
+                relativeDir = assetsDir.Replace('\\', '/');
+            }
+
+            if (!Directory.Exists(assetsDir))
+            {
+                Directory.CreateDirectory(assetsDir);
+            }
+
+            string timeStamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+            string fileName = $"image_{timeStamp}.png";
+            string targetFilePath = Path.Combine(assetsDir, fileName);
+
+            int counter = 1;
+            while (File.Exists(targetFilePath))
+            {
+                fileName = $"image_{timeStamp}_{counter}.png";
+                targetFilePath = Path.Combine(assetsDir, fileName);
+                counter++;
+            }
+
+            using (var fileStream = new FileStream(targetFilePath, FileMode.Create, FileAccess.Write))
+            {
+                var encoder = new PngBitmapEncoder();
+                encoder.Frames.Add(BitmapFrame.Create(bitmap));
+                encoder.Save(fileStream);
+            }
+
+            string markdownRef = $"![image]({relativeDir}/{fileName})";
+
+            int caret = MainEditor.CaretOffset;
+            MainEditor.Document.Insert(caret, markdownRef);
+            MainEditor.CaretOffset = caret + markdownRef.Length;
+
+            UpdateStatusBar();
+            if (PreviewContainer.Visibility == Visibility.Visible)
+            {
+                UpdateMarkdownPreview();
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Could not paste image:\n{ex.Message}", "Image Paste Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    public void OpenResolvedPathExternally(string path)
+    {
+        try
+        {
+            string target = path.Trim().Trim('"', '\'');
+            if (target.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                target.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            {
+                Process.Start(new ProcessStartInfo(target) { UseShellExecute = true });
+                return;
+            }
+
+            string fullPath = target;
+            if (!Path.IsPathRooted(target) && !string.IsNullOrEmpty(_currentFilePath))
+            {
+                string docDir = Path.GetDirectoryName(_currentFilePath)!;
+                fullPath = Path.GetFullPath(Path.Combine(docDir, target));
+            }
+
+            if (File.Exists(fullPath) || Directory.Exists(fullPath))
+            {
+                Process.Start(new ProcessStartInfo(fullPath) { UseShellExecute = true });
+            }
+            else
+            {
+                MessageBox.Show($"File or directory not found:\n{fullPath}", "File Not Found", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Could not open externally:\n{ex.Message}", "Open Error", MessageBoxButton.OK, MessageBoxImage.Error);
+        }
+    }
+
+    private string? GetLinkOrImagePathAtOffset(int offset)
+    {
+        if (offset < 0 || offset > MainEditor.Document.TextLength) return null;
+        var line = MainEditor.Document.GetLineByOffset(offset);
+        string lineText = MainEditor.Document.GetText(line.Offset, line.Length);
+        int relOffset = offset - line.Offset;
+
+        // 1. Check for markdown image: ![alt](url)
+        var imgMatches = Regex.Matches(lineText, @"!\[.*?\]\((.*?)\)");
+        foreach (Match m in imgMatches)
+        {
+            if (relOffset >= m.Index && relOffset <= m.Index + m.Length)
+            {
+                return m.Groups[1].Value.Trim();
+            }
+        }
+
+        // 2. Check for markdown link: [text](url)
+        var linkMatches = Regex.Matches(lineText, @"\[.*?\]\((.*?)\)");
+        foreach (Match m in linkMatches)
+        {
+            if (relOffset >= m.Index && relOffset <= m.Index + m.Length)
+            {
+                return m.Groups[1].Value.Trim();
+            }
+        }
+
+        // 3. Check for URLs: https?://...
+        var urlMatches = Regex.Matches(lineText, @"https?://[^\s<>""']+");
+        foreach (Match m in urlMatches)
+        {
+            if (relOffset >= m.Index && relOffset <= m.Index + m.Length)
+            {
+                return m.Value.Trim();
+            }
+        }
+
+        return null;
+    }
+
+    private string? GetLinkOrImagePathAtCaret()
+    {
+        return GetLinkOrImagePathAtOffset(MainEditor.CaretOffset);
+    }
+
+    private void MenuOpenLink_Click(object sender, RoutedEventArgs e)
+    {
+        string? link = GetLinkOrImagePathAtCaret();
+        if (string.IsNullOrEmpty(link))
+        {
+            // Try entire line
+            var line = MainEditor.Document.GetLineByNumber(MainEditor.TextArea.Caret.Line);
+            string lineText = MainEditor.Document.GetText(line.Offset, line.Length);
+            var m = Regex.Match(lineText, @"!?\[.*?\]\((.*?)\)");
+            if (m.Success)
+            {
+                link = m.Groups[1].Value.Trim();
+            }
+            else
+            {
+                var u = Regex.Match(lineText, @"https?://[^\s<>""']+");
+                if (u.Success) link = u.Value.Trim();
+            }
+        }
+
+        if (!string.IsNullOrEmpty(link))
+        {
+            OpenResolvedPathExternally(link);
+        }
+        else
+        {
+            MessageBox.Show("No image or link found at current caret position or line.\nMove cursor over an image or link like ![image](path.png) or [link](url).", "Open Link / Image", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+    }
+
+    private void TextArea_PreviewMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+    {
+        if (Keyboard.Modifiers == ModifierKeys.Control)
+        {
+            var pos = MainEditor.GetPositionFromPoint(e.GetPosition(MainEditor));
+            if (pos.HasValue)
+            {
+                int offset = MainEditor.Document.GetOffset(pos.Value.Line, pos.Value.Column);
+                string? link = GetLinkOrImagePathAtOffset(offset);
+                if (!string.IsNullOrEmpty(link))
+                {
+                    e.Handled = true;
+                    OpenResolvedPathExternally(link);
+                }
+            }
+        }
+    }
+
+    private void MainEditor_ContextMenuOpening(object sender, ContextMenuEventArgs e)
+    {
+        var menu = new ContextMenu();
+
+        string? linkUnderCaret = GetLinkOrImagePathAtCaret();
+        if (string.IsNullOrEmpty(linkUnderCaret))
+        {
+            var line = MainEditor.Document.GetLineByNumber(MainEditor.TextArea.Caret.Line);
+            string lineText = MainEditor.Document.GetText(line.Offset, line.Length);
+            var m = Regex.Match(lineText, @"!?\[.*?\]\((.*?)\)");
+            if (m.Success) linkUnderCaret = m.Groups[1].Value.Trim();
+        }
+
+        if (!string.IsNullOrEmpty(linkUnderCaret))
+        {
+            string cleanTarget = linkUnderCaret.Trim('"', '\'');
+            string fileName = Path.GetFileName(cleanTarget);
+            var openItem = new MenuItem
+            {
+                Header = $"🖼️ Open Externally: {(string.IsNullOrEmpty(fileName) ? cleanTarget : fileName)}",
+                FontWeight = FontWeights.SemiBold
+            };
+            openItem.Click += (s, ev) => OpenResolvedPathExternally(cleanTarget);
+            menu.Items.Add(openItem);
+
+            string fullPath = cleanTarget;
+            if (!Path.IsPathRooted(cleanTarget) && !string.IsNullOrEmpty(_currentFilePath))
+            {
+                fullPath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(_currentFilePath)!, cleanTarget));
+            }
+
+            if (File.Exists(fullPath))
+            {
+                var revealItem = new MenuItem { Header = "📁 Reveal in File Explorer" };
+                revealItem.Click += (s, ev) =>
+                {
+                    try { Process.Start("explorer.exe", $"/select,\"{fullPath}\""); } catch { }
+                };
+                menu.Items.Add(revealItem);
+            }
+
+            menu.Items.Add(new Separator());
+        }
+
+        var undoItem = new MenuItem { Header = "Undo", InputGestureText = "Ctrl+Z" };
+        undoItem.Click += (s, ev) => MainEditor.Undo();
+        var redoItem = new MenuItem { Header = "Redo", InputGestureText = "Ctrl+Y" };
+        redoItem.Click += (s, ev) => MainEditor.Redo();
+        menu.Items.Add(undoItem);
+        menu.Items.Add(redoItem);
+        menu.Items.Add(new Separator());
+
+        var cutItem = new MenuItem { Header = "Cut", InputGestureText = "Ctrl+X" };
+        cutItem.Click += (s, ev) => MainEditor.Cut();
+        var copyItem = new MenuItem { Header = "Copy", InputGestureText = "Ctrl+C" };
+        copyItem.Click += (s, ev) => MainEditor.Copy();
+
+        var pasteItem = new MenuItem
+        {
+            Header = (Clipboard.ContainsImage() || HasImageFileInClipboard()) ? "📋 Paste (Image)" : "📋 Paste",
+            InputGestureText = "Ctrl+V"
+        };
+        pasteItem.Click += (s, ev) => MenuPaste_Click(s, ev);
+
+        menu.Items.Add(cutItem);
+        menu.Items.Add(copyItem);
+        menu.Items.Add(pasteItem);
+
+        var selectAllItem = new MenuItem { Header = "Select All", InputGestureText = "Ctrl+A" };
+        selectAllItem.Click += (s, ev) => MainEditor.SelectAll();
+        menu.Items.Add(selectAllItem);
+
+        menu.Items.Add(new Separator());
+
+        var wordWrapItem = new MenuItem { Header = "Word Wrap", InputGestureText = "Alt+Z", IsCheckable = true, IsChecked = MainEditor.WordWrap };
+        wordWrapItem.Click += (s, ev) =>
+        {
+            MainEditor.WordWrap = !MainEditor.WordWrap;
+            MenuWordWrap.IsChecked = MainEditor.WordWrap;
+        };
+        menu.Items.Add(wordWrapItem);
+
+        MainEditor.ContextMenu = menu;
+    }
+
+    #endregion
+
+    #region Lightweight External File Watcher
+
+    private void SetupFileWatcher(string? filePath)
+    {
+        DisposeFileWatcher();
+        if (string.IsNullOrWhiteSpace(filePath) || !File.Exists(filePath)) return;
+
+        try
+        {
+            string? dir = Path.GetDirectoryName(filePath);
+            string fileName = Path.GetFileName(filePath);
+            if (string.IsNullOrEmpty(dir) || !Directory.Exists(dir)) return;
+
+            _lastKnownWriteTimeUtc = File.GetLastWriteTimeUtc(filePath);
+
+            _fileWatcher = new FileSystemWatcher(dir, fileName)
+            {
+                NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size | NotifyFilters.FileName,
+                EnableRaisingEvents = true
+            };
+
+            _fileWatcher.Changed += OnFileWatcherChanged;
+            _fileWatcher.Renamed += OnFileWatcherRenamed;
+            _fileWatcher.Deleted += OnFileWatcherDeleted;
+        }
+        catch
+        {
+            // Resilient against system folder / security restrictions
+        }
+    }
+
+    private void DisposeFileWatcher()
+    {
+        if (_fileWatcher != null)
+        {
+            try
+            {
+                _fileWatcher.EnableRaisingEvents = false;
+                _fileWatcher.Changed -= OnFileWatcherChanged;
+                _fileWatcher.Renamed -= OnFileWatcherRenamed;
+                _fileWatcher.Deleted -= OnFileWatcherDeleted;
+                _fileWatcher.Dispose();
+            }
+            catch { }
+            _fileWatcher = null;
+        }
+    }
+
+    private void OnFileWatcherChanged(object sender, FileSystemEventArgs e)
+    {
+        if (_isSavingInternal) return;
+        if (string.IsNullOrEmpty(_currentFilePath) || !File.Exists(_currentFilePath)) return;
+
+        try
+        {
+            var currentWrite = File.GetLastWriteTimeUtc(_currentFilePath);
+            if (currentWrite <= _lastKnownWriteTimeUtc.AddMilliseconds(100)) return;
+            _lastKnownWriteTimeUtc = currentWrite;
+            _hasPendingExternalChange = true;
+
+            Dispatcher.InvokeAsync(() =>
+            {
+                ShowExternalChangeNotification();
+            });
+        }
+        catch { }
+    }
+
+    private void OnFileWatcherRenamed(object sender, RenamedEventArgs e)
+    {
+        if (_isSavingInternal) return;
+        _hasPendingExternalChange = true;
+        Dispatcher.InvokeAsync(() =>
+        {
+            TxtExternalChangeMessage.Text = $"File was renamed to '{e.Name}' outside Notepad.";
+            ExternalChangeBanner.Visibility = Visibility.Visible;
+        });
+    }
+
+    private void OnFileWatcherDeleted(object sender, FileSystemEventArgs e)
+    {
+        if (_isSavingInternal) return;
+        _hasPendingExternalChange = true;
+        Dispatcher.InvokeAsync(() =>
+        {
+            TxtExternalChangeMessage.Text = "File was deleted or moved outside Notepad.";
+            ExternalChangeBanner.Visibility = Visibility.Visible;
+        });
+    }
+
+    private void ShowExternalChangeNotification()
+    {
+        if (string.IsNullOrEmpty(_currentFilePath)) return;
+        string fileName = Path.GetFileName(_currentFilePath);
+        TxtExternalChangeMessage.Text = $"'{fileName}' has been modified outside Notepad.";
+        ExternalChangeBanner.Visibility = Visibility.Visible;
+    }
+
+    private void BtnReloadExternal_Click(object sender, RoutedEventArgs e)
+    {
+        if (string.IsNullOrEmpty(_currentFilePath) || !File.Exists(_currentFilePath))
+        {
+            ExternalChangeBanner.Visibility = Visibility.Collapsed;
+            _hasPendingExternalChange = false;
+            return;
+        }
+
+        try
+        {
+            int savedCaret = MainEditor.CaretOffset;
+            string newContent = File.ReadAllText(_currentFilePath, Encoding.UTF8);
+            MainEditor.Document.Text = newContent;
+            MainEditor.CaretOffset = Math.Clamp(savedCaret, 0, newContent.Length);
+
+            _isModified = false;
+            _hasPendingExternalChange = false;
+            _lastKnownWriteTimeUtc = File.GetLastWriteTimeUtc(_currentFilePath);
+            ExternalChangeBanner.Visibility = Visibility.Collapsed;
+
+            UpdateTitle();
+            UpdateStatusBar();
+            if (PreviewContainer.Visibility == Visibility.Visible)
+            {
+                UpdateMarkdownPreview();
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"Could not reload file:\n{ex.Message}", "Reload Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+        }
+    }
+
+    private void BtnIgnoreExternal_Click(object sender, RoutedEventArgs e)
+    {
+        _hasPendingExternalChange = false;
+        if (!string.IsNullOrEmpty(_currentFilePath) && File.Exists(_currentFilePath))
+        {
+            try { _lastKnownWriteTimeUtc = File.GetLastWriteTimeUtc(_currentFilePath); } catch { }
+        }
+        ExternalChangeBanner.Visibility = Visibility.Collapsed;
+    }
+
+    #endregion
     private void MenuDelete_Click(object sender, RoutedEventArgs e) => MainEditor.Delete();
     private void MenuSelectAll_Click(object sender, RoutedEventArgs e) => MainEditor.SelectAll();
 
@@ -1432,6 +2038,7 @@ public partial class MainWindow : Window
         {
             if (key == Key.Z) { e.Handled = true; MenuWordWrap.IsChecked = !MenuWordWrap.IsChecked; MenuWordWrap_Click(sender, e); return; }
             if (key == Key.M) { e.Handled = true; ToggleMarkdownPreview(); return; }
+            if (key == Key.O) { e.Handled = true; MenuOpenLink_Click(sender, e); return; }
             if (key == Key.Up) { e.Handled = true; MenuMoveLineUp_Click(sender, e); return; }
             if (key == Key.Down) { e.Handled = true; MenuMoveLineDown_Click(sender, e); return; }
             if (key == Key.S) { e.Handled = true; ShowQuickSave(); return; }
@@ -1457,12 +2064,24 @@ public partial class MainWindow : Window
             }
             else if (key == Key.F5)
             {
+                if (ExternalChangeBanner.Visibility == Visibility.Visible)
+                {
+                    e.Handled = true;
+                    BtnReloadExternal_Click(sender, e);
+                    return;
+                }
                 e.Handled = true;
                 MenuInsertDateTime_Click(sender, e);
                 return;
             }
             else if (key == Key.Escape)
             {
+                if (ExternalChangeBanner.Visibility == Visibility.Visible)
+                {
+                    e.Handled = true;
+                    BtnIgnoreExternal_Click(sender, e);
+                    return;
+                }
                 if (QuickSavePanel.Visibility == Visibility.Visible)
                 {
                     e.Handled = true;
@@ -1537,6 +2156,7 @@ public partial class MainWindow : Window
             return;
         }
 
+        DisposeFileWatcher();
         base.OnClosing(e);
     }
 

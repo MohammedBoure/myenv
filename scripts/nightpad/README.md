@@ -2,7 +2,7 @@
 
 Pre-compiled Release binaries and runtime dependencies for **NightPad**, the professional Obsidian Night Mode text and code editor.
 
-## 📂 Files & Structure
+## Files and Structure
 
 | File | Purpose |
 |---|---|

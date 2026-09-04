@@ -7,6 +7,22 @@ A fast, lightweight, and keyboard-driven text and code editor built natively for
 ## Overview and Key Highlights
 
 - **Instant Launch & Direct Typing**: Ready to type immediately upon opening (<20ms) - keyboard focus is acquired instantly with zero mouse interaction required.
+- **Unified Single-Row Top Bar**: Combines window title, document branding, integrated menus (`File`, `Edit`, `View`, `Tools`), Markdown Live Preview button, and window controls onto a single row, saving vertical space for the text editor and live preview.
+- **Smooth Line Movement & Long Line Control**:
+  - **Default Word Wrap (`Alt + Z`)**: Wraps long lines neatly within the editor window with automatic block indent alignment.
+  - **Scroll Below Document**: Allows scrolling past the last line for comfortable breathing room.
+  - **New Line Below (`Ctrl + Enter`)**: Inserts a new line below from anywhere within a long line without breaking existing text.
+  - **New Line Above (`Ctrl + Shift + Enter`)**: Inserts a new indented line above the current line.
+- **Zero-Strain External File Watcher**:
+  - Monitors open files using kernel-level `FileSystemWatcher` event hooks (zero polling, 0% CPU strain).
+  - Automatically prompts via a non-intrusive warning banner when an external program updates, renames, or deletes the active file.
+  - One-click `[Reload]` (or `F5`) updates buffer while preserving caret position; internal saves are automatically de-duplicated.
+- **Clipboard Image Pasting & External Viewer Integration**:
+  - Paste images directly from the clipboard (`Ctrl + V`) or copied from File Explorer.
+  - Automatically saves the image into `./assets/image_YYYYMMDD_HHMMSS.png` relative to the open document.
+  - Generates standard Markdown syntax `![image](assets/filename.png)` so images copy cleanly with the text.
+  - Embedded image rendering in the split Markdown Live Preview with click-to-open capability.
+  - Quick external viewing directly from the editor buffer via `Alt + O`, `Ctrl + Click`, or right-click context menu (`Open Externally` / `Reveal in File Explorer`).
 - **Terminal-Style Fast Keyboard Saving (`Ctrl + S` / `Ctrl + Shift + S` / `F2`)**:
   - Interactive keyboard path input bar embedded directly in the window (no slow OS dialog lag).
   - **Tab Auto-Completion**: Autocompletes folder and file paths interactively.
@@ -65,7 +81,11 @@ A fast, lightweight, and keyboard-driven text and code editor built natively for
 | Shortcut | Action |
 |---|---|
 | `Ctrl + Z` / `Ctrl + Y` | Undo / Redo |
-| `Ctrl + X` / `Ctrl + C` / `Ctrl + V` | Cut / Copy / Paste |
+| `Ctrl + X` / `Ctrl + C` / `Ctrl + V` | Cut / Copy / Paste (Supports Image Pasting into `./assets/`) |
+| `Ctrl + Enter` | Insert new line below current line without breaking text |
+| `Ctrl + Shift + Enter` | Insert new line above current line |
+| `Alt + O` | Open image or link under cursor in external viewer |
+| `Ctrl + Click` | Follow link or open image under mouse in external viewer |
 | `Ctrl + A` | Select All |
 | `Ctrl + D` | Duplicate current line |
 | `Ctrl + Shift + K` | Delete current line |
@@ -73,7 +93,7 @@ A fast, lightweight, and keyboard-driven text and code editor built natively for
 | `Ctrl + /` | Toggle single-line comment |
 | `Ctrl + Shift + J` | Format / Beautify JSON |
 | `Ctrl + Shift + U` / `Ctrl + U` | Transform selection to UPPERCASE / lowercase |
-| `F5` | Insert current timestamp |
+| `F5` | Insert timestamp (or Reload file when external modification banner is active) |
 
 ### Search & Navigation
 | Shortcut | Action |

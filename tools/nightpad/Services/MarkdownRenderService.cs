@@ -1,9 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
 using System.Text.RegularExpressions;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Documents;
+using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace NightPad.Services;
 
@@ -33,13 +38,16 @@ public static partial class MarkdownRenderService
     [GeneratedRegex(@"`([^`]+)`")]
     private static partial Regex InlineCodeRegex();
 
+    [GeneratedRegex(@"^!\[([^\]]*)\]\(([^)]+)\)$")]
+    private static partial Regex ImageRegex();
+
     [GeneratedRegex(@"\[([^\]]+)\]\(([^)]+)\)")]
     private static partial Regex LinkRegex();
 
     /// <summary>
     /// Renders raw Markdown text into a styled WPF FlowDocument.
     /// </summary>
-    public static FlowDocument Render(string markdownText, bool isRtl = false)
+    public static FlowDocument Render(string markdownText, bool isRtl = false, string? baseDirectory = null)
     {
         var doc = new FlowDocument
         {
@@ -147,6 +155,16 @@ public static partial class MarkdownRenderService
                 string prefix = prefixMatch.Value;
                 string itemText = trimmed[prefixMatch.Length..].Trim();
                 doc.Blocks.Add(CreateListItem(prefix, itemText));
+                continue;
+            }
+
+            // Image Block (![alt](url))
+            var imgMatch = ImageRegex().Match(trimmed);
+            if (imgMatch.Success)
+            {
+                string alt = imgMatch.Groups[1].Value;
+                string src = imgMatch.Groups[2].Value.Trim();
+                doc.Blocks.Add(CreateImageBlock(alt, src, baseDirectory));
                 continue;
             }
 
@@ -283,6 +301,86 @@ public static partial class MarkdownRenderService
 
         section.Blocks.Add(p);
         return section;
+    }
+
+    private static Block CreateImageBlock(string alt, string src, string? baseDirectory)
+    {
+        string resolvedPath = src;
+        bool isHttp = src.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                      src.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
+
+        if (!isHttp && !Path.IsPathRooted(src) && !string.IsNullOrEmpty(baseDirectory))
+        {
+            try
+            {
+                resolvedPath = Path.GetFullPath(Path.Combine(baseDirectory, src));
+            }
+            catch { }
+        }
+
+        bool fileExists = false;
+        try
+        {
+            fileExists = !isHttp && File.Exists(resolvedPath);
+        }
+        catch { }
+
+        if (fileExists || isHttp)
+        {
+            try
+            {
+                var bi = new BitmapImage();
+                bi.BeginInit();
+                bi.UriSource = new Uri(resolvedPath, UriKind.Absolute);
+                if (!isHttp)
+                {
+                    bi.CacheOption = BitmapCacheOption.OnLoad;
+                }
+                bi.EndInit();
+                bi.Freeze();
+
+                var img = new Image
+                {
+                    Source = bi,
+                    MaxWidth = 650,
+                    Stretch = Stretch.Uniform,
+                    Margin = new Thickness(0, 4, 0, 4),
+                    Cursor = Cursors.Hand,
+                    ToolTip = $"Click to open externally: {(isHttp ? src : Path.GetFileName(resolvedPath))}"
+                };
+
+                img.MouseLeftButtonUp += (s, e) =>
+                {
+                    try
+                    {
+                        Process.Start(new ProcessStartInfo(resolvedPath) { UseShellExecute = true });
+                    }
+                    catch { }
+                };
+
+                return new BlockUIContainer(img)
+                {
+                    Margin = new Thickness(0, 6, 0, 6)
+                };
+            }
+            catch
+            {
+                // Fallback to text card if bitmap decoding fails
+            }
+        }
+
+        // Placeholder for missing local file or failed decode
+        var p = new Paragraph
+        {
+            Margin = new Thickness(0, 4, 0, 4),
+            Foreground = TextSecondaryBrush
+        };
+        p.Inlines.Add(new Run($"🖼️ [{(!string.IsNullOrWhiteSpace(alt) ? alt : "Image")}: {src}]")
+        {
+            FontStyle = FontStyles.Italic,
+            Foreground = AccentBlueBrush
+        });
+        return p;
     }
 
     private static Block CreateHorizontalRule(double thickness = 1.0)
