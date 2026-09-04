@@ -108,7 +108,65 @@ function prompt {
     return ' '
 }
 
-# Human-readable size formatting for ls and Get-ChildItem
+# Human-readable size formatting and FolderSizeCalc engine for ls
+if (-not ('FolderSizeCalc' -as [type])) {
+    Add-Type -TypeDefinition @'
+    using System;
+    using System.IO;
+    using System.Collections.Generic;
+
+    public static class FolderSizeCalc {
+        public static long GetFolderSize(string path, int maxDepth = 25) {
+            if (string.IsNullOrEmpty(path) || !Directory.Exists(path)) return 0;
+            long total = 0;
+            var stack = new Stack<Tuple<string, int>>();
+            stack.Push(new Tuple<string, int>(path, 0));
+
+            while (stack.Count > 0) {
+                var current = stack.Pop();
+                string currentDir = current.Item1;
+                int depth = current.Item2;
+
+                try {
+                    var dirInfo = new DirectoryInfo(currentDir);
+                    if ((dirInfo.Attributes & FileAttributes.ReparsePoint) != 0 && depth > 0) continue;
+
+                    foreach (var file in dirInfo.EnumerateFiles()) {
+                        try {
+                            total += file.Length;
+                        } catch {}
+                    }
+
+                    if (depth < maxDepth) {
+                        foreach (var subDir in dirInfo.EnumerateDirectories()) {
+                            try {
+                                if ((subDir.Attributes & FileAttributes.ReparsePoint) == 0) {
+                                    stack.Push(new Tuple<string, int>(subDir.FullName, depth + 1));
+                                }
+                            } catch {}
+                        }
+                    }
+                } catch {}
+            }
+            return total;
+        }
+    }
+'@
+}
+
+if ($null -eq $global:__MyEnvDirSizeCache) {
+    $global:__MyEnvDirSizeCache = @{}
+}
+
+function Format-MyEnvSize {
+    param([long]$Length)
+    if ($Length -ge 1TB) { return [string]::Format([System.Globalization.CultureInfo]::InvariantCulture, "{0:0.#} TB", $Length / 1TB) }
+    if ($Length -ge 1GB) { return [string]::Format([System.Globalization.CultureInfo]::InvariantCulture, "{0:0.#} GB", $Length / 1GB) }
+    if ($Length -ge 1MB) { return [string]::Format([System.Globalization.CultureInfo]::InvariantCulture, "{0:0.#} MB", $Length / 1MB) }
+    if ($Length -ge 1KB) { return [string]::Format([System.Globalization.CultureInfo]::InvariantCulture, "{0:0.#} KB", $Length / 1KB) }
+    return "$Length B"
+}
+
 $formatXmlPath = Join-Path $PSScriptRoot "FileSystem.format.ps1xml"
 if (-not (Test-Path -LiteralPath $formatXmlPath)) {
     $formatXmlPath = "$env:USERPROFILE\Documents\myenv\powershell\FileSystem.format.ps1xml"
@@ -118,17 +176,237 @@ if (Test-Path -LiteralPath $formatXmlPath) {
 }
 Update-TypeData -TypeName System.IO.FileInfo -MemberType ScriptProperty -MemberName size -Value {
     if ($null -ne $this.Length) {
-        $len = $this.Length
-        if ($len -ge 1TB) { [string]::Format([System.Globalization.CultureInfo]::InvariantCulture, "{0:0.#} TB", $len / 1TB) }
-        elseif ($len -ge 1GB) { [string]::Format([System.Globalization.CultureInfo]::InvariantCulture, "{0:0.#} GB", $len / 1GB) }
-        elseif ($len -ge 1MB) { [string]::Format([System.Globalization.CultureInfo]::InvariantCulture, "{0:0.#} MB", $len / 1MB) }
-        elseif ($len -ge 1KB) { [string]::Format([System.Globalization.CultureInfo]::InvariantCulture, "{0:0.#} KB", $len / 1KB) }
-        else { "$len B" }
+        Format-MyEnvSize $this.Length
     }
+} -Force -ErrorAction SilentlyContinue
+
+Update-TypeData -TypeName System.IO.DirectoryInfo -MemberType ScriptProperty -MemberName size -Value {
+    if ($global:__MyEnvDirSizeCache -and $global:__MyEnvDirSizeCache.ContainsKey($this.FullName)) {
+        return $global:__MyEnvDirSizeCache[$this.FullName].Formatted
+    }
+    return '-'
 } -Force -ErrorAction SilentlyContinue
 
 Remove-Item -Path Alias:cd -Force -ErrorAction SilentlyContinue
 Remove-Item -Path Alias:chdir -Force -ErrorAction SilentlyContinue
+Remove-Item -Path Alias:ls -Force -ErrorAction SilentlyContinue
+
+function ls {
+    <#
+    .SYNOPSIS
+        Midnight Aurora Table Directory Lister with Distinct Column Colors and Live Async Folder Sizes.
+    .DESCRIPTION
+        Lists directory contents formatted in high-contrast colored columns:
+        - Mode: Yellow
+        - LastWriteTime: Cyan
+        - size: Green (files) / Bright Cyan (folders)
+        - Name: Bold Cyan (directories) / Bright Green (scripts) / Magenta (archives) / White (files)
+        Includes sub-option -s / -Size for live asynchronous folder size calculation updating in-place.
+    .PARAMETER Path
+        Path to directory or file to list.
+    .PARAMETER Size
+        Sub-option (-s / -Size): Asynchronously computes folder sizes in the background, updating in-place smoothly until stabilized.
+    .PARAMETER Force
+        Show hidden and system files (-a / -Force).
+    .PARAMETER Directory
+        List directories only (-d / -Directory).
+    .PARAMETER File
+        List files only (-af / -File).
+    .PARAMETER Fast
+        Bypass folder size calculations explicitly (-n / -Fast / -NoSize).
+    #>
+    [CmdletBinding(DefaultParameterSetName = 'Default')]
+    param(
+        [Parameter(Position = 0, ValueFromPipeline = $true, ValueFromPipelineByPropertyName = $true)]
+        [string[]]$Path,
+
+        [Alias('s', 'FolderSize', 'fsize')]
+        [switch]$Size,
+
+        [Alias('a')]
+        [switch]$Force,
+
+        [Alias('d')]
+        [switch]$Directory,
+
+        [Alias('af')]
+        [switch]$File,
+
+        [string]$Filter,
+
+        [string[]]$Include,
+
+        [string[]]$Exclude,
+
+        [switch]$Recurse,
+
+        [uint32]$Depth,
+
+        [Alias('NoSize', 'n')]
+        [switch]$Fast,
+
+        [Alias('h', '?')]
+        [switch]$Help
+    )
+
+    if ($Help) {
+        Write-Host ''
+        Write-Host '=====================================================================' -ForegroundColor DarkGray
+        Write-Host '  ls - Table Directory Lister with Live Async Folder Sizes           ' -ForegroundColor Cyan
+        Write-Host '=====================================================================' -ForegroundColor DarkGray
+        Write-Host ''
+        Write-Host '  Usage:' -ForegroundColor White
+        Write-Host '    ls [path]             List directory contents with colored table columns' -ForegroundColor Green
+        Write-Host '    ls -s / -Size         Compute & display folder sizes asynchronously in-place' -ForegroundColor Green
+        Write-Host '    ls -a / -Force        Show hidden and system files' -ForegroundColor Green
+        Write-Host '    ls -d / -Directory    List directories only' -ForegroundColor Green
+        Write-Host '    ls -af / -File        List files only' -ForegroundColor Green
+        Write-Host ''
+        Write-Host '  Column Colors:' -ForegroundColor White
+        Write-Host '    Mode:           Yellow' -ForegroundColor Yellow
+        Write-Host '    LastWriteTime:  Cyan' -ForegroundColor Cyan
+        Write-Host '    size:           Green (Files) / Bright Cyan (Folders)' -ForegroundColor Green
+        Write-Host '    Name:           Bold Cyan (Folders) / Green (Scripts) / White (Files)' -ForegroundColor White
+        Write-Host ''
+        return
+    }
+
+    $gciParams = @{}
+    if ($PSBoundParameters.ContainsKey('Path')) { $gciParams['Path'] = $Path }
+    if ($Force) { $gciParams['Force'] = $true }
+    if ($Directory) { $gciParams['Directory'] = $true }
+    if ($File) { $gciParams['File'] = $true }
+    if ($Filter) { $gciParams['Filter'] = $Filter }
+    if ($Include) { $gciParams['Include'] = $Include }
+    if ($Exclude) { $gciParams['Exclude'] = $Exclude }
+    if ($Recurse) { $gciParams['Recurse'] = $true }
+    if ($PSBoundParameters.ContainsKey('Depth')) { $gciParams['Depth'] = $Depth }
+
+    # If piped to another command, output standard pipeline objects
+    $isPiped = ($MyInvocation.PipelinePosition -lt $MyInvocation.PipelineLength)
+    if ($isPiped) {
+        Get-ChildItem @gciParams
+        return
+    }
+
+    $items = @(Get-ChildItem @gciParams -ErrorAction SilentlyContinue)
+    if ($items.Count -eq 0) {
+        return
+    }
+
+    # Display Directory Header
+    $targetDir = if ($Path -and (Test-Path -LiteralPath $Path[0] -PathType Container)) {
+        (Resolve-Path -LiteralPath $Path[0]).Path
+    } else {
+        (Get-Location).Path
+    }
+
+    $e = [char]27
+    Write-Host ''
+    Write-Host "$e[90m    Directory: $e[1;36m$targetDir$e[0m"
+    Write-Host ''
+
+    # Table Header with Distinct Column Colors
+    $hdrMode = "$e[33;1mMode   $e[0m"
+    $hdrDate = "$e[36;1mLastWriteTime           $e[0m"
+    $hdrSize = "$e[32;1m          size$e[0m"
+    $hdrName = "$e[97;1mName$e[0m"
+    $sepLine = "$e[90m-------  ------------------------  --------------  --------------------$e[0m"
+
+    Write-Host "  $hdrMode  $hdrDate  $hdrSize  $hdrName"
+    Write-Host "  $sepLine"
+
+    $shouldComputeFolderSizes = if ($Fast) { $false } else { $Size -or $global:MyEnvLsDefaultFolderSize }
+    $pendingDirs = [System.Collections.Generic.List[PSObject]]::new()
+    $rowIndex = 0
+
+    foreach ($item in $items) {
+        $modeStr = if ($item.Mode) { $item.Mode.PadRight(7) } else { '-------' }
+        $colMode = "$e[33m$modeStr$e[0m"
+
+        $dateFormatted = [string]::Format("{0,10}  {1,8}", $item.LastWriteTime.ToString("d"), $item.LastWriteTime.ToString("t"))
+        $colDate = "$e[36m$dateFormatted$e[0m"
+
+        $colSize = ""
+        $isDir = $item -is [System.IO.DirectoryInfo]
+
+        if (-not $isDir) {
+            $formattedSize = (Format-MyEnvSize $item.Length).PadLeft(14)
+            $colSize = "$e[32m$formattedSize$e[0m"
+        } else {
+            # Check memory cache
+            $cached = $null
+            if ($global:__MyEnvDirSizeCache.ContainsKey($item.FullName)) {
+                $entry = $global:__MyEnvDirSizeCache[$item.FullName]
+                if ($entry.LastWriteTimeUtc -eq $item.LastWriteTimeUtc) {
+                    $cached = $entry.Formatted
+                }
+            }
+
+            if ($cached) {
+                $colSize = "$e[96m$($cached.PadLeft(14))$e[0m"
+            } elseif ($shouldComputeFolderSizes) {
+                $colSize = "$e[90m           ...$e[0m"
+                $pendingDirs.Add([PSCustomObject]@{
+                    Dir = $item
+                    RowIndex = $rowIndex
+                })
+            } else {
+                $colSize = "$e[90m             -$e[0m"
+            }
+        }
+
+        # Styled Name Column
+        $colName = if ($isDir) {
+            "$e[1;36m$($item.Name)$e[0m"
+        } elseif ($item.Name.StartsWith('.')) {
+            "$e[90m$($item.Name)$e[0m"
+        } elseif ($item.Extension -in @('.exe', '.bat', '.cmd', '.ps1', '.sh')) {
+            "$e[92m$($item.Name)$e[0m"
+        } elseif ($item.Extension -in @('.zip', '.rar', '.7z', '.tar', '.gz')) {
+            "$e[95m$($item.Name)$e[0m"
+        } else {
+            "$e[97m$($item.Name)$e[0m"
+        }
+
+        Write-Host "  $colMode  $colDate  $colSize  $colName"
+        $rowIndex++
+    }
+
+    Write-Host ''
+
+    # If folder size computation was requested, update them smoothly and simultaneously in-place
+    if ($pendingDirs.Count -gt 0) {
+        $totalPrintedRows = $rowIndex + 1
+        $winHeight = try { [Console]::WindowHeight } catch { 30 }
+
+        foreach ($p in $pendingDirs) {
+            try {
+                if ([Console]::KeyAvailable) { break }
+            } catch {}
+
+            $linesUp = $totalPrintedRows - $p.RowIndex
+            $dirBytes = [FolderSizeCalc]::GetFolderSize($p.Dir.FullName)
+            $formattedSize = Format-MyEnvSize $dirBytes
+
+            $global:__MyEnvDirSizeCache[$p.Dir.FullName] = @{
+                Formatted = $formattedSize
+                Size = $dirBytes
+                LastWriteTimeUtc = $p.Dir.LastWriteTimeUtc
+            }
+
+            if ($linesUp -lt ($winHeight - 2) -and $linesUp -gt 0) {
+                $padded = $formattedSize.PadLeft(14)
+                try {
+                    [Console]::Out.Write("$e[${linesUp}A$e[38G$e[96m$padded$e[0m$e[${linesUp}B$e[1G")
+                    [Console]::Out.Flush()
+                } catch {}
+            }
+
+            Start-Sleep -Milliseconds 40
+        }
+    }
+}
 
 function cd {
     if ($args.Count -eq 0) {
@@ -137,7 +415,7 @@ function cd {
         Set-Location @args
     }
     if ($?) {
-        Get-ChildItem
+        ls
     }
 }
 function chdir {
@@ -147,12 +425,12 @@ function chdir {
         Set-Location @args
     }
     if ($?) {
-        Get-ChildItem
+        ls
     }
 }
 
-function ll { Get-ChildItem -Force | Format-Table Mode,LastWriteTime,size,Name -AutoSize }
-function la { Get-ChildItem -Force }
+function ll { ls -Force @args }
+function la { ls -Force @args }
 function gs { git status }
 function croot { cd $HOME }
 

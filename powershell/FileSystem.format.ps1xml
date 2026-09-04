@@ -51,6 +51,10 @@
                                         elseif ($len -ge 1MB) { [string]::Format([System.Globalization.CultureInfo]::InvariantCulture, "{0:0.#} MB", $len / 1MB) }
                                         elseif ($len -ge 1KB) { [string]::Format([System.Globalization.CultureInfo]::InvariantCulture, "{0:0.#} KB", $len / 1KB) }
                                         else { "$len B" }
+                                    } elseif ($_ -is [System.IO.DirectoryInfo]) {
+                                        if ($global:__MyEnvDirSizeCache -and $global:__MyEnvDirSizeCache.ContainsKey($_.FullName)) {
+                                            $global:__MyEnvDirSizeCache[$_.FullName].Formatted
+                                        }
                                     }
                                 </ScriptBlock>
                             </TableColumnItem>

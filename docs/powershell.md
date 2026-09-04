@@ -19,10 +19,12 @@ High-performance, customized PowerShell profile featuring PSReadLine, Midnight A
 5. **Dev Tools PATH Auto-Loader**:
    - Automatically loads `dotnet`, `flutter`, `jdk-17`, `Android SDK`, `kotlin`, `msys64`, `php`, `composer`, `nodejs`, `npm`.
 6. **Auto-LS Navigation (`cd` / `chdir`)**:
-   - Executing `cd <path>` automatically runs `Get-ChildItem` to list directory contents.
-7. **Human-Readable File Size (`ls` / `Get-ChildItem`)**:
-   - Replaces the raw byte `Length` column with a human-readable `size` column (formatted dynamically as `B`, `KB`, `MB`, `GB`, `TB`).
-   - Integrated via [`powershell/FileSystem.format.ps1xml`](file:///%USERPROFILE%/Documents/myenv/powershell/FileSystem.format.ps1xml) and registered programmatically via `Update-FormatData` and `Update-TypeData`.
+   - Executing `cd <path>` automatically runs `ls` with colored table formatting.
+7. **Enhanced Table Directory Lister (`ls`)**:
+   - High-contrast column colors: Yellow `Mode`, Cyan `LastWriteTime`, Green `size`, and categorized `Name` (Bold Cyan folders, Green scripts, Magenta archives, White files).
+   - Live Asynchronous Folder Size Sub-Option (`ls -s` / `ls -Size`): Computes folder sizes non-blockingly using a high-speed C# engine (`FolderSizeCalc`), updating the console in-place smoothly with zero resource pressure until stabilized.
+   - Preserves standard pipeline objects when piped or redirected (`ls | Where-Object ...`).
+   - Replaces the raw byte `Length` column with a human-readable `size` column (formatted dynamically as `B`, `KB`, `MB`, `GB`, `TB`) integrated via [`powershell/FileSystem.format.ps1xml`](file:///%USERPROFILE%/Documents/myenv/powershell/FileSystem.format.ps1xml).
 
 ---
 
@@ -39,7 +41,9 @@ High-performance, customized PowerShell profile featuring PSReadLine, Midnight A
 
 | Shortcut | Description |
 |---|---|
-| `cd` / `chdir` | Navigate to directory and auto-list files (`Get-ChildItem`) |
+| `ls` | List directory contents with distinct column colors |
+| `ls -s` / `ls -Size` | List directory with asynchronous in-place folder size calculation |
+| `cd` / `chdir` | Navigate to directory and auto-list files (`ls`) |
 | `cpf` | Interactively select single/multiple files via fzf (`Tab` multi-select, `Ctrl+P` preview, `-abs`, `-md`, `-s`, `-c`) and copy paths to Clipboard |
 | `docs` | Terminal Documentation & Shortcut Navigator CLI |
 | `cb` / `c` | Execute command, display output, and copy directly to Clipboard |

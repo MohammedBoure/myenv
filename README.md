@@ -56,7 +56,7 @@ Access all system documentation guides directly:
 - **Dev Tools PATH**: `dotnet`, `flutter`, `jdk-17`, `Android SDK`, `kotlin`, `msys64`, `php`, `composer`, `nodejs`, `npm`.
 - **True Black Console & Terminal Theme**: `#000000` background with **32% Transparency** (68% opacity / `WindowAlpha = 173`) synchronized across classic Windows Console (`conhost.exe`) and Windows 11 Windows Terminal (`wt.exe`).
 - **PSReadLine**: `Ctrl+Backspace` for backward word deletion (`BackwardKillWord`), history predictions (`ListView`), and Tab menu completion.
-- **Auto-LS on Navigation (`cd`)**: Automatically lists directory contents (`ls` / `Get-ChildItem`) whenever navigating to a new directory via `cd` or `chdir`.
+- **Enhanced Directory Lister (`ls`) & Auto-LS (`cd`)**: Automatically lists directory contents on navigation with distinct column colors (`Mode` in Yellow, `LastWriteTime` in Cyan, `size` in Green, categorized names) and non-blocking in-place async folder size calculation (`ls -s`).
 - **FZF Multi-Path Copy (`cpf`)**: Fuzzy-find single or multiple files/folders interactively (`Tab` multi-select, `Ctrl+P` preview) and copy normalized relative/absolute paths or Markdown links to clipboard.
 
 ### 5. CMD (Command Prompt) Auto-Completion & Clink History Predictions

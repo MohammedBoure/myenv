@@ -126,6 +126,12 @@ Update-TypeData -TypeName System.IO.FileInfo -MemberType ScriptProperty -MemberN
         else { "$len B" }
     }
 } -Force -ErrorAction SilentlyContinue
+Update-TypeData -TypeName System.IO.DirectoryInfo -MemberType ScriptProperty -MemberName size -Value {
+    if ($global:__MyEnvDirSizeCache -and $global:__MyEnvDirSizeCache.ContainsKey($this.FullName)) {
+        return $global:__MyEnvDirSizeCache[$this.FullName].Formatted
+    }
+    return '-'
+} -Force -ErrorAction SilentlyContinue
 
 $themePath = Join-Path $myenvDir "powershell\midnight-aurora.ps1"
 if (Test-Path $themePath) { . $themePath }
