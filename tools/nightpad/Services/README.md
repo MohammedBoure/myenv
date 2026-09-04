@@ -11,3 +11,5 @@ Core business logic, path completion, Arabic language utilities, Markdown live p
 | [`PathCompletionService.cs`](file:///C:/Users/moham/Documents/myenv/tools/nightpad/Services/PathCompletionService.cs) | High-speed terminal-style keyboard path resolution, Tab auto-completion cycling, preset folder jumping (`F1`-`F4`), and auto-directory creation. |
 | [`ArabicTextService.cs`](file:///C:/Users/moham/Documents/myenv/tools/nightpad/Services/ArabicTextService.cs) | Arabic character detection, smart bidirectional Right-to-Left (RTL) flow evaluation, and multilingual Unicode word counting. |
 | [`TextTransformService.cs`](file:///C:/Users/moham/Documents/myenv/tools/nightpad/Services/TextTransformService.cs) | Provides text manipulations, casing conversions, line sorting/deduplication, JSON formatting/minifying, Base64/URL encoding and decoding, and timestamp insertion. |
+| [`QuickSymbolService.cs`](file:///C:/Users/moham/Documents/myenv/tools/nightpad/Services/QuickSymbolService.cs) | Manages persistent JSON storage and presets for quick symbols, snippets, math characters, typography, and frequent Arabic phrases. |
+

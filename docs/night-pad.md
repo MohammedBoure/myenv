@@ -23,6 +23,11 @@ A fast, lightweight, and keyboard-driven text and code editor built natively for
   - Generates standard Markdown syntax `![image](assets/filename.png)` so images copy cleanly with the text.
   - Embedded image rendering in the split Markdown Live Preview with click-to-open capability.
   - Quick external viewing directly from the editor buffer via `Alt + O`, `Ctrl + Click`, or right-click context menu (`Open Externally` / `Reveal in File Explorer`).
+- **Quick Symbols & Frequent Words Palette (`Ctrl + .` / `F4`)**:
+  - Instant modal palette for fast access to symbols, arrows, bullets, math characters, markdown snippets, and frequent Arabic phrases.
+  - 100% keyboard-driven: type to filter in real-time, `Up`/`Down` arrows to navigate, and `Enter` to insert directly at current cursor position.
+  - Fully customizable: press `Ctrl + Enter` (or click `[+] Add`) to add new custom words and symbols directly to persistent JSON storage (`%APPDATA%/NightPad/quick_symbols.json`).
+  - Delete any item directly from the palette using `Del` key or `[x]` button.
 - **Terminal-Style Fast Keyboard Saving (`Ctrl + S` / `Ctrl + Shift + S` / `F2`)**:
   - Interactive keyboard path input bar embedded directly in the window (no slow OS dialog lag).
   - **Tab Auto-Completion**: Autocompletes folder and file paths interactively.
@@ -94,6 +99,17 @@ A fast, lightweight, and keyboard-driven text and code editor built natively for
 | `Ctrl + Shift + J` | Format / Beautify JSON |
 | `Ctrl + Shift + U` / `Ctrl + U` | Transform selection to UPPERCASE / lowercase |
 | `F5` | Insert timestamp (or Reload file when external modification banner is active) |
+
+### Quick Symbols & Frequent Words
+| Shortcut | Action |
+|---|---|
+| `Ctrl + .` / `F4` | Open Quick Symbols & Frequent Words palette |
+| `Up` / `Down` | Navigate through symbols and words |
+| `PageUp` / `PageDown` | Jump 5 items up or down |
+| `Enter` | Insert selected symbol/word into editor and close palette |
+| `Ctrl + Enter` | Add typed search query as a new symbol/word |
+| `Del` | Delete selected symbol/word from list and persistent storage |
+| `Esc` | Close symbols palette and refocus editor |
 
 ### Search & Navigation
 | Shortcut | Action |

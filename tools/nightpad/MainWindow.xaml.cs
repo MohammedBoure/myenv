@@ -41,6 +41,11 @@ public partial class MainWindow : Window
     private bool _isSavingInternal;
     private bool _hasPendingExternalChange;
 
+    // Quick Symbols & Frequent Words palette state
+    private List<QuickSymbolItem> _allSymbols = new();
+    private List<QuickSymbolItem> _filteredSymbols = new();
+    private string _selectedCategoryFilter = "All";
+
     public MainWindow()
     {
         InitializeComponent();
@@ -78,7 +83,8 @@ public partial class MainWindow : Window
 
         if (QuickSavePanel.Visibility != Visibility.Visible &&
             SearchPanel.Visibility != Visibility.Visible &&
-            GoToLinePanel.Visibility != Visibility.Visible)
+            GoToLinePanel.Visibility != Visibility.Visible &&
+            QuickSymbolsOverlay.Visibility != Visibility.Visible)
         {
             FocusEditor();
         }
@@ -2031,6 +2037,7 @@ public partial class MainWindow : Window
             if (key is Key.Add or Key.OemPlus) { e.Handled = true; ZoomIn(); return; }
             if (key is Key.Subtract or Key.OemMinus) { e.Handled = true; ZoomOut(); return; }
             if (key is Key.D0 or Key.NumPad0) { e.Handled = true; ZoomReset(); return; }
+            if (key is Key.OemPeriod or Key.Decimal) { e.Handled = true; ShowQuickSymbols(); return; }
         }
 
         // Check Alt combinations (using resolved key)
@@ -2062,6 +2069,15 @@ public partial class MainWindow : Window
                 FindNext();
                 return;
             }
+            else if (key == Key.F4)
+            {
+                if (QuickSymbolsOverlay.Visibility != Visibility.Visible)
+                {
+                    e.Handled = true;
+                    ShowQuickSymbols();
+                    return;
+                }
+            }
             else if (key == Key.F5)
             {
                 if (ExternalChangeBanner.Visibility == Visibility.Visible)
@@ -2076,6 +2092,12 @@ public partial class MainWindow : Window
             }
             else if (key == Key.Escape)
             {
+                if (QuickSymbolsOverlay.Visibility == Visibility.Visible)
+                {
+                    e.Handled = true;
+                    CloseQuickSymbols();
+                    return;
+                }
                 if (ExternalChangeBanner.Visibility == Visibility.Visible)
                 {
                     e.Handled = true;
@@ -2147,6 +2169,362 @@ public partial class MainWindow : Window
         BtnLanguageSelector.Content = _currentSyntaxName;
         BtnLanguageSelector.ToolTip = $"Syntax Highlighting: {_currentSyntaxName} {(_isAutoDetectMode ? "(Auto-Detected)" : "(Manual)")} - Click to switch language";
     }
+
+    #region Quick Symbols & Words Palette
+
+    public void ShowQuickSymbols()
+    {
+        // Collapse other panels to keep workspace clean
+        QuickSavePanel.Visibility = Visibility.Collapsed;
+        SearchPanel.Visibility = Visibility.Collapsed;
+        GoToLinePanel.Visibility = Visibility.Collapsed;
+
+        if (_allSymbols.Count == 0)
+        {
+            _allSymbols = QuickSymbolService.LoadItems();
+        }
+
+        QuickSymbolsOverlay.Visibility = Visibility.Visible;
+        TxtQuickSymbolSearch.Text = string.Empty;
+        _selectedCategoryFilter = "All";
+        BuildCategoryChips();
+        RefreshQuickSymbolsList();
+
+        Dispatcher.InvokeAsync(() =>
+        {
+            TxtQuickSymbolSearch.Focus();
+            Keyboard.Focus(TxtQuickSymbolSearch);
+        }, System.Windows.Threading.DispatcherPriority.Input);
+    }
+
+    public void CloseQuickSymbols()
+    {
+        QuickSymbolsOverlay.Visibility = Visibility.Collapsed;
+        FocusEditor();
+    }
+
+    private void QuickSymbolsOverlay_MouseDown(object sender, MouseButtonEventArgs e)
+    {
+        CloseQuickSymbols();
+    }
+
+    private void QuickSymbolsCard_MouseDown(object sender, MouseButtonEventArgs e)
+    {
+        e.Handled = true;
+    }
+
+    private void BtnCloseQuickSymbols_Click(object sender, RoutedEventArgs e)
+    {
+        CloseQuickSymbols();
+    }
+
+    private void MenuQuickSymbols_Click(object sender, RoutedEventArgs e)
+    {
+        ShowQuickSymbols();
+    }
+
+    private void BuildCategoryChips()
+    {
+        CategoryFilterPanel.Children.Clear();
+
+        var categories = new List<string> { "All" };
+        var customCats = _allSymbols
+            .Select(s => s.Category)
+            .Where(c => !string.IsNullOrWhiteSpace(c))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(c => c);
+        categories.AddRange(customCats);
+
+        foreach (var cat in categories)
+        {
+            var btn = new Button
+            {
+                Content = cat,
+                Style = (Style)FindResource("NightButton"),
+                Padding = new Thickness(7, 2, 7, 2),
+                Margin = new Thickness(0, 0, 4, 4),
+                FontSize = 11,
+                Tag = cat
+            };
+
+            UpdateCategoryChipStyle(btn, cat.Equals(_selectedCategoryFilter, StringComparison.OrdinalIgnoreCase));
+
+            btn.Click += (s, e) =>
+            {
+                if (s is Button clickedBtn && clickedBtn.Tag is string catTag)
+                {
+                    _selectedCategoryFilter = catTag;
+                    foreach (UIElement child in CategoryFilterPanel.Children)
+                    {
+                        if (child is Button childBtn && childBtn.Tag is string childTag)
+                        {
+                            UpdateCategoryChipStyle(childBtn, childTag.Equals(_selectedCategoryFilter, StringComparison.OrdinalIgnoreCase));
+                        }
+                    }
+                    RefreshQuickSymbolsList();
+                    TxtQuickSymbolSearch.Focus();
+                }
+            };
+
+            CategoryFilterPanel.Children.Add(btn);
+        }
+    }
+
+    private void UpdateCategoryChipStyle(Button btn, bool isSelected)
+    {
+        if (isSelected)
+        {
+            btn.Background = (SolidColorBrush)FindResource("AccentBlueBrush");
+            btn.Foreground = (SolidColorBrush)FindResource("BgDarkBrush");
+            btn.BorderBrush = (SolidColorBrush)FindResource("AccentBlueBrush");
+            btn.FontWeight = FontWeights.Bold;
+        }
+        else
+        {
+            btn.Background = (SolidColorBrush)FindResource("BgSurfaceBrush");
+            btn.Foreground = (SolidColorBrush)FindResource("TextSecondaryBrush");
+            btn.BorderBrush = (SolidColorBrush)FindResource("BorderDarkBrush");
+            btn.FontWeight = FontWeights.Normal;
+        }
+    }
+
+    private void TxtQuickSymbolSearch_TextChanged(object sender, TextChangedEventArgs e)
+    {
+        RefreshQuickSymbolsList();
+    }
+
+    private void RefreshQuickSymbolsList()
+    {
+        string query = TxtQuickSymbolSearch.Text.Trim();
+
+        IEnumerable<QuickSymbolItem> queryable = _allSymbols;
+
+        if (!string.Equals(_selectedCategoryFilter, "All", StringComparison.OrdinalIgnoreCase))
+        {
+            queryable = queryable.Where(s => string.Equals(s.Category, _selectedCategoryFilter, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!string.IsNullOrEmpty(query))
+        {
+            queryable = queryable
+                .Where(s => s.Text.Contains(query, StringComparison.OrdinalIgnoreCase)
+                         || s.Label.Contains(query, StringComparison.OrdinalIgnoreCase)
+                         || s.Category.Contains(query, StringComparison.OrdinalIgnoreCase))
+                .OrderBy(s =>
+                {
+                    if (string.Equals(s.Text, query, StringComparison.OrdinalIgnoreCase)) return 0;
+                    if (string.Equals(s.Label, query, StringComparison.OrdinalIgnoreCase)) return 1;
+                    if (s.Text.StartsWith(query, StringComparison.OrdinalIgnoreCase)) return 2;
+                    if (s.Label.StartsWith(query, StringComparison.OrdinalIgnoreCase)) return 3;
+                    return 4;
+                });
+        }
+
+        _filteredSymbols = queryable.ToList();
+        LstQuickSymbols.ItemsSource = null;
+        LstQuickSymbols.ItemsSource = _filteredSymbols;
+
+        if (_filteredSymbols.Count > 0)
+        {
+            LstQuickSymbols.SelectedIndex = 0;
+            LstQuickSymbols.ScrollIntoView(LstQuickSymbols.SelectedItem);
+        }
+
+        TxtQuickSymbolsCount.Text = $"{_filteredSymbols.Count} item{(_filteredSymbols.Count == 1 ? "" : "s")}";
+    }
+
+    private void InsertQuickSymbol(QuickSymbolItem? item)
+    {
+        if (item == null) return;
+
+        CloseQuickSymbols();
+
+        if (!string.IsNullOrEmpty(MainEditor.SelectedText))
+        {
+            int start = MainEditor.SelectionStart;
+            MainEditor.Document.Replace(start, MainEditor.SelectionLength, item.Text);
+            MainEditor.CaretOffset = start + item.Text.Length;
+        }
+        else
+        {
+            int offset = MainEditor.CaretOffset;
+            MainEditor.Document.Insert(offset, item.Text);
+            MainEditor.CaretOffset = offset + item.Text.Length;
+        }
+
+        FocusEditor();
+    }
+
+    private void TxtQuickSymbolSearch_PreviewKeyDown(object sender, KeyEventArgs e)
+    {
+        var key = e.Key == Key.System ? e.SystemKey : e.Key;
+
+        if (key == Key.Down)
+        {
+            if (_filteredSymbols.Count > 0)
+            {
+                int next = Math.Min(_filteredSymbols.Count - 1, LstQuickSymbols.SelectedIndex + 1);
+                LstQuickSymbols.SelectedIndex = next;
+                LstQuickSymbols.ScrollIntoView(LstQuickSymbols.SelectedItem);
+            }
+            e.Handled = true;
+        }
+        else if (key == Key.Up)
+        {
+            if (_filteredSymbols.Count > 0)
+            {
+                int prev = Math.Max(0, LstQuickSymbols.SelectedIndex - 1);
+                LstQuickSymbols.SelectedIndex = prev;
+                LstQuickSymbols.ScrollIntoView(LstQuickSymbols.SelectedItem);
+            }
+            e.Handled = true;
+        }
+        else if (key == Key.PageDown)
+        {
+            if (_filteredSymbols.Count > 0)
+            {
+                int next = Math.Min(_filteredSymbols.Count - 1, LstQuickSymbols.SelectedIndex + 5);
+                LstQuickSymbols.SelectedIndex = next;
+                LstQuickSymbols.ScrollIntoView(LstQuickSymbols.SelectedItem);
+            }
+            e.Handled = true;
+        }
+        else if (key == Key.PageUp)
+        {
+            if (_filteredSymbols.Count > 0)
+            {
+                int prev = Math.Max(0, LstQuickSymbols.SelectedIndex - 5);
+                LstQuickSymbols.SelectedIndex = prev;
+                LstQuickSymbols.ScrollIntoView(LstQuickSymbols.SelectedItem);
+            }
+            e.Handled = true;
+        }
+        else if (key == Key.Enter)
+        {
+            if (Keyboard.Modifiers.HasFlag(ModifierKeys.Control))
+            {
+                AddNewQuickSymbolFromSearch();
+                e.Handled = true;
+            }
+            else
+            {
+                if (LstQuickSymbols.SelectedItem is QuickSymbolItem selected)
+                {
+                    InsertQuickSymbol(selected);
+                }
+                else if (!string.IsNullOrWhiteSpace(TxtQuickSymbolSearch.Text))
+                {
+                    AddNewQuickSymbolFromSearch();
+                }
+                e.Handled = true;
+            }
+        }
+        else if (key == Key.Escape)
+        {
+            CloseQuickSymbols();
+            e.Handled = true;
+        }
+    }
+
+    private void LstQuickSymbols_KeyDown(object sender, KeyEventArgs e)
+    {
+        var key = e.Key == Key.System ? e.SystemKey : e.Key;
+
+        if (key == Key.Enter)
+        {
+            if (LstQuickSymbols.SelectedItem is QuickSymbolItem selected)
+            {
+                InsertQuickSymbol(selected);
+            }
+            e.Handled = true;
+        }
+        else if (key == Key.Delete)
+        {
+            if (LstQuickSymbols.SelectedItem is QuickSymbolItem selected)
+            {
+                DeleteQuickSymbol(selected);
+            }
+            e.Handled = true;
+        }
+        else if (key == Key.Escape)
+        {
+            CloseQuickSymbols();
+            e.Handled = true;
+        }
+    }
+
+    private void LstQuickSymbols_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+    {
+        if (LstQuickSymbols.SelectedItem is QuickSymbolItem selected)
+        {
+            InsertQuickSymbol(selected);
+        }
+    }
+
+    private void BtnAddQuickSymbol_Click(object sender, RoutedEventArgs e)
+    {
+        AddNewQuickSymbolFromSearch();
+    }
+
+    private void AddNewQuickSymbolFromSearch()
+    {
+        string text = TxtQuickSymbolSearch.Text.Trim();
+        if (string.IsNullOrEmpty(text))
+        {
+            return;
+        }
+
+        var existing = _allSymbols.FirstOrDefault(s => string.Equals(s.Text, text, StringComparison.Ordinal));
+        if (existing != null)
+        {
+            InsertQuickSymbol(existing);
+            return;
+        }
+
+        string cat = _selectedCategoryFilter == "All" ? "Custom" : _selectedCategoryFilter;
+        var newItem = new QuickSymbolItem(text, text, cat, true);
+
+        _allSymbols.Insert(0, newItem);
+        QuickSymbolService.SaveItems(_allSymbols);
+
+        BuildCategoryChips();
+        RefreshQuickSymbolsList();
+
+        LstQuickSymbols.SelectedItem = newItem;
+        LstQuickSymbols.ScrollIntoView(newItem);
+        TxtQuickSymbolSearch.Focus();
+    }
+
+    private void BtnDeleteQuickSymbol_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is Button btn && btn.Tag is QuickSymbolItem item)
+        {
+            DeleteQuickSymbol(item);
+        }
+    }
+
+    private void DeleteQuickSymbol(QuickSymbolItem? item)
+    {
+        if (item == null) return;
+
+        int currentIndex = LstQuickSymbols.SelectedIndex;
+        _allSymbols.Remove(item);
+        QuickSymbolService.SaveItems(_allSymbols);
+
+        BuildCategoryChips();
+        RefreshQuickSymbolsList();
+
+        if (_filteredSymbols.Count > 0)
+        {
+            int nextIndex = Math.Min(currentIndex, _filteredSymbols.Count - 1);
+            LstQuickSymbols.SelectedIndex = nextIndex;
+            LstQuickSymbols.ScrollIntoView(LstQuickSymbols.SelectedItem);
+        }
+
+        TxtQuickSymbolSearch.Focus();
+    }
+
+    #endregion
 
     protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
     {
