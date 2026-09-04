@@ -20,6 +20,9 @@ High-performance, customized PowerShell profile featuring PSReadLine, Midnight A
    - Automatically loads `dotnet`, `flutter`, `jdk-17`, `Android SDK`, `kotlin`, `msys64`, `php`, `composer`, `nodejs`, `npm`.
 6. **Auto-LS Navigation (`cd` / `chdir`)**:
    - Executing `cd <path>` automatically runs `Get-ChildItem` to list directory contents.
+7. **Human-Readable File Size (`ls` / `Get-ChildItem`)**:
+   - Replaces the raw byte `Length` column with a human-readable `size` column (formatted dynamically as `B`, `KB`, `MB`, `GB`, `TB`).
+   - Integrated via [`powershell/FileSystem.format.ps1xml`](file:///%USERPROFILE%/Documents/myenv/powershell/FileSystem.format.ps1xml) and registered programmatically via `Update-FormatData` and `Update-TypeData`.
 
 ---
 
@@ -27,6 +30,7 @@ High-performance, customized PowerShell profile featuring PSReadLine, Midnight A
 
 - **Main Profile**: [powershell/profile.ps1](file:///%USERPROFILE%/Documents/myenv/powershell/profile.ps1)
 - **Theme & Prompt Script**: [powershell/midnight-aurora.ps1](file:///%USERPROFILE%/Documents/myenv/powershell/midnight-aurora.ps1)
+- **Table Formatting Definition**: [powershell/FileSystem.format.ps1xml](file:///%USERPROFILE%/Documents/myenv/powershell/FileSystem.format.ps1xml)
 - **Console Transparency Script**: [powershell/console-theme.ps1](file:///%USERPROFILE%/Documents/myenv/powershell/console-theme.ps1)
 
 ---

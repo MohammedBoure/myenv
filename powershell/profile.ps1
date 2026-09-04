@@ -111,6 +111,22 @@ if (Test-Path $myenvModules) {
     $env:PSModulePath = $myenvModules + ';' + $env:PSModulePath
 }
 
+# Human-readable size format for ls, Get-ChildItem, and FileInfo
+$customFormat = Join-Path $myenvDir "powershell\FileSystem.format.ps1xml"
+if (Test-Path -LiteralPath $customFormat) {
+    Update-FormatData -PrependPath $customFormat -ErrorAction SilentlyContinue
+}
+Update-TypeData -TypeName System.IO.FileInfo -MemberType ScriptProperty -MemberName size -Value {
+    if ($null -ne $this.Length) {
+        $len = $this.Length
+        if ($len -ge 1TB) { [string]::Format([System.Globalization.CultureInfo]::InvariantCulture, "{0:0.#} TB", $len / 1TB) }
+        elseif ($len -ge 1GB) { [string]::Format([System.Globalization.CultureInfo]::InvariantCulture, "{0:0.#} GB", $len / 1GB) }
+        elseif ($len -ge 1MB) { [string]::Format([System.Globalization.CultureInfo]::InvariantCulture, "{0:0.#} MB", $len / 1MB) }
+        elseif ($len -ge 1KB) { [string]::Format([System.Globalization.CultureInfo]::InvariantCulture, "{0:0.#} KB", $len / 1KB) }
+        else { "$len B" }
+    }
+} -Force -ErrorAction SilentlyContinue
+
 $themePath = Join-Path $myenvDir "powershell\midnight-aurora.ps1"
 if (Test-Path $themePath) { . $themePath }
 

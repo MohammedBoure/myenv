@@ -108,6 +108,25 @@ function prompt {
     return ' '
 }
 
+# Human-readable size formatting for ls and Get-ChildItem
+$formatXmlPath = Join-Path $PSScriptRoot "FileSystem.format.ps1xml"
+if (-not (Test-Path -LiteralPath $formatXmlPath)) {
+    $formatXmlPath = "$env:USERPROFILE\Documents\myenv\powershell\FileSystem.format.ps1xml"
+}
+if (Test-Path -LiteralPath $formatXmlPath) {
+    Update-FormatData -PrependPath $formatXmlPath -ErrorAction SilentlyContinue
+}
+Update-TypeData -TypeName System.IO.FileInfo -MemberType ScriptProperty -MemberName size -Value {
+    if ($null -ne $this.Length) {
+        $len = $this.Length
+        if ($len -ge 1TB) { [string]::Format([System.Globalization.CultureInfo]::InvariantCulture, "{0:0.#} TB", $len / 1TB) }
+        elseif ($len -ge 1GB) { [string]::Format([System.Globalization.CultureInfo]::InvariantCulture, "{0:0.#} GB", $len / 1GB) }
+        elseif ($len -ge 1MB) { [string]::Format([System.Globalization.CultureInfo]::InvariantCulture, "{0:0.#} MB", $len / 1MB) }
+        elseif ($len -ge 1KB) { [string]::Format([System.Globalization.CultureInfo]::InvariantCulture, "{0:0.#} KB", $len / 1KB) }
+        else { "$len B" }
+    }
+} -Force -ErrorAction SilentlyContinue
+
 Remove-Item -Path Alias:cd -Force -ErrorAction SilentlyContinue
 Remove-Item -Path Alias:chdir -Force -ErrorAction SilentlyContinue
 
@@ -132,7 +151,7 @@ function chdir {
     }
 }
 
-function ll { Get-ChildItem -Force | Format-Table Mode,LastWriteTime,Length,Name -AutoSize }
+function ll { Get-ChildItem -Force | Format-Table Mode,LastWriteTime,size,Name -AutoSize }
 function la { Get-ChildItem -Force }
 function gs { git status }
 function croot { cd $HOME }
