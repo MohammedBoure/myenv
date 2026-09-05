@@ -108,21 +108,51 @@ function prompt {
     return ' '
 }
 
-# Human-readable size formatting and FolderSizeCalc engine for ls
-if (-not ('FolderSizeCalc' -as [type])) {
+# Human-readable size formatting and FolderSizeEngine with live progressive counting
+if (-not ('FolderSizeEngine' -as [type])) {
     Add-Type -TypeDefinition @'
     using System;
     using System.IO;
     using System.Collections.Generic;
+    using System.Threading;
 
-    public static class FolderSizeCalc {
-        public static long GetFolderSize(string path, int maxDepth = 25) {
+    public static class FolderSizeEngine {
+        public static string FormatSize(long bytes) {
+            if (bytes >= 1099511627776L) return string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.#} TB", bytes / 1099511627776.0);
+            if (bytes >= 1073741824L) return string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.#} GB", bytes / 1073741824.0);
+            if (bytes >= 1048576L) return string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.#} MB", bytes / 1048576.0);
+            if (bytes >= 1024L) return string.Format(System.Globalization.CultureInfo.InvariantCulture, "{0:0.#} KB", bytes / 1024.0);
+            return bytes + " B";
+        }
+
+        public static long MeasureWithProgress(
+            string path,
+            int linesUp,
+            int col,
+            bool updateLive,
+            int maxDepth = 25)
+        {
             if (string.IsNullOrEmpty(path) || !Directory.Exists(path)) return 0;
+
             long total = 0;
             var stack = new Stack<Tuple<string, int>>();
             stack.Push(new Tuple<string, int>(path, 0));
 
+            int lastTick = Environment.TickCount;
+            long lastReportedTotal = -1;
+
+            if (updateLive) {
+                string initial = FormatSize(0).PadLeft(14);
+                try {
+                    Console.Write(string.Format("\x1b[{0}A\x1b[{1}G\x1b[33m{2}\x1b[0m\x1b[{0}B\x1b[1G", linesUp, col, initial));
+                } catch {}
+            }
+
             while (stack.Count > 0) {
+                try {
+                    if (Console.KeyAvailable) break;
+                } catch {}
+
                 var current = stack.Pop();
                 string currentDir = current.Item1;
                 int depth = current.Item2;
@@ -135,6 +165,17 @@ if (-not ('FolderSizeCalc' -as [type])) {
                         try {
                             total += file.Length;
                         } catch {}
+
+                        int now = Environment.TickCount;
+                        if (updateLive && (now - lastTick >= 35) && total != lastReportedTotal) {
+                            lastTick = now;
+                            lastReportedTotal = total;
+                            string formatted = FormatSize(total).PadLeft(14);
+                            try {
+                                Console.Write(string.Format("\x1b[{0}A\x1b[{1}G\x1b[33m{2}\x1b[0m\x1b[{0}B\x1b[1G", linesUp, col, formatted));
+                            } catch {}
+                            Thread.Sleep(3);
+                        }
                     }
 
                     if (depth < maxDepth) {
@@ -148,6 +189,14 @@ if (-not ('FolderSizeCalc' -as [type])) {
                     }
                 } catch {}
             }
+
+            if (updateLive) {
+                string finalFormatted = FormatSize(total).PadLeft(14);
+                try {
+                    Console.Write(string.Format("\x1b[{0}A\x1b[{1}G\x1b[96m{2}\x1b[0m\x1b[{0}B\x1b[1G", linesUp, col, finalFormatted));
+                } catch {}
+            }
+
             return total;
         }
     }
@@ -160,11 +209,7 @@ if ($null -eq $global:__MyEnvDirSizeCache) {
 
 function Format-MyEnvSize {
     param([long]$Length)
-    if ($Length -ge 1TB) { return [string]::Format([System.Globalization.CultureInfo]::InvariantCulture, "{0:0.#} TB", $Length / 1TB) }
-    if ($Length -ge 1GB) { return [string]::Format([System.Globalization.CultureInfo]::InvariantCulture, "{0:0.#} GB", $Length / 1GB) }
-    if ($Length -ge 1MB) { return [string]::Format([System.Globalization.CultureInfo]::InvariantCulture, "{0:0.#} MB", $Length / 1MB) }
-    if ($Length -ge 1KB) { return [string]::Format([System.Globalization.CultureInfo]::InvariantCulture, "{0:0.#} KB", $Length / 1KB) }
-    return "$Length B"
+    return [FolderSizeEngine]::FormatSize($Length)
 }
 
 $formatXmlPath = Join-Path $PSScriptRoot "FileSystem.format.ps1xml"
@@ -380,14 +425,23 @@ function ls {
         $totalPrintedRows = $rowIndex + 1
         $winHeight = try { [Console]::WindowHeight } catch { 30 }
 
+        $isInteractive = -not [Console]::IsOutputRedirected -and -not [Console]::IsInputRedirected
+
         foreach ($p in $pendingDirs) {
             try {
                 if ([Console]::KeyAvailable) { break }
             } catch {}
 
             $linesUp = $totalPrintedRows - $p.RowIndex
-            $dirBytes = [FolderSizeCalc]::GetFolderSize($p.Dir.FullName)
-            $formattedSize = Format-MyEnvSize $dirBytes
+            $canUpdateLive = $isInteractive -and ($linesUp -lt ($winHeight - 2)) -and ($linesUp -gt 0)
+
+            $dirBytes = [FolderSizeEngine]::MeasureWithProgress(
+                $p.Dir.FullName,
+                $linesUp,
+                38,
+                $canUpdateLive
+            )
+            $formattedSize = [FolderSizeEngine]::FormatSize($dirBytes)
 
             $global:__MyEnvDirSizeCache[$p.Dir.FullName] = @{
                 Formatted = $formattedSize
@@ -395,15 +449,7 @@ function ls {
                 LastWriteTimeUtc = $p.Dir.LastWriteTimeUtc
             }
 
-            if ($linesUp -lt ($winHeight - 2) -and $linesUp -gt 0) {
-                $padded = $formattedSize.PadLeft(14)
-                try {
-                    [Console]::Out.Write("$e[${linesUp}A$e[38G$e[96m$padded$e[0m$e[${linesUp}B$e[1G")
-                    [Console]::Out.Flush()
-                } catch {}
-            }
-
-            Start-Sleep -Milliseconds 40
+            Start-Sleep -Milliseconds 25
         }
     }
 }

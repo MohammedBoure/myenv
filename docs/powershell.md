@@ -22,7 +22,7 @@ High-performance, customized PowerShell profile featuring PSReadLine, Midnight A
    - Executing `cd <path>` automatically runs `ls` with colored table formatting.
 7. **Enhanced Table Directory Lister (`ls`)**:
    - High-contrast column colors: Yellow `Mode`, Cyan `LastWriteTime`, Green `size`, and categorized `Name` (Bold Cyan folders, Green scripts, Magenta archives, White files).
-   - Live Asynchronous Folder Size Sub-Option (`ls -s` / `ls -Size`): Computes folder sizes non-blockingly using a high-speed C# engine (`FolderSizeCalc`), updating the console in-place smoothly with zero resource pressure until stabilized.
+   - Live Asynchronous Folder Size Sub-Option (`ls -s` / `ls -Size`): Computes folder sizes non-blockingly using a high-speed C# engine (`FolderSizeEngine`), visibly incrementing numbers in real-time with dynamic units (`B`, `KB`, `MB`, `GB`, `TB`) until stabilized, with zero resource pressure.
    - Preserves standard pipeline objects when piped or redirected (`ls | Where-Object ...`).
    - Replaces the raw byte `Length` column with a human-readable `size` column (formatted dynamically as `B`, `KB`, `MB`, `GB`, `TB`) integrated via [`powershell/FileSystem.format.ps1xml`](file:///%USERPROFILE%/Documents/myenv/powershell/FileSystem.format.ps1xml).
 
