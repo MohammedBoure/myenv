@@ -210,23 +210,25 @@ public partial class MainWindow : Window
                 {
                     var curLine = MainEditor.Document.GetLineByNumber(MainEditor.TextArea.Caret.Line);
                     string lineText = MainEditor.Document.GetText(curLine.Offset, MainEditor.CaretOffset - curLine.Offset);
+                    string indent = GetLineIndentation(curLine);
 
-                    int leadingSpaces = 0;
-                    while (leadingSpaces < lineText.Length && lineText[leadingSpaces] == ' ')
+                    if (!lineText.TrimStart().StartsWith('#') && !lineText.TrimStart().StartsWith("//") && lineText.TrimEnd().EndsWith(':'))
                     {
-                        leadingSpaces++;
+                        indent += "    ";
                     }
 
-                    if (lineText.TrimEnd().EndsWith(':'))
-                    {
-                        leadingSpaces += 4;
-                    }
-
-                    if (leadingSpaces > 0)
+                    if (!string.IsNullOrEmpty(indent))
                     {
                         e.Handled = true;
-                        string indent = Environment.NewLine + new string(' ', leadingSpaces);
-                        MainEditor.Document.Insert(MainEditor.CaretOffset, indent);
+                        if (MainEditor.SelectionLength > 0)
+                        {
+                            int selStart = MainEditor.SelectionStart;
+                            MainEditor.Document.Remove(selStart, MainEditor.SelectionLength);
+                            MainEditor.CaretOffset = selStart;
+                        }
+
+                        string toInsert = Environment.NewLine + indent;
+                        MainEditor.Document.Insert(MainEditor.CaretOffset, toInsert);
                     }
                 }
             }

@@ -62,11 +62,35 @@ public static class SyntaxService
             var builtIn = HighlightingManager.Instance.GetDefinitionByExtension(ext);
             if (builtIn != null)
                 return builtIn;
+
+            if (mappedName.Equals("C/C++", StringComparison.OrdinalIgnoreCase))
+            {
+                var cpp = HighlightingManager.Instance.GetDefinition("C++");
+                if (cpp != null) return cpp;
+            }
+
+            if (mappedName.Equals("TypeScript", StringComparison.OrdinalIgnoreCase))
+            {
+                var js = HighlightingManager.Instance.GetDefinition("JavaScript");
+                if (js != null) return js;
+            }
         }
 
         // Check custom definitions by name
         if (CustomDefinitions.TryGetValue(name, out var customDef))
             return customDef;
+
+        if (name.Equals("C/C++", StringComparison.OrdinalIgnoreCase))
+        {
+            var cpp = HighlightingManager.Instance.GetDefinition("C++");
+            if (cpp != null) return cpp;
+        }
+
+        if (name.Equals("TypeScript", StringComparison.OrdinalIgnoreCase))
+        {
+            var js = HighlightingManager.Instance.GetDefinition("JavaScript");
+            if (js != null) return js;
+        }
 
         // Check built-in definitions by name
         return HighlightingManager.Instance.GetDefinition(name);
@@ -176,7 +200,7 @@ public static class SyntaxService
         }
 
         // 6. Python Detection
-        if (Regex.IsMatch(trimmed, @"\b(def\s+[a-zA-Z0-9_]+\s*\(.*?\)\s*:|class\s+[a-zA-Z0-9_]+(\(.*?\))?\s*:|import\s+[a-zA-Z0-9_]+|from\s+[a-zA-Z0-9_]+\s+import|if\s+__name__\s*==\s*['""]__main__['""]|elif\s+.*?:|except\s+([a-zA-Z0-9_]+\s+as\s+[a-zA-Z0-9_]+|\w+)\s*:)\b"))
+        if (Regex.IsMatch(trimmed, @"\b(def\s+[a-zA-Z0-9_]+\s*\(.*?\)[\s:]|class\s+[a-zA-Z0-9_]+(\(.*?\))?[\s:]|import\s+[a-zA-Z0-9_]+|from\s+[a-zA-Z0-9_]+\s+import|if\s+__name__\s*==\s*['""]__main__['""]|elif\s+.*?:|except(\s+[\w.]+)?\s*:)"))
         {
             return "Python";
         }
@@ -300,25 +324,25 @@ public static class SyntaxService
     <RuleSet>
         <!-- Single line comments -->
         <Span color=""Comment"">
-            <Begin>#</Begin>
+            <Begin>\#</Begin>
         </Span>
 
         <!-- Multi-line Docstrings -->
-        <Span color=""DocString"">
+        <Span color=""DocString"" multiline=""true"">
             <Begin>""""""</Begin>
             <End>""""""</End>
         </Span>
-        <Span color=""DocString"">
+        <Span color=""DocString"" multiline=""true"">
             <Begin>''''''</Begin>
             <End>''''''</End>
         </Span>
 
         <!-- F-Strings & Raw strings -->
-        <Span color=""String"">
+        <Span color=""String"" multiline=""true"">
             <Begin>[fFrRbBuU]?&quot;&quot;&quot;</Begin>
             <End>&quot;&quot;&quot;</End>
         </Span>
-        <Span color=""String"">
+        <Span color=""String"" multiline=""true"">
             <Begin>[fFrRbBuU]?&apos;&apos;&apos;</Begin>
             <End>&apos;&apos;&apos;</End>
         </Span>
@@ -326,14 +350,14 @@ public static class SyntaxService
             <Begin>[fFrRbBuU]?&quot;</Begin>
             <End>&quot;</End>
             <RuleSet>
-                <Span begin=""\\."" end="""" />
+                <Span begin=""\\"" end=""."" />
             </RuleSet>
         </Span>
         <Span color=""String"">
             <Begin>[fFrRbBuU]?&apos;</Begin>
             <End>&apos;</End>
             <RuleSet>
-                <Span begin=""\\."" end="""" />
+                <Span begin=""\\"" end=""."" />
             </RuleSet>
         </Span>
 
@@ -444,12 +468,12 @@ public static class SyntaxService
     <Color name=""Parameter"" foreground=""#4EC9B0"" />
 
     <RuleSet>
-        <Span color=""Comment"">
-            <Begin>&lt;#</Begin>
-            <End>#&gt;</End>
+        <Span color=""Comment"" multiline=""true"">
+            <Begin>&lt;\#</Begin>
+            <End>\#&gt;</End>
         </Span>
         <Span color=""Comment"">
-            <Begin>#</Begin>
+            <Begin>\#</Begin>
         </Span>
         <Span color=""String"">
             <Begin>""</Begin>
@@ -548,7 +572,7 @@ public static class SyntaxService
 
     <RuleSet>
         <Span color=""Comment"">
-            <Begin>#</Begin>
+            <Begin>\#</Begin>
         </Span>
         <Span color=""String"">
             <Begin>&quot;</Begin>
@@ -735,7 +759,7 @@ public static class SyntaxService
 
     <RuleSet>
         <Span color=""Comment"">
-            <Begin>#</Begin>
+            <Begin>\#</Begin>
         </Span>
         <Span color=""Comment"">
             <Begin>;</Begin>
