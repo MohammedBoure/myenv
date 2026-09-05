@@ -356,9 +356,9 @@ function ls {
     $hdrDate = "$e[36;1mLastWriteTime           $e[0m"
     $hdrSize = "$e[32;1m          size$e[0m"
     $hdrName = "$e[97;1mName$e[0m"
-    $sepLine = "$e[90m-------  ------------------------  --------------  --------------------$e[0m"
+    $sepLine = "$e[90m-------  ------------------------  --------------   --------------------$e[0m"
 
-    Write-Host "  $hdrMode  $hdrDate  $hdrSize  $hdrName"
+    Write-Host "  $hdrMode  $hdrDate  $hdrSize   $hdrName"
     Write-Host "  $sepLine"
 
     $shouldComputeFolderSizes = if ($Fast) { $false } else { $Size -or $global:MyEnvLsDefaultFolderSize }
@@ -369,7 +369,8 @@ function ls {
         $modeStr = if ($item.Mode) { $item.Mode.PadRight(7) } else { '-------' }
         $colMode = "$e[33m$modeStr$e[0m"
 
-        $dateFormatted = [string]::Format("{0,10}  {1,8}", $item.LastWriteTime.ToString("d"), $item.LastWriteTime.ToString("t"))
+        $rawDate = [string]::Format("{0,10}  {1,8}", $item.LastWriteTime.ToString("d"), $item.LastWriteTime.ToString("t"))
+        $dateFormatted = $rawDate.PadRight(24)
         $colDate = "$e[36m$dateFormatted$e[0m"
 
         $colSize = ""
@@ -414,7 +415,7 @@ function ls {
             "$e[97m$($item.Name)$e[0m"
         }
 
-        Write-Host "  $colMode  $colDate  $colSize  $colName"
+        Write-Host "  $colMode  $colDate  $colSize   $colName"
         $rowIndex++
     }
 
