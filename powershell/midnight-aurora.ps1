@@ -558,6 +558,50 @@ function Get-ContentAndCopy {
 Remove-Item Alias:gc -Force -ErrorAction SilentlyContinue
 Set-Alias -Name gc -Value Get-ContentAndCopy -Option AllScope -Force -ErrorAction SilentlyContinue
 
+# Copy File or Directory to Clipboard as FileDropList (Pasteable in File Explorer, chat apps, etc.)
+Add-Type -AssemblyName System.Windows.Forms -ErrorAction SilentlyContinue
+function Copy-FileToClipboard {
+    [CmdletBinding(DefaultParameterSetName='Path')]
+    param(
+        [Parameter(Position=0, Mandatory=$true, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true)]
+        [string[]]$Path,
+
+        [Parameter(ParameterSetName='LiteralPath', Mandatory=$true, ValueFromPipelineByPropertyName=$true)]
+        [Alias('PSPath', 'LP')]
+        [string[]]$LiteralPath,
+
+        [switch]$Quiet
+    )
+    process {
+        $targetPaths = if ($PSCmdlet.ParameterSetName -eq 'LiteralPath') { $LiteralPath } else { $Path }
+        $fileCollection = New-Object System.Collections.Specialized.StringCollection
+        foreach ($p in $targetPaths) {
+            $resolvedList = if ($PSCmdlet.ParameterSetName -eq 'LiteralPath') {
+                @(Resolve-Path -LiteralPath $p -ErrorAction SilentlyContinue)
+            } else {
+                @(Resolve-Path -Path $p -ErrorAction SilentlyContinue)
+            }
+            if (-not $resolvedList -or $resolvedList.Count -eq 0) {
+                Write-Error "Cannot find path '$p' because it does not exist."
+                continue
+            }
+            foreach ($r in $resolvedList) {
+                $null = $fileCollection.Add($r.Path)
+                if (-not $Quiet) {
+                    Write-Host "Copied to clipboard (FileDropList): " -NoNewline
+                    Write-Host $r.Path -ForegroundColor Cyan
+                }
+            }
+        }
+        if ($fileCollection.Count -gt 0) {
+            [System.Windows.Forms.Clipboard]::SetFileDropList($fileCollection)
+        }
+    }
+}
+Remove-Item Alias:sc -Force -ErrorAction SilentlyContinue
+Set-Alias -Name sc -Value Copy-FileToClipboard -Option AllScope -Force -ErrorAction SilentlyContinue
+
+
 
 # Copy Path via fzf - VS Code Style Interactive Tree Explorer & Multi-Path Selector
 function cpf {
