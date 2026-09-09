@@ -8,17 +8,13 @@ chcp 65001 > $null
 
 # Configure PSReadLine & Predictive IntelliSense if interactive
 if (-not [Console]::IsInputRedirected -and -not [Console]::IsOutputRedirected) {
-    if (Get-Module -ListAvailable PSReadLine) {
-        try {
-            Import-Module PSReadLine -ErrorAction SilentlyContinue
-            Set-PSReadLineOption -EditMode Windows
-            Set-PSReadLineOption -PredictionSource HistoryAndPlugin
-            Set-PSReadLineOption -PredictionViewStyle ListView
-        } catch {}
-    }
-    if (Get-Module -ListAvailable CompletionPredictor) {
-        Import-Module CompletionPredictor -ErrorAction SilentlyContinue
-    }
+    try {
+        Import-Module PSReadLine -ErrorAction SilentlyContinue
+        Set-PSReadLineOption -EditMode Windows
+        Set-PSReadLineOption -PredictionSource HistoryAndPlugin
+        Set-PSReadLineOption -PredictionViewStyle ListView
+    } catch {}
+    Import-Module CompletionPredictor -ErrorAction SilentlyContinue
 }
 
 $PSDefaultParameterValues['*:Encoding'] = 'utf8'

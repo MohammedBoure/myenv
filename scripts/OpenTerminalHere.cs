@@ -94,6 +94,19 @@ namespace MyEnv {
             string pwshPf = Path.Combine(programFiles, @"PowerShell\7\pwsh.exe");
             if (File.Exists(pwshPf)) return pwshPf;
 
+            // Direct WindowsApps install directory check (bypasses Windows execution alias overhead)
+            string windowsApps = Path.Combine(programFiles, "WindowsApps");
+            if (Directory.Exists(windowsApps)) {
+                try {
+                    string[] pkgDirs = Directory.GetDirectories(windowsApps, "Microsoft.PowerShell_*_x64__*");
+                    if (pkgDirs.Length > 0) {
+                        Array.Sort(pkgDirs);
+                        string directPwsh = Path.Combine(pkgDirs[pkgDirs.Length - 1], "pwsh.exe");
+                        if (File.Exists(directPwsh)) return directPwsh;
+                    }
+                } catch {}
+            }
+
             string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
             string pwshApp = Path.Combine(localAppData, @"Microsoft\WindowsApps\pwsh.exe");
             if (File.Exists(pwshApp)) return pwshApp;

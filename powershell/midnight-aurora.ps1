@@ -76,9 +76,21 @@ try {
 
 function Get-MyEnvGitBranch {
     try {
-        $branch = git branch --show-current 2>$null
-        if ($LASTEXITCODE -eq 0 -and $branch) {
-            return "  <$branch>"
+        $curr = (Get-Location).Path
+        while ($curr) {
+            $gitHead = Join-Path $curr ".git\HEAD"
+            if ([System.IO.File]::Exists($gitHead)) {
+                $line = [System.IO.File]::ReadAllText($gitHead).Trim()
+                if ($line.StartsWith('ref: refs/heads/')) {
+                    return "  <" + $line.Substring(16) + ">"
+                } elseif ($line.Length -ge 7) {
+                    return "  <" + $line.Substring(0, 7) + ">"
+                }
+                return ''
+            }
+            $parent = [System.IO.Path]::GetDirectoryName($curr)
+            if (-not $parent -or $parent -eq $curr) { break }
+            $curr = $parent
         }
     } catch {}
     return ''

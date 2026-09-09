@@ -28,6 +28,13 @@ $palette = @{
     ColorTable15 = '#FFFFFF'  # Pure White
 }
 
+# Check if console theme is already configured in HKCU:\Console to prevent hundreds of registry writes on every shell launch
+$configuredMarker = 'HKCU:\Console'
+$markerName = 'MyEnvThemeApplied_v1'
+if ((Get-ItemProperty -Path $configuredMarker -Name $markerName -ErrorAction SilentlyContinue).$markerName -eq 1) {
+    return
+}
+
 # 1. Configure Classic Windows Console Host (conhost.exe) Registry Settings
 $keys = @(
     'HKCU:\Console',
@@ -68,4 +75,5 @@ foreach ($key in $keys) {
     Set-ItemProperty -Path $key -Name VirtualTerminalLevel -Type DWord -Value 1
     Remove-ItemProperty -Path $key -Name CodePage -ErrorAction SilentlyContinue
 }
+Set-ItemProperty -Path $configuredMarker -Name $markerName -Type DWord -Value 1 -Force
 # Theme applied silently on profile load.
