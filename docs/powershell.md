@@ -48,6 +48,7 @@ High-performance, customized PowerShell profile featuring PSReadLine, Midnight A
 | `docs` | Terminal Documentation & Shortcut Navigator CLI |
 | `cb` / `c` | Execute command, display output, and copy directly to Clipboard |
 | `\| cb` | Pipe output to screen and Clipboard simultaneously |
+| `gc <path>` | Read file raw, display content, and copy directly to Clipboard |
 | `sudo <command>` | Execute command with Administrator privileges at current directory |
 | `Ctrl + Backspace` | Delete word backward |
 | `Tab` | Open interactive menu completion |

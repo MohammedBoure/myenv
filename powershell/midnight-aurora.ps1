@@ -518,6 +518,47 @@ function cb {
 }
 Set-Alias -Name c -Value cb -Option ReadOnly, AllScope -ErrorAction SilentlyContinue
 
+# Read File Raw and Copy to Clipboard
+function Get-ContentAndCopy {
+    [CmdletBinding(DefaultParameterSetName='Path')]
+    param(
+        [Parameter(Position=0, Mandatory=$true, ValueFromPipeline=$true, ValueFromPipelineByPropertyName=$true)]
+        [string[]]$Path,
+
+        [Parameter(ParameterSetName='LiteralPath', Mandatory=$true, ValueFromPipelineByPropertyName=$true)]
+        [Alias('PSPath', 'LP')]
+        [string[]]$LiteralPath,
+
+        [switch]$NoClipboard,
+        [switch]$Quiet,
+        [switch]$Raw
+    )
+    process {
+        $targetPaths = if ($PSCmdlet.ParameterSetName -eq 'LiteralPath') { $LiteralPath } else { $Path }
+        $collected = [System.Collections.Generic.List[string]]::new()
+        foreach ($p in $targetPaths) {
+            $resolvedList = @(Resolve-Path -Path $p -ErrorAction SilentlyContinue)
+            if (-not $resolvedList -or $resolvedList.Count -eq 0) {
+                Write-Error "Cannot find path '$p' because it does not exist."
+                continue
+            }
+            foreach ($r in $resolvedList) {
+                $content = [System.IO.File]::ReadAllText($r.Path)
+                if (-not $Quiet) {
+                    Write-Output $content
+                }
+                $collected.Add($content)
+            }
+        }
+        if (-not $NoClipboard -and $collected.Count -gt 0) {
+            Set-Clipboard -Value ($collected -join "`r`n")
+        }
+    }
+}
+Remove-Item Alias:gc -Force -ErrorAction SilentlyContinue
+Set-Alias -Name gc -Value Get-ContentAndCopy -Option AllScope -Force -ErrorAction SilentlyContinue
+
+
 # Copy Path via fzf - VS Code Style Interactive Tree Explorer & Multi-Path Selector
 function cpf {
     <#
