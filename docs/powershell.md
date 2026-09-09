@@ -49,7 +49,10 @@ High-performance, customized PowerShell profile featuring PSReadLine, Midnight A
 | `cb` / `c` | Execute command, display output, and copy directly to Clipboard |
 | `\| cb` | Pipe output to screen and Clipboard simultaneously |
 | `gc <path>` | Read file raw, display content, and copy directly to Clipboard |
-| `sc <path>` | Copy file/folder to Clipboard as `FileDropList` (pasteable directly in File Explorer/apps) |
+| `cf <path>` / `cfile` | Copy file/folder to Clipboard as `FileDropList` (pasteable directly in File Explorer/apps) |
+| `lensbridge-install` | Run automated installer and manager for LensBridge Server |
+| `lensbridge-run` | Launch LensBridge Server interactively via isolated venv Python |
+| `lensbridge-service` | Control 24/7 background service (`status`, `start`, `stop`, `restart`) |
 | `sudo <command>` | Execute command with Administrator privileges at current directory |
 | `Ctrl + Backspace` | Delete word backward |
 | `Tab` | Open interactive menu completion |

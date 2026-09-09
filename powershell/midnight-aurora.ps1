@@ -598,8 +598,86 @@ function Copy-FileToClipboard {
         }
     }
 }
-Remove-Item Alias:sc -Force -ErrorAction SilentlyContinue
-Set-Alias -Name sc -Value Copy-FileToClipboard -Option AllScope -Force -ErrorAction SilentlyContinue
+Set-Alias -Name cf -Value Copy-FileToClipboard -Option AllScope -Force -ErrorAction SilentlyContinue
+Set-Alias -Name cfile -Value Copy-FileToClipboard -Option AllScope -Force -ErrorAction SilentlyContinue
+
+# ==============================================================================
+# LensBridge Server Helper Commands
+# ==============================================================================
+
+function Invoke-LensBridgeInstall {
+    <#
+    .SYNOPSIS
+        Automated installer and manager for LensBridge Server.
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Position=0)]
+        [ValidateSet("install", "start", "status", "skip")]
+        [string]$Action = "install"
+    )
+    $script = Join-Path $PSScriptRoot "..\scripts\install-lensbridge.ps1"
+    if (-not (Test-Path -LiteralPath $script)) {
+        $script = Join-Path $env:USERPROFILE "Documents\myenv\scripts\install-lensbridge.ps1"
+    }
+    if (Test-Path -LiteralPath $script) {
+        powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$script" -ConfigureService $Action
+    } else {
+        Write-Error "Installer script not found at $script."
+    }
+}
+Set-Alias -Name lensbridge-install -Value Invoke-LensBridgeInstall -Option AllScope -Force -ErrorAction SilentlyContinue
+
+function Invoke-LensBridgeRun {
+    <#
+    .SYNOPSIS
+        Launch LensBridge Server interactively using its isolated virtual environment.
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(ValueFromRemainingArguments=$true)]
+        [string[]]$ArgsList
+    )
+    $serverDir = "D:\git\LensBridge\server"
+    $venvPy = Join-Path $serverDir "venv\Scripts\python.exe"
+    $mainPy = Join-Path $serverDir "main.py"
+    if (-not (Test-Path -LiteralPath $venvPy)) {
+        Write-Warning "LensBridge virtual environment not found. Running installer first..."
+        Invoke-LensBridgeInstall -Action "skip"
+    }
+    if (Test-Path -LiteralPath $venvPy) {
+        & "$venvPy" "$mainPy" @ArgsList
+    } else {
+        Write-Error "Could not locate or initialize $venvPy."
+    }
+}
+Set-Alias -Name lensbridge-run -Value Invoke-LensBridgeRun -Option AllScope -Force -ErrorAction SilentlyContinue
+
+function Invoke-LensBridgeService {
+    <#
+    .SYNOPSIS
+        Control LensBridge 24/7 background service (status, start, stop, restart, install, uninstall).
+    #>
+    [CmdletBinding()]
+    param(
+        [Parameter(Position=0)]
+        [ValidateSet("status", "start", "stop", "restart", "install", "uninstall")]
+        [string]$Action = "status"
+    )
+    $mgr = "D:\git\LensBridge\server\service_manager.ps1"
+    if (-not (Test-Path -LiteralPath $mgr)) {
+        Write-Warning "LensBridge server directory not found. Running installer first..."
+        Invoke-LensBridgeInstall -Action "skip"
+    }
+    if (Test-Path -LiteralPath $mgr) {
+        powershell.exe -NoProfile -ExecutionPolicy Bypass -File "$mgr" $Action
+    } else {
+        Write-Error "Could not find $mgr."
+    }
+}
+Set-Alias -Name lensbridge-service -Value Invoke-LensBridgeService -Option AllScope -Force -ErrorAction SilentlyContinue
+
+
 
 
 

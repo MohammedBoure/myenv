@@ -23,6 +23,7 @@ Access all system documentation guides directly:
 | NetLimiter (Bandwidth Control) | [`docs/netlimiter.md`](file:///%USERPROFILE%/Documents/myenv/docs/netlimiter.md) |
 | Gemini Antigravity (AI) | [`docs/gemini-antigravity.md`](file:///%USERPROFILE%/Documents/myenv/docs/gemini-antigravity.md) |
 | len (ProjectLens Tree Tool) | [`docs/len.md`](file:///%USERPROFILE%/Documents/myenv/docs/len.md) |
+| LensBridge (Server & Stream Proxy) | [`docs/lensbridge.md`](file:///%USERPROFILE%/Documents/myenv/docs/lensbridge.md) |
 | Automation Scripts | [`docs/automation-scripts.md`](file:///%USERPROFILE%/Documents/myenv/docs/automation-scripts.md) |
 
 ---
@@ -129,6 +130,7 @@ Access all system documentation guides directly:
 | **`app-launcher.ps1`** | [scripts/app-launcher.ps1](file:///%USERPROFILE%/Documents/myenv/scripts/app-launcher.ps1) | Fast WPF application launcher search dialog (`Alt + Q`). |
 | **`cb.cmd`** | [scripts/cb.cmd](file:///%USERPROFILE%/Documents/myenv/scripts/cb.cmd) | Runs a command, outputs results directly to terminal, and copies output to system clipboard. |
 | **`install-len.ps1`** | [scripts/install-len.ps1](file:///%USERPROFILE%/Documents/myenv/scripts/install-len.ps1) | Automated installer and smart commit-based updater for `len` CLI tool from remote GitHub repository. |
+| **`install-lensbridge.ps1`** | [scripts/install-lensbridge.ps1](file:///%USERPROFILE%/Documents/myenv/scripts/install-lensbridge.ps1) | Automated installer, repository manager (`D:\git\LensBridge`), isolated venv builder, and background service manager for LensBridge Server. |
 | **`open-terminal-here.exe`** | [scripts/open-terminal-here.exe](file:///%USERPROFILE%/Documents/myenv/scripts/open-terminal-here.exe) | Instant native launcher (< 10ms, 0% window flash) to open CMD or PS at active File Explorer path. |
 
 

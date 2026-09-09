@@ -18,3 +18,4 @@ Central documentation repository for the MyEnv environment architecture, core co
 | [`netlimiter.md`](file:///C:/Users/moham/Documents/myenv/docs/netlimiter.md) | Network bandwidth limiter setup and per-application rules. |
 | [`gemini-antigravity.md`](file:///C:/Users/moham/Documents/myenv/docs/gemini-antigravity.md) | Gemini Antigravity instructions, skills, rules, and MCP setup. |
 | [`automation-scripts.md`](file:///C:/Users/moham/Documents/myenv/docs/automation-scripts.md) | Complete reference for all automation scripts in `scripts/`. |
+| [`lensbridge.md`](file:///C:/Users/moham/Documents/myenv/docs/lensbridge.md) | Guide for LensBridge Server, isolated venv setup, and background service manager. |
