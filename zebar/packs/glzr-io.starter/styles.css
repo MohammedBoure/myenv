@@ -248,6 +248,35 @@ body,
   border-color: #ffffff;
 }
 
+.translator-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 4px;
+  margin-right: 2px;
+  cursor: pointer;
+  border-radius: 0px !important;
+  flex-shrink: 0;
+  transition: all 0.15s ease;
+}
+
+.translator-icon-btn:hover {
+  background: rgba(88, 166, 255, 0.25);
+}
+
+.translator-icon-btn:hover i {
+  color: #ffffff;
+}
+
+.translator-icon-btn.speaking {
+  background: rgba(63, 185, 80, 0.25);
+  animation: speakPulse 0.7s infinite alternate ease-in-out;
+}
+
+.translator-icon-btn.speaking i {
+  color: #3fb950 !important;
+}
+
 .translator-widget i {
   font-size: 13px;
   color: #58a6ff;
@@ -624,5 +653,41 @@ body,
 .exit-focus-btn i {
   margin: 0;
   font-size: 11px;
+}
+
+.focus-speak-btn {
+  background: rgba(88, 166, 255, 0.15);
+  border: 1px solid rgba(88, 166, 255, 0.40);
+  color: #58a6ff;
+  padding: 2px 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0px !important;
+  transition: all 0.12s ease;
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+
+.focus-speak-btn:hover {
+  background: rgba(88, 166, 255, 0.30);
+  border-color: #58a6ff;
+  color: #ffffff;
+}
+
+.focus-speak-btn.speaking {
+  background: rgba(63, 185, 80, 0.25);
+  border-color: #3fb950;
+  animation: speakPulse 0.7s infinite alternate ease-in-out;
+}
+
+.focus-speak-btn.speaking i {
+  color: #3fb950 !important;
+}
+
+@keyframes speakPulse {
+  0% { transform: scale(1); opacity: 0.85; }
+  100% { transform: scale(1.18); opacity: 1; text-shadow: 0 0 6px rgba(63, 185, 80, 0.9); }
 }
 

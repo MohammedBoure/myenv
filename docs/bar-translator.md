@@ -34,9 +34,10 @@ An ultra-fast, background selection monitor, translator, and status bar control 
 | Action | Result |
 |---|---|
 | **Left Click on Menu Button (`bar_menu`)** | Open unified settings dropdown menu (Translation controls & widget visibility toggles). |
-| **Left Click on Translator Widget** | Toggle between short preview and full translated text (`display_short` <-> `display_full`). |
+| **Click on Translator Microphone Icon (Zebar)** | Pronounce active English text out loud using Google Neural TTS / Windows speech synthesis with speaker icon feedback. |
+| **Left Click on Translator Widget Text** | Toggle between short preview and full translated text (`display_short` <-> `display_full`). |
 | **Right Click on Translator Widget** | Copy full Arabic translation directly to system clipboard. |
-| **Middle Click on Translator Widget** | Clear current translation and reset field to default idle state (`English -> Arabic`). |
+| **Middle Click on Translator Widget (YASB)** | Pronounce active English text out loud via `speak-state.cmd`. |
 
 ---
 
@@ -44,11 +45,12 @@ An ultra-fast, background selection monitor, translator, and status bar control 
 
 | Component | Path | Description |
 |---|---|---|
-| **C# Source Code** | [`tools/bar-translator/`](file:///%USERPROFILE%/Documents/myenv/tools/bar-translator) | Background daemon source with Win32 hooks (`WH_MOUSE_LL`). |
+| **C# Source Code** | [`tools/bar-translator/`](file:///%USERPROFILE%/Documents/myenv/tools/bar-translator) | Background daemon source with Win32 hooks (`WH_MOUSE_LL`) and speech synthesis. |
 | **Bar Config Manager** | [`tools/bar-translator/BarConfigManager.cs`](file:///%USERPROFILE%/Documents/myenv/tools/bar-translator/BarConfigManager.cs) | Dynamic manager for reading and modifying `yasb/config.yaml` widget lists. |
-| **Published Daemon** | [`scripts/bar-translator/BarTranslator.exe`](file:///%USERPROFILE%/Documents/myenv/scripts/bar-translator/BarTranslator.exe) | Compiled standalone background process. |
+| **Published Daemon** | [`scripts/bar-translator/BarTranslator.exe`](file:///%USERPROFILE%/Documents/myenv/scripts/bar-translator/BarTranslator.exe) | Compiled standalone background process with `/speak` endpoint. |
 | **Fast CLI Reader** | [`scripts/bar-translator/get-state-reader.exe`](file:///%USERPROFILE%/Documents/myenv/scripts/bar-translator/get-state-reader.exe) | Instant native state reader with continuous display defaults. |
-| **Action Utility** | [`scripts/bar-translator/translator-action.exe`](file:///%USERPROFILE%/Documents/myenv/scripts/bar-translator/translator-action.exe) | Headless utility executing copy and clear callbacks without console windows. |
+| **Action Utility** | [`scripts/bar-translator/translator-action.exe`](file:///%USERPROFILE%/Documents/myenv/scripts/bar-translator/translator-action.exe) | Headless utility executing `copy`, `clear`, and `speak` callbacks without console windows. |
+| **Speak Wrapper** | [`scripts/bar-translator/speak-state.cmd`](file:///%USERPROFILE%/Documents/myenv/scripts/bar-translator/speak-state.cmd) | Pronounces active English text via `translator-action.exe speak`. |
 | **Menu Wrapper** | [`scripts/bar-translator/show-menu.cmd`](file:///%USERPROFILE%/Documents/myenv/scripts/bar-translator/show-menu.cmd) | Spawns the dark dropdown settings menu at the cursor position. |
 | **State File** | [`scripts/bar-translator/state.json`](file:///%USERPROFILE%/Documents/myenv/scripts/bar-translator/state.json) | Shared state file read by YASB and Zebar. |
 | **YASB Config** | [`yasb/config.yaml`](file:///%USERPROFILE%/Documents/myenv/yasb/config.yaml) | Widget registration under `primary-bar.widgets`. |

@@ -24,7 +24,7 @@ namespace BarTranslator {
             new BarWidgetInfo { Id = "home", Name = "Home Menu (User Folders)", Icon = "🏠", Section = "left", DefaultOrder = 0 },
             new BarWidgetInfo { Id = "glazewm_workspaces", Name = "GlazeWM Workspaces", Icon = "🪟", Section = "left", DefaultOrder = 1 },
             new BarWidgetInfo { Id = "bar_menu", Name = "Settings Dropdown Button", Icon = "⚙️", Section = "left", DefaultOrder = 2 },
-            new BarWidgetInfo { Id = "translator", Name = "Translator Widget", Icon = "🌐", Section = "center", DefaultOrder = 0 },
+            new BarWidgetInfo { Id = "translator", Name = "Translator Widget", Icon = "🎙️", Section = "center", DefaultOrder = 0 },
             new BarWidgetInfo { Id = "clock", Name = "Clock & Date", Icon = "🕒", Section = "center", DefaultOrder = 1 },
             new BarWidgetInfo { Id = "traffic", Name = "Network Traffic (Download/Upload)", Icon = "📶", Section = "right", DefaultOrder = 0 },
             new BarWidgetInfo { Id = "cpu", Name = "CPU Performance & Load", Icon = "💻", Section = "right", DefaultOrder = 1 },

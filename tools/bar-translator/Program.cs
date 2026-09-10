@@ -38,6 +38,13 @@ namespace BarTranslator {
                     return;
                 }
 
+                if (command is "--speak" or "-s" or "speak") {
+                    string? text = args.Length > 1 ? string.Join(" ", args.Skip(1)) : null;
+                    StateManager.SpeakText(text);
+                    Console.WriteLine("{\"speaking\":true}");
+                    return;
+                }
+
                 if (command is "--toggle-clipboard-translate" or "-tct") {
                     StateManager.ToggleClipboardTranslate();
                     Console.WriteLine(StateManager.GetCurrentJson());

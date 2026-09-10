@@ -7,8 +7,27 @@
   "targets": {
     ".NETCoreApp,Version=v10.0": {
       "BarTranslator/1.0.0": {
+        "dependencies": {
+          "System.Speech": "10.0.12"
+        },
         "runtime": {
           "BarTranslator.dll": {}
+        }
+      },
+      "System.Speech/10.0.12": {
+        "runtime": {
+          "lib/net10.0/System.Speech.dll": {
+            "assemblyVersion": "10.0.0.12",
+            "fileVersion": "10.0.1226.42308"
+          }
+        },
+        "runtimeTargets": {
+          "runtimes/win/lib/net10.0/System.Speech.dll": {
+            "rid": "win",
+            "assetType": "runtime",
+            "assemblyVersion": "10.0.0.12",
+            "fileVersion": "10.0.1226.42308"
+          }
         }
       }
     }
@@ -18,6 +37,13 @@
       "type": "project",
       "serviceable": false,
       "sha512": ""
+    },
+    "System.Speech/10.0.12": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-IrIKdPfbeCtgDeKQvJE2EtS8sSLxxpBRzCCpkg/4jORLwmhSUrVZtIrnbbaWQxo3tjnXK6aHH6MNsvi3S3PuTg==",
+      "path": "system.speech/10.0.12",
+      "hashPath": "system.speech.10.0.12.nupkg.sha512"
     }
   }
 }

@@ -7,6 +7,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.Speech.Synthesis;
 
 namespace BarTranslator {
     public static class StateManager {
@@ -200,6 +201,33 @@ namespace BarTranslator {
             }
         }
 
+        private static SpeechSynthesizer? speechSynthesizer;
+        private static readonly object speakLock = new();
+
+        public static void SpeakText(string? text = null) {
+            if (string.IsNullOrWhiteSpace(text)) {
+                lock (fileLock) {
+                    text = !string.IsNullOrWhiteSpace(currentData.English) ? currentData.English : currentData.Original;
+                }
+            }
+            if (string.IsNullOrWhiteSpace(text) || text.Equals("English", StringComparison.OrdinalIgnoreCase)) return;
+
+            Task.Run(() => {
+                try {
+                    lock (speakLock) {
+                        speechSynthesizer ??= new SpeechSynthesizer();
+                        var enVoice = speechSynthesizer.GetInstalledVoices()
+                            .FirstOrDefault(v => v.Enabled && v.VoiceInfo.Culture.TwoLetterISOLanguageName.Equals("en", StringComparison.OrdinalIgnoreCase));
+                        if (enVoice != null) {
+                            try { speechSynthesizer.SelectVoice(enVoice.VoiceInfo.Name); } catch {}
+                        }
+                        speechSynthesizer.Rate = 0;
+                        speechSynthesizer.Speak(text);
+                    }
+                } catch {}
+            });
+        }
+
         private static void SaveToFile(TranslationData data) {
             try {
                 isInternalSaving = true;
@@ -365,6 +393,11 @@ namespace BarTranslator {
                 CopyCurrentToClipboard();
                 response.ContentType = "application/json; charset=utf-8";
                 responseBytes = Encoding.UTF8.GetBytes("{\"copied\":true}");
+            } else if (path == "/speak") {
+                string? text = request.QueryString["text"];
+                SpeakText(text);
+                response.ContentType = "application/json; charset=utf-8";
+                responseBytes = Encoding.UTF8.GetBytes("{\"speaking\":true}");
             } else if (path == "/toggle_auto_capture") {
                 ToggleAutoCapture();
                 response.ContentType = "application/json; charset=utf-8";

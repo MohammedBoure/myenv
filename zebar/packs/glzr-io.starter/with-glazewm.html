@@ -39,7 +39,7 @@
 
       const BAR_ITEMS = [
         { key: 'workspaces', label: 'GlazeWM Workspaces', icon: 'nf-md-view_dashboard_outline', desc: 'Workspace navigation buttons' },
-        { key: 'translator', label: 'Translator Widget', icon: 'nf-md-translate', desc: 'Live English ➔ Arabic status bar translation' },
+        { key: 'translator', label: 'Translator Widget', icon: 'nf-md-microphone', desc: 'Live English ➔ Arabic status bar translation' },
         { key: 'date', label: 'Clock & Date', icon: 'nf-md-clock_outline', desc: 'Center date and time display' },
         { key: 'glazewm', label: 'GlazeWM Modes & Tiling', icon: 'nf-md-swap_horizontal', desc: 'Binding modes & tiling direction switch' },
         { key: 'network', label: 'Network & Wi-Fi', icon: 'nf-md-wifi', desc: 'Network status & active SSID' },
@@ -67,6 +67,7 @@
         const [isExpanded, setIsExpanded] = useState(false);
         const [showMenu, setShowMenu] = useState(false);
         const [menuTab, setMenuTab] = useState('translator'); // 'translator' | 'items'
+        const [isSpeaking, setIsSpeaking] = useState(false);
 
         const [visibility, setVisibility] = useState(() => {
           try {
@@ -181,6 +182,73 @@
           } catch (e) {}
         };
 
+        const handlePronounce = (e, customText) => {
+          e?.stopPropagation();
+          const text = customText || translation?.english || translation?.original || (hasData ? '' : 'English');
+          if (!text) return;
+
+          setIsSpeaking(true);
+          let ended = false;
+          const markDone = () => {
+            if (!ended) {
+              ended = true;
+              setIsSpeaking(false);
+            }
+          };
+
+          try {
+            const encoded = encodeURIComponent(text);
+            const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=en&client=tw-ob&q=${encoded}`;
+            const audio = new Audio(ttsUrl);
+            audio.onended = markDone;
+            audio.onerror = () => {
+              if (window.speechSynthesis) {
+                try {
+                  window.speechSynthesis.cancel();
+                  const utter = new SpeechSynthesisUtterance(text);
+                  utter.lang = 'en-US';
+                  utter.rate = 0.95;
+                  utter.onend = markDone;
+                  utter.onerror = () => {
+                    fetch(`http://127.0.0.1:49876/speak?text=${encoded}`).finally(() => setTimeout(markDone, 1200));
+                  };
+                  window.speechSynthesis.speak(utter);
+                  return;
+                } catch (err) {}
+              }
+              fetch(`http://127.0.0.1:49876/speak?text=${encoded}`).finally(() => setTimeout(markDone, 1200));
+            };
+
+            const p = audio.play();
+            if (p && typeof p.catch === 'function') {
+              p.catch(() => {
+                if (window.speechSynthesis) {
+                  try {
+                    window.speechSynthesis.cancel();
+                    const utter = new SpeechSynthesisUtterance(text);
+                    utter.lang = 'en-US';
+                    utter.rate = 0.95;
+                    utter.onend = markDone;
+                    utter.onerror = () => {
+                      fetch(`http://127.0.0.1:49876/speak?text=${encoded}`).finally(() => setTimeout(markDone, 1200));
+                    };
+                    window.speechSynthesis.speak(utter);
+                    return;
+                  } catch (err) {}
+                }
+                fetch(`http://127.0.0.1:49876/speak?text=${encoded}`).finally(() => setTimeout(markDone, 1200));
+              });
+            }
+          } catch (err) {
+            fetch(`http://127.0.0.1:49876/speak?text=${encodeURIComponent(text)}`).finally(() => setTimeout(markDone, 1200));
+          }
+
+          // Safety timeout so speaker state always resets
+          setTimeout(() => {
+            if (!ended) markDone();
+          }, 8000);
+        };
+
         // Get icon to show for current network status.
         function getNetworkIcon(networkOutput) {
           switch (networkOutput.defaultInterface?.type) {
@@ -283,7 +351,7 @@
                 className={`dropdown-tab-btn ${menuTab === 'translator' ? 'active' : ''}`}
                 onClick={() => setMenuTab('translator')}
               >
-                <i className="nf nf-md-translate"></i> Translator
+                <i className="nf nf-md-microphone"></i> Translator
               </button>
               <button
                 className={`dropdown-tab-btn ${menuTab === 'items' ? 'active' : ''}`}
@@ -367,6 +435,9 @@
 
                 {/* Quick Actions */}
                 <div className="dropdown-actions">
+                  <button className="action-btn" onClick={(e) => handlePronounce(e)} title="Pronounce English text out loud">
+                    <i className={`nf ${isSpeaking ? 'nf-md-volume_high' : 'nf-md-microphone'}`}></i> Speak
+                  </button>
                   <button className="action-btn" onClick={handleCopy} title="Copy Arabic translation to clipboard">
                     <i className="nf nf-md-content_copy"></i> Copy
                   </button>
@@ -475,6 +546,13 @@
                   <div className="focus-content">
                     {isShowEnglish && (
                       <>
+                        <button
+                          className={`focus-speak-btn ${isSpeaking ? 'speaking' : ''}`}
+                          onClick={(e) => handlePronounce(e)}
+                          title={isSpeaking ? "Pronouncing English text..." : "Click to pronounce English text"}
+                        >
+                          <i className={`nf ${isSpeaking ? 'nf-md-volume_high' : 'nf-md-microphone'}`}></i>
+                        </button>
                         <span
                           className="focus-en"
                           title={translation.english || translation.original}
@@ -493,7 +571,7 @@
                   </div>
                 ) : (
                   <div className="focus-empty">
-                    <i className="nf nf-md-translate"></i>
+                    <i className="nf nf-md-microphone"></i>
                     <span>
                       {isAutoCapture
                         ? "Select or copy any text to translate..."
@@ -557,11 +635,17 @@
                   }}
                   title={
                     hasData
-                      ? `English: ${translation.english || translation.original}\nArabic: ${translation.arabic || translation.full}\n[Left Click: Toggle Full/Short | Right Click: Copy]`
+                      ? `English: ${translation.english || translation.original}\nArabic: ${translation.arabic || translation.full}\n[Click Mic: Pronounce English | Left Click Text: Toggle Full/Short | Right Click: Copy]`
                       : `Status Bar Translator\n• Auto-Copy: ${isClipboardTranslate ? 'ON' : 'OFF'}\n• Auto-Select: ${isAutoCapture ? 'ON' : 'OFF'}\n\n[Select or copy text to translate]`
                   }
                 >
-                  <i className="nf nf-md-translate"></i>
+                  <span
+                    className={`translator-icon-btn ${isSpeaking ? 'speaking' : ''}`}
+                    onClick={(e) => handlePronounce(e)}
+                    title={isSpeaking ? "Pronouncing English text..." : "Click to pronounce English text"}
+                  >
+                    <i className={`nf ${isSpeaking ? 'nf-md-volume_high' : 'nf-md-microphone'}`}></i>
+                  </span>
                   {isShowEnglish ? (
                     <div className="translator-divided">
                       <span

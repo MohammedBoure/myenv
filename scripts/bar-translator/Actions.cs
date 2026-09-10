@@ -63,6 +63,32 @@ namespace BarTranslator {
                         }
                     }
                 } catch {}
+            } else if (action == "speak") {
+                string text = args.Length > 1 ? string.Join(" ", args, 1, args.Length - 1) : null;
+                // 1. Try local HTTP API
+                try {
+                    string query = !string.IsNullOrWhiteSpace(text) ? "?text=" + Uri.EscapeDataString(text) : "";
+                    var req = (HttpWebRequest)WebRequest.Create("http://127.0.0.1:" + port + "/speak" + query);
+                    req.Timeout = 300;
+                    using (var resp = req.GetResponse()) {
+                        return;
+                    }
+                } catch {}
+
+                // 2. Fallback to BarTranslator.exe --speak
+                try {
+                    string exe = Path.Combine(dir, "BarTranslator.exe");
+                    if (File.Exists(exe)) {
+                        var psi = new ProcessStartInfo {
+                            FileName = exe,
+                            Arguments = !string.IsNullOrWhiteSpace(text) ? "--speak \"" + text + "\"" : "--speak",
+                            CreateNoWindow = true,
+                            UseShellExecute = false
+                        };
+                        var p = Process.Start(psi);
+                        if (p != null) p.WaitForExit(2000);
+                    }
+                } catch {}
             }
         }
     }
