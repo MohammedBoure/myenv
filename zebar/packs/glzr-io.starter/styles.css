@@ -219,69 +219,84 @@ body,
   background-color: #ffffff;
 }
 
-/* Standalone Translator Widget */
-.translator-widget {
+/* Standalone Translator Container */
+.translator-container {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  background: rgba(255, 255, 255, 0.10);
-  border: 1px solid rgba(255, 255, 255, 0.20);
-  color: #ffffff;
-  padding: 3px 8px;
+  gap: 3px;
   height: 22px;
-  font-size: 12px;
-  font-weight: 600;
-  cursor: pointer;
-  border-radius: 0px !important;
-  transition: background 0.15s ease, border-color 0.15s ease;
-  max-width: 360px;
-  min-width: 140px;
-  overflow: hidden;
 }
 
-.translator-widget.expanded {
-  max-width: 520px;
-}
-
-.translator-widget:hover {
-  background: rgba(255, 255, 255, 0.22);
-  border-color: #ffffff;
-}
-
-.translator-icon-btn {
+/* External Speak Button (can be pressed to pronounce) */
+.translator-speak-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 2px 4px;
-  margin-right: 2px;
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.20);
+  color: #58a6ff;
+  height: 22px;
+  width: 26px;
+  padding: 0;
   cursor: pointer;
   border-radius: 0px !important;
   flex-shrink: 0;
-  transition: all 0.15s ease;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
-.translator-icon-btn:hover {
+.translator-speak-btn i {
+  font-size: 13px;
+  margin: 0;
+}
+
+.translator-speak-btn:hover:not(:disabled) {
   background: rgba(88, 166, 255, 0.25);
-}
-
-.translator-icon-btn:hover i {
+  border-color: #58a6ff;
   color: #ffffff;
 }
 
-.translator-icon-btn.speaking {
+.translator-speak-btn:disabled,
+.translator-speak-btn.disabled {
+  opacity: 0.40;
+  cursor: not-allowed;
+  border-color: rgba(255, 255, 255, 0.10);
+}
+
+.translator-speak-btn.speaking {
   background: rgba(63, 185, 80, 0.25);
+  border-color: #3fb950;
+  color: #3fb950;
   animation: speakPulse 0.7s infinite alternate ease-in-out;
 }
 
-.translator-icon-btn.speaking i {
+.translator-speak-btn.speaking i {
   color: #3fb950 !important;
 }
 
-.translator-widget i {
-  font-size: 13px;
-  color: #58a6ff;
-  flex-shrink: 0;
-  margin-right: 0;
+/* Text Frame (displays text, cannot be pressed / non-clickable) */
+.translator-text-frame {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  padding: 3px 10px;
+  height: 22px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: default;
+  user-select: none;
+  border-radius: 0px !important;
+  max-width: 480px;
+  min-width: 130px;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.translator-text-frame:hover {
+  background: rgba(255, 255, 255, 0.10);
+  border-color: rgba(255, 255, 255, 0.25);
 }
 
 /* Divided 50/50 Equal Priority Translator Container */
@@ -545,13 +560,13 @@ body,
   min-height: 26px;
   overflow: hidden;
   text-align: center;
-  cursor: pointer;
+  cursor: default;
   transition: background 0.15s ease;
 }
 
 .translation-focus-banner:hover {
-  background: rgba(88, 166, 255, 0.18);
-  border-color: #58a6ff;
+  background: rgba(88, 166, 255, 0.12);
+  border-color: rgba(88, 166, 255, 0.45);
 }
 
 .focus-content {

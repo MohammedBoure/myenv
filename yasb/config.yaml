@@ -39,6 +39,7 @@ bars:
       - glazewm_workspaces
       - bar_menu
       center:
+      - translator_speak
       - translator
       - clock
       right:
@@ -217,15 +218,29 @@ widgets:
         show_graph_grid: true
         graph_history_size: 60
         alignment: center
+  translator_speak:
+    type: yasb.custom.CustomWidget
+    options:
+      class_name: translator-speak-widget
+      label: "<span>\uE720</span>"
+      tooltip: true
+      tooltip_label: "Pronounce English Text\n\n[Click to pronounce]"
+      exec_options:
+        run_cmd: 'powershell -NoProfile -Command "Write-Output ok"'
+        run_interval: 3600
+        return_format: 'string'
+      callbacks:
+        on_left: "exec C:/Users/moham/Documents/myenv/scripts/bar-translator/speak-state.cmd"
+        on_right: "exec C:/Users/moham/Documents/myenv/scripts/bar-translator/speak-state.cmd"
   translator:
     type: yasb.custom.CustomWidget
     options:
       class_name: translator-widget
-      label: "<span>\uE720</span> {data[display_short]}"
-      label_alt: "<span>\uE720</span> {data[display_full]}"
-      label_placeholder: "<span>\uE720</span> English ➔ العربية"
+      label: "{data[display_short]}"
+      label_alt: "{data[display_full]}"
+      label_placeholder: "English ➔ العربية"
       tooltip: true
-      tooltip_label: "English: {data[original]}\nArabic: {data[full]}\n\n[Left Click: Toggle Full/Short | Right Click: Copy | Middle Click: Pronounce English]"
+      tooltip_label: "English: {data[original]}\nArabic: {data[full]}\n\n[Right Click: Copy Arabic]"
       exec_options:
         run_cmd: 'C:/Users/moham/Documents/myenv/scripts/bar-translator/get-state-reader.exe'
         run_interval: 120
@@ -234,9 +249,8 @@ widgets:
         use_shell: false
         encoding: 'utf-8'
       callbacks:
-        on_left: toggle_label
+        on_left: ""
         on_right: "exec C:/Users/moham/Documents/myenv/scripts/bar-translator/copy-state.cmd"
-        on_middle: "exec C:/Users/moham/Documents/myenv/scripts/bar-translator/speak-state.cmd"
   bar_menu:
     type: yasb.custom.CustomWidget
     options:

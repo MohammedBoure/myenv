@@ -536,23 +536,35 @@
                 {renderMenuButton()}
               </div>
 
-              {/* Center: Full-Width Prominent Sentence Translation Banner */}
+              {/* External Pronounce Button (can be pressed) */}
+              <button
+                className={`focus-speak-btn ${isSpeaking ? 'speaking' : ''} ${!hasData ? 'disabled' : ''}`}
+                onClick={(e) => handlePronounce(e)}
+                disabled={!hasData || isSpeaking}
+                title={
+                  !hasData
+                    ? "Microphone (no English text to pronounce)"
+                    : isSpeaking
+                    ? "Pronouncing English text..."
+                    : `Pronounce English: "${translation.english || translation.original}"`
+                }
+              >
+                <i className={`nf ${isSpeaking ? 'nf-md-volume_high' : 'nf-md-microphone'}`}></i>
+              </button>
+
+              {/* Center: Full-Width Prominent Sentence Translation Banner (cannot be pressed) */}
               <div
                 className="translation-focus-banner"
-                onClick={handleCopy}
-                title="[Click to Copy Arabic Translation]"
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  handleCopy(e);
+                }}
+                title="[Right Click to Copy Arabic Translation]"
               >
                 {hasData ? (
                   <div className="focus-content">
                     {isShowEnglish && (
                       <>
-                        <button
-                          className={`focus-speak-btn ${isSpeaking ? 'speaking' : ''}`}
-                          onClick={(e) => handlePronounce(e)}
-                          title={isSpeaking ? "Pronouncing English text..." : "Click to pronounce English text"}
-                        >
-                          <i className={`nf ${isSpeaking ? 'nf-md-volume_high' : 'nf-md-microphone'}`}></i>
-                        </button>
                         <span
                           className="focus-en"
                           title={translation.english || translation.original}
@@ -571,7 +583,6 @@
                   </div>
                 ) : (
                   <div className="focus-empty">
-                    <i className="nf nf-md-microphone"></i>
                     <span>
                       {isAutoCapture
                         ? "Select or copy any text to translate..."
@@ -624,65 +635,70 @@
               {/* Three Squares Menu Button beside Workspaces Navigation */}
               {renderMenuButton()}
 
-              {/* Standalone Translator Widget */}
+              {/* Standalone Translator Widget & External Speak Button */}
               {visibility.translator && (
-                <button
-                  className={`translator-widget ${isExpanded ? 'expanded' : ''}`}
-                  onClick={() => setIsExpanded(!isExpanded)}
-                  onContextMenu={(e) => {
-                    e.preventDefault();
-                    handleCopy(e);
-                  }}
-                  title={
-                    hasData
-                      ? `English: ${translation.english || translation.original}\nArabic: ${translation.arabic || translation.full}\n[Click Mic: Pronounce English | Left Click Text: Toggle Full/Short | Right Click: Copy]`
-                      : `Status Bar Translator\n• Auto-Copy: ${isClipboardTranslate ? 'ON' : 'OFF'}\n• Auto-Select: ${isAutoCapture ? 'ON' : 'OFF'}\n\n[Select or copy text to translate]`
-                  }
-                >
-                  <span
-                    className={`translator-icon-btn ${isSpeaking ? 'speaking' : ''}`}
+                <div className="translator-container">
+                  {/* External Pronounce Button (can be pressed) */}
+                  <button
+                    className={`translator-speak-btn ${isSpeaking ? 'speaking' : ''} ${!hasData ? 'disabled' : ''}`}
                     onClick={(e) => handlePronounce(e)}
-                    title={isSpeaking ? "Pronouncing English text..." : "Click to pronounce English text"}
+                    disabled={!hasData || isSpeaking}
+                    title={
+                      !hasData
+                        ? "Microphone (no English text to pronounce)"
+                        : isSpeaking
+                        ? "Pronouncing English text..."
+                        : `Pronounce English: "${translation.english || translation.original}"`
+                    }
                   >
                     <i className={`nf ${isSpeaking ? 'nf-md-volume_high' : 'nf-md-microphone'}`}></i>
-                  </span>
-                  {isShowEnglish ? (
-                    <div className="translator-divided">
+                  </button>
+
+                  {/* Text Frame (displays text, cannot be pressed / non-clickable) */}
+                  <div
+                    className="translator-text-frame"
+                    onContextMenu={(e) => {
+                      e.preventDefault();
+                      handleCopy(e);
+                    }}
+                    title={
+                      hasData
+                        ? `English: ${translation.english || translation.original}\nArabic: ${translation.arabic || translation.full}\n[Right Click: Copy Arabic]`
+                        : `Status Bar Translator\n• Auto-Copy: ${isClipboardTranslate ? 'ON' : 'OFF'}\n• Auto-Select: ${isAutoCapture ? 'ON' : 'OFF'}\n\n[Select or copy text to translate]`
+                    }
+                  >
+                    {isShowEnglish ? (
+                      <div className="translator-divided">
+                        <span
+                          className="part-en"
+                          title={hasData ? (translation.english || translation.original) : "English"}
+                        >
+                          {hasData
+                            ? (translation.english || translation.original)
+                            : "English"}
+                        </span>
+                        <span className="part-sep">➔</span>
+                        <span
+                          className="part-ar"
+                          title={hasData ? (translation.arabic || translation.full) : "العربية"}
+                        >
+                          {hasData
+                            ? (translation.arabic || translation.full)
+                            : "العربية"}
+                        </span>
+                      </div>
+                    ) : (
                       <span
-                        className="part-en"
-                        title={hasData ? (translation.english || translation.original) : "English"}
-                      >
-                        {hasData
-                          ? (isExpanded
-                              ? (translation.english || translation.original)
-                              : (translation.english_short || translation.original_short || translation.english || translation.original))
-                          : "English"}
-                      </span>
-                      <span className="part-sep">➔</span>
-                      <span
-                        className="part-ar"
+                        className="part-ar-only"
                         title={hasData ? (translation.arabic || translation.full) : "العربية"}
                       >
                         {hasData
-                          ? (isExpanded
-                              ? (translation.arabic || translation.full)
-                              : (translation.arabic_short || translation.short || translation.arabic || translation.full))
+                          ? (translation.arabic || translation.full)
                           : "العربية"}
                       </span>
-                    </div>
-                  ) : (
-                    <span
-                      className="part-ar-only"
-                      title={hasData ? (translation.arabic || translation.full) : "العربية"}
-                    >
-                      {hasData
-                        ? (isExpanded
-                            ? (translation.arabic || translation.full)
-                            : (translation.arabic_short || translation.short || translation.arabic || translation.full))
-                        : "العربية"}
-                    </span>
-                  )}
-                </button>
+                    )}
+                  </div>
+                </div>
               )}
             </div>
 

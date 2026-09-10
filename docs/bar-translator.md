@@ -34,10 +34,9 @@ An ultra-fast, background selection monitor, translator, and status bar control 
 | Action | Result |
 |---|---|
 | **Left Click on Menu Button (`bar_menu`)** | Open unified settings dropdown menu (Translation controls & widget visibility toggles). |
-| **Click on Translator Microphone Icon (Zebar)** | Pronounce active English text out loud using Google Neural TTS / Windows speech synthesis with speaker icon feedback. |
-| **Left Click on Translator Widget Text** | Toggle between short preview and full translated text (`display_short` <-> `display_full`). |
-| **Right Click on Translator Widget** | Copy full Arabic translation directly to system clipboard. |
-| **Middle Click on Translator Widget (YASB)** | Pronounce active English text out loud via `speak-state.cmd`. |
+| **Click on External Microphone Button (`translator-speak-btn` / `translator_speak`)** | Pronounce active English text out loud using Google Neural TTS / Windows speech synthesis with speaker icon feedback. |
+| **Left Click on Translator Text Frame** | Non-clickable static display frame (cannot be pressed). |
+| **Right Click on Translator Text Frame** | Copy full Arabic translation directly to system clipboard. |
 
 ---
 

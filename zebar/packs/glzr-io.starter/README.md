@@ -14,7 +14,8 @@ A customized widget pack for Zebar integrated with GlazeWM.
 
 ## Translator Widget Features
 
-- **Microphone Icon**: Displays a microphone icon (`nf-md-microphone`) replacing the previous globe icon.
-- **Audio Pronunciation Playback**: Clicking the microphone icon switches the icon to a speaker (`nf-md-volume_high`) with pulsing animation while pronouncing the active English text using natural Google Text-to-Speech, with automatic fallback to Web Speech API and local daemon synthesis.
+- **External Microphone Button**: Standalone pressable button (`.translator-speak-btn`) hosting the microphone icon (`nf-md-microphone`), separated completely from the text display.
+- **Audio Pronunciation Playback**: Clicking the external microphone button switches the icon to a speaker (`nf-md-volume_high`) with pulsing animation while pronouncing the active English text using natural Google Text-to-Speech, with automatic fallback to Web Speech API and local daemon synthesis.
+- **Non-Clickable Text Frame**: The text container (`.translator-text-frame`) is a static display frame that cannot be pressed (`cursor: default`), keeping the text stable without triggering toggles.
 - **Divided Layout**: 50/50 symmetric space allocation for English text and Arabic translation.
 - **Dropdown Controls**: Tabbed menu for toggling auto-capture, clipboard translation, bilingual display, focus mode, and bar container visibility.
