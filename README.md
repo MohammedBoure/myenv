@@ -150,6 +150,8 @@ Access all system documentation guides directly:
 | `Alt + Shift + H/L/K/J` | Move focused window in direction |
 | `Alt + Space` | Cycle window focus (tiling -> floating -> fullscreen) |
 | `Alt + Shift + Space` | Toggle window floating (centered) |
+| `Alt + Shift + I` | Permanently add focused dialog/window to ignore list and untile immediately |
+| `Alt + Ctrl + I` | Temporarily unmanage focused window for current session (`ignore`) |
 | `Alt + T` | Return window to tiling state |
 | `Alt + F` | Toggle window fullscreen |
 | `Alt + M` | Toggle window minimize |

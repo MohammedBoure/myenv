@@ -109,6 +109,8 @@ window_rules:
       - window_title: { regex: '(?i).*Quick Symbols & Words.*' }
       # Ignores the centered myenv application launcher.
       - window_title: { regex: '.*myenv-app-launcher.*' }
+      # Ignores myenv toast notifications
+      - window_title: { regex: '.*myenv-ignore-toast.*' }
 
   # Always tile terminals and text editors (CMD, PowerShell, Windows Terminal, NightPad)
   - commands: ['set-tiling']
@@ -250,6 +252,14 @@ keybindings:
 
   - commands: ['toggle-floating --centered']
     bindings: ['alt+shift+space']
+
+  # Add focused dialog/window permanently to GlazeWM ignore rules & unmanage immediately (Alt+Shift+I)
+  - commands: ['shell-exec powershell.exe -sta -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File %USERPROFILE%\Documents\myenv\scripts\ignore-focused-window.ps1']
+    bindings: ['alt+shift+i']
+
+  # Instant session-only ignore without adding to config (Alt+Ctrl+I)
+  - commands: ['ignore']
+    bindings: ['alt+ctrl+i']
 
   - commands: ['toggle-tiling']
     bindings: ['alt+t']

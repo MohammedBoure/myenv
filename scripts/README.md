@@ -34,4 +34,5 @@ Central automation scripts, system configuration utilities, and native binary la
 | [`setup-gemini-config.ps1`](file:///C:/Users/moham/Documents/myenv/scripts/setup-gemini-config.ps1) | Sets up central directory junction linking `%USERPROFILE%\.gemini\config` to `%USERPROFILE%\Documents\myenv\gemini`. |
 | [`install-len.ps1`](file:///C:/Users/moham/Documents/myenv/scripts/install-len.ps1) | Automated installer and smart updater for **len (ProjectLens)** CLI tool from remote GitHub repository. |
 | [`install-lensbridge.ps1`](file:///C:/Users/moham/Documents/myenv/scripts/install-lensbridge.ps1) | Automated installer, repository manager (`D:\git\LensBridge`), isolated venv builder, and background service manager for **LensBridge Server**. |
+| [`ignore-focused-window.ps1`](file:///C:/Users/moham/Documents/myenv/scripts/ignore-focused-window.ps1) | Unmanages focused dialog or window immediately and persists an ignore rule to GlazeWM config (`Alt + Shift + I`). |
 | [`docs.ps1`](file:///C:/Users/moham/Documents/myenv/scripts/docs.ps1) | Interactive CLI documentation viewer. |
