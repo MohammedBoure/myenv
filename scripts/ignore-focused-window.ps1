@@ -1,19 +1,72 @@
 <#
 .SYNOPSIS
-    Instantly unmanages the focused dialog or window, shrinks/centers it to native dialog size, and persists an ignore rule.
+    Instantly unmanages the focused dialog or window, shrinks/centers it to native dialog size, and manages persistent GlazeWM ignore rules.
 .DESCRIPTION
-    Triggered via Alt+Shift+I (permanent rule) or Alt+Ctrl+I (session only).
-    1. Queries the active focused window details via GlazeWM CLI.
-    2. Immediately calls 'glazewm command ignore' to unmanage and untile the dialog right now.
-    3. Restores window from maximized/stretched state, sets clean centered dialog dimensions via Win32.
-    4. If not -SessionOnly, appends rule to glazewm/config.yaml under window_rules (ignore) and reloads.
-    5. Displays a subtle, non-activating dark toast notification and plays audio confirmation.
+    Keybindings:
+      Alt+Shift+I : Permanently ignore focused dialog, shrink & center it, persist rule in config.yaml.
+      Alt+Shift+U : Remove focused dialog from permanent ignore rules in config.yaml & reload.
+      Alt+Ctrl+I  : Session-only ignore, shrink & center dialog without writing to config.yaml.
+
+    CLI Options:
+      -List       : Display all custom ignored dialog rules.
+      -Remove     : Remove the focused window's rule from config.yaml.
+      -SessionOnly: Ignore window for current session without modifying config.yaml.
 #>
 
 [CmdletBinding()]
 param(
-    [switch]$SessionOnly
+    [switch]$SessionOnly,
+    [switch]$Remove,
+    [switch]$List
 )
+
+$configPath = "$env:USERPROFILE\Documents\myenv\glazewm\config.yaml"
+if (-not (Test-Path $configPath)) {
+    $configPath = "$env:USERPROFILE\.glzr\glazewm\config.yaml"
+}
+
+# 1. CLI List Mode
+if ($List) {
+    if (-not (Test-Path $configPath)) {
+        Write-Host "GlazeWM config not found at $configPath" -ForegroundColor Red
+        exit 1
+    }
+
+    $lines = [System.IO.File]::ReadAllLines($configPath, [System.Text.Encoding]::UTF8)
+    $inCustomSection = $false
+    $rulesFound = 0
+
+    Write-Host "`n=== GlazeWM Custom Ignored Dialogs ===" -ForegroundColor Cyan
+    for ($i = 0; $i -lt $lines.Count; $i++) {
+        $line = $lines[$i]
+        if ($line -match "USER CUSTOM IGNORED DIALOGS") {
+            $inCustomSection = $true
+            continue
+        }
+        if ($inCustomSection -and ($line -match "^\s*-\s*commands:" -or $line -match "^\s*binding_modes:" -or $line -match "^\s*# Always tile")) {
+            $inCustomSection = $false
+            break
+        }
+        if ($inCustomSection -and $line.Trim().StartsWith("# Custom rule:")) {
+            $rulesFound++
+            Write-Host "[$rulesFound] $($line.Trim().Substring(2))" -ForegroundColor Green
+            # Print associated match lines
+            for ($j = $i + 1; $j -lt $lines.Count; $j++) {
+                if ($lines[$j].Trim().StartsWith("- window_") -or $lines[$j].Trim().StartsWith("window_")) {
+                    Write-Host "    $($lines[$j].Trim())" -ForegroundColor Gray
+                } else {
+                    break
+                }
+            }
+        }
+    }
+
+    if ($rulesFound -eq 0) {
+        Write-Host "No custom ignored dialogs found." -ForegroundColor Yellow
+    }
+    Write-Host ""
+    exit 0
+}
 
 # Win32 API Helper for un-maximizing, resizing, and centering dialogs
 $win32Code = @"
@@ -75,133 +128,8 @@ try {
     }
 } catch {}
 
-try {
-    # 1. Query focused window from GlazeWM
-    $raw = & glazewm.exe query focused 2>$null
-    if (-not $raw) {
-        exit 0
-    }
-
-    $json = $raw | ConvertFrom-Json
-    if (-not $json.success -or -not $json.data.focused) {
-        exit 0
-    }
-
-    $focused = $json.data.focused
-    $procName = if ($focused.processName) { [string]$focused.processName } else { "" }
-    $className = if ($focused.className) { [string]$focused.className } else { "" }
-    $title = if ($focused.title) { [string]$focused.title } else { "" }
-    $windowId = $focused.id
-    $hwndVal = $focused.handle
-
-    if (-not $procName -and -not $title -and -not $className) {
-        exit 0
-    }
-
-    # 2. Immediately execute GlazeWM ignore command to unmanage the dialog instantly
-    if ($windowId) {
-        & glazewm.exe command ignore --id $windowId 2>$null
-    } else {
-        & glazewm.exe command ignore 2>$null
-    }
-
-    # 3. Restore window from maximized/stretched state and center with clean dialog dimensions
-    if ($hwndVal) {
-        try {
-            Add-Type -AssemblyName PresentationFramework -ErrorAction SilentlyContinue
-            $screen = [System.Windows.SystemParameters]::WorkArea
-            $hWnd = [IntPtr][long]$hwndVal
-            [Win32DialogResizer]::ShrinkAndCenter($hWnd, [int]$screen.Left, [int]$screen.Top, [int]$screen.Width, [int]$screen.Height)
-        } catch {}
-    }
-
-    # If user only wanted session-only ignore, play sound and exit
-    if ($SessionOnly) {
-        try { [System.Media.SystemSounds]::Asterisk.Play() } catch {}
-        exit 0
-    }
-
-    # 4. Locate GlazeWM config file
-    $configPath = "$env:USERPROFILE\Documents\myenv\glazewm\config.yaml"
-    if (-not (Test-Path $configPath)) {
-        $configPath = "$env:USERPROFILE\.glzr\glazewm\config.yaml"
-    }
-    if (-not (Test-Path $configPath)) {
-        exit 0
-    }
-
-    $configContent = [System.IO.File]::ReadAllText($configPath, [System.Text.Encoding]::UTF8)
-
-    # 5. Formulate precise matching rule
-    $dateStr = (Get-Date).ToString("yyyy-MM-dd HH:mm")
-    $ruleSummary = ""
-    $ruleLines = @()
-
-    # Clean title for regex matching
-    $trimmedTitle = $title.Trim()
-    $safeTitleRegex = ""
-    if ($trimmedTitle) {
-        if ($trimmedTitle.Length -gt 40) {
-            $trimmedTitle = $trimmedTitle.Substring(0, 40)
-        }
-        $safeTitleRegex = [regex]::Escape($trimmedTitle)
-    }
-
-    if ($className -eq "#32770" -and $procName) {
-        $ruleSummary = "$procName [Dialog #32770]"
-        $ruleLines = @(
-            "      # Ignored standard dialog (#32770) added on $($dateStr)",
-            "      - window_process: { regex: '(?i)^$([regex]::Escape($procName))$' }",
-            "        window_class: { equals: '#32770' }"
-        )
-    }
-    elseif ($safeTitleRegex -and $procName) {
-        $displayTitle = if ($title.Length -gt 35) { $title.Substring(0, 32) + "..." } else { $title }
-        $ruleSummary = "$procName ($displayTitle)"
-        $ruleLines = @(
-            "      # Ignored dialog/window added on $($dateStr) - $displayTitle",
-            "      - window_process: { regex: '(?i)^$([regex]::Escape($procName))$' }",
-            "        window_title: { regex: '(?i).*$safeTitleRegex.*' }"
-        )
-    }
-    elseif ($className -and $procName) {
-        $ruleSummary = "$procName [Class: $className]"
-        $ruleLines = @(
-            "      # Ignored dialog window added on $($dateStr) - Class $className",
-            "      - window_process: { regex: '(?i)^$([regex]::Escape($procName))$' }",
-            "        window_class: { equals: '$className' }"
-        )
-    }
-    elseif ($procName) {
-        $ruleSummary = "$procName"
-        $ruleLines = @(
-            "      # Ignored application added on $($dateStr) - $procName",
-            "      - window_process: { regex: '(?i)^$([regex]::Escape($procName))$' }"
-        )
-    }
-
-    if ($ruleLines.Count -gt 0) {
-        $newRuleText = ($ruleLines -join "`r`n")
-
-        # Check if already present in config
-        if (-not ($configContent -match [regex]::Escape($ruleLines[1].Trim()))) {
-            # Find insertion anchor in window_rules -> commands: ['ignore']
-            $anchorRegex = "(?m)^(\s*-\s*window_title:\s*\{\s*regex:\s*['`"].*myenv-app-launcher.*['`"]\s*\})"
-            if ($configContent -match $anchorRegex) {
-                $replacement = "`$1`r`n$newRuleText"
-                $newConfig = [regex]::Replace($configContent, $anchorRegex, $replacement, 1)
-                [System.IO.File]::WriteAllText($configPath, $newConfig, [System.Text.Encoding]::UTF8)
-
-                # Reload GlazeWM config
-                & glazewm.exe command wm-reload-config 2>$null
-            }
-        }
-    }
-
-    # Audio confirmation
-    try { [System.Media.SystemSounds]::Asterisk.Play() } catch {}
-
-    # 6. Fast non-intrusive notification toast (WPF)
+# Helper to show dark non-intrusive toast notification
+function Show-NotificationToast([string]$titleText, [string]$detailText) {
     try {
         Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase -ErrorAction SilentlyContinue
 
@@ -217,7 +145,6 @@ try {
         $win.Width = 360
         $win.Height = 72
 
-        # Position at bottom-right corner above taskbar
         $screen = [System.Windows.SystemParameters]::WorkArea
         $win.Left = $screen.Right - 380
         $win.Top = $screen.Bottom - 85
@@ -232,14 +159,14 @@ try {
         $stack = New-Object System.Windows.Controls.StackPanel
 
         $header = New-Object System.Windows.Controls.TextBlock
-        $header.Text = "GlazeWM: Window Added to Ignore List"
+        $header.Text = $titleText
         $header.FontSize = 12
         $header.FontWeight = [System.Windows.FontWeights]::SemiBold
         $header.Foreground = New-Object System.Windows.Media.SolidColorBrush([System.Windows.Media.Color]::FromRgb(240, 240, 240))
         $stack.Children.Add($header) | Out-Null
 
         $detail = New-Object System.Windows.Controls.TextBlock
-        $detail.Text = $ruleSummary
+        $detail.Text = $detailText
         $detail.FontSize = 11
         $detail.Margin = New-Object System.Windows.Thickness(0, 4, 0, 0)
         $detail.TextTrimming = [System.Windows.TextTrimming]::CharacterEllipsis
@@ -249,7 +176,6 @@ try {
         $border.Child = $stack
         $win.Content = $border
 
-        # Auto-close after 2.2 seconds
         $timer = New-Object System.Windows.Threading.DispatcherTimer
         $timer.Interval = [TimeSpan]::FromSeconds(2.2)
         $timer.Add_Tick({
@@ -261,6 +187,171 @@ try {
         $win.Show()
         [System.Windows.Threading.Dispatcher]::Run()
     } catch {}
+}
+
+try {
+    # 2. Query focused window from GlazeWM
+    $raw = & glazewm.exe query focused 2>$null
+    if (-not $raw) { exit 0 }
+
+    $json = $raw | ConvertFrom-Json
+    if (-not $json.success -or -not $json.data.focused) { exit 0 }
+
+    $focused = $json.data.focused
+    $procName = if ($focused.processName) { [string]$focused.processName } else { "" }
+    $className = if ($focused.className) { [string]$focused.className } else { "" }
+    $title = if ($focused.title) { [string]$focused.title } else { "" }
+    $windowId = $focused.id
+    $hwndVal = $focused.handle
+
+    if (-not $procName -and -not $title -and -not $className) { exit 0 }
+
+    # 3. Handle Removal Mode (-Remove / Alt+Shift+U)
+    if ($Remove) {
+        if (-not (Test-Path $configPath)) { exit 0 }
+
+        $lines = [System.Collections.Generic.List[string]]([System.IO.File]::ReadAllLines($configPath, [System.Text.Encoding]::UTF8))
+        $removed = $false
+        $removedTitle = if ($title) { $title.Trim() } else { $procName }
+
+        # Look for matching custom rule under the custom section
+        for ($i = $lines.Count - 1; $i -ge 0; $i--) {
+            $line = $lines[$i]
+            $matchTarget = $false
+
+            if ($title -and ($line -match [regex]::Escape($title.Trim()))) {
+                $matchTarget = $true
+            } elseif ($procName -and ($line -match "regex: '\(\?i\)\^$([regex]::Escape($procName))\.\*\$'")) {
+                $matchTarget = $true
+            }
+
+            if ($matchTarget) {
+                # Find start of block (comment line above)
+                $startIdx = $i
+                while ($startIdx -gt 0 -and (-not $lines[$startIdx].Trim().StartsWith("# Custom rule:"))) {
+                    $startIdx--
+                }
+                # Find end of block
+                $endIdx = $i
+                while ($endIdx + 1 -lt $lines.Count -and ($lines[$endIdx + 1].Trim().StartsWith("window_") -or $lines[$endIdx + 1].Trim().StartsWith("- window_"))) {
+                    $endIdx++
+                }
+
+                $countToRemove = ($endIdx - $startIdx) + 1
+                for ($k = 0; $k -lt $countToRemove; $k++) {
+                    $lines.RemoveAt($startIdx)
+                }
+                $removed = $true
+                break
+            }
+        }
+
+        if ($removed) {
+            [System.IO.File]::WriteAllLines($configPath, $lines, [System.Text.Encoding]::UTF8)
+            & glazewm.exe command wm-reload-config 2>$null
+            try { [System.Media.SystemSounds]::Asterisk.Play() } catch {}
+            Show-NotificationToast "GlazeWM: Removed from Ignore List" $removedTitle
+        } else {
+            Show-NotificationToast "GlazeWM: Rule Not Found" "Window was not in custom ignore list."
+        }
+        exit 0
+    }
+
+    # 4. Immediate unmanage in current GlazeWM session
+    if ($windowId) {
+        & glazewm.exe command ignore --id $windowId 2>$null
+    } else {
+        & glazewm.exe command ignore 2>$null
+    }
+
+    # 5. Win32 un-maximize and shrink/center dialog
+    if ($hwndVal) {
+        try {
+            Add-Type -AssemblyName PresentationFramework -ErrorAction SilentlyContinue
+            $screen = [System.Windows.SystemParameters]::WorkArea
+            $hWnd = [IntPtr][long]$hwndVal
+            [Win32DialogResizer]::ShrinkAndCenter($hWnd, [int]$screen.Left, [int]$screen.Top, [int]$screen.Width, [int]$screen.Height)
+        } catch {}
+    }
+
+    # If user only wanted session-only ignore, play sound and exit
+    if ($SessionOnly) {
+        try { [System.Media.SystemSounds]::Asterisk.Play() } catch {}
+        exit 0
+    }
+
+    # 6. Formulate Permanent YAML Rule
+    if (-not (Test-Path $configPath)) { exit 0 }
+
+    $dateStr = (Get-Date).ToString("yyyy-MM-dd HH:mm")
+    $trimmedTitle = $title.Trim()
+    $safeTitle = if ($trimmedTitle) { [regex]::Replace($trimmedTitle, '([\\\[\]\(\)\{\}\.\*\+\?\^\$\|])', '\$1') } else { "" }
+    $safeProc = if ($procName) { [regex]::Replace($procName, '([\\\[\]\(\)\{\}\.\*\+\?\^\$\|])', '\$1') } else { "" }
+
+    $ruleLines = [System.Collections.Generic.List[string]]::new()
+    $displayTitle = if ($trimmedTitle.Length -gt 35) { $trimmedTitle.Substring(0, 32) + "..." } else { $trimmedTitle }
+    $ruleSummary = ""
+
+    if ($className -eq "#32770" -and $procName) {
+        $ruleSummary = "$procName [Dialog #32770]"
+        $ruleLines.Add("      # Custom rule: $procName [Dialog #32770] [Added: $dateStr]")
+        $ruleLines.Add("      - window_process: { regex: '(?i)^" + $safeProc + ".*$' }")
+        $ruleLines.Add("        window_class: { equals: '#32770' }")
+    }
+    elseif ($safeTitle -and $procName) {
+        $ruleSummary = "$procName ($displayTitle)"
+        $ruleLines.Add("      # Custom rule: $displayTitle [Added: $dateStr]")
+        $ruleLines.Add("      - window_process: { regex: '(?i)^" + $safeProc + ".*$' }")
+        $ruleLines.Add("        window_title: { regex: '(?i).*" + $safeTitle + ".*' }")
+    }
+    elseif ($className -and $procName) {
+        $ruleSummary = "$procName [Class: $className]"
+        $ruleLines.Add("      # Custom rule: $procName [Class: $className] [Added: $dateStr]")
+        $ruleLines.Add("      - window_process: { regex: '(?i)^" + $safeProc + ".*$' }")
+        $ruleLines.Add("        window_class: { equals: '" + $className + "' }")
+    }
+    elseif ($procName) {
+        $ruleSummary = "$procName"
+        $ruleLines.Add("      # Custom rule: $procName [Added: $dateStr]")
+        $ruleLines.Add("      - window_process: { regex: '(?i)^" + $safeProc + ".*$' }")
+    }
+
+    if ($ruleLines.Count -gt 0) {
+        $lines = [System.Collections.Generic.List[string]]([System.IO.File]::ReadAllLines($configPath, [System.Text.Encoding]::UTF8))
+
+        # Check if identical match line already exists
+        $alreadyPresent = $false
+        foreach ($line in $lines) {
+            if ($line.Trim() -eq $ruleLines[1].Trim()) {
+                $alreadyPresent = $true
+                break
+            }
+        }
+
+        if (-not $alreadyPresent) {
+            # Find insertion anchor
+            $anchorIdx = $lines.FindIndex([Predicate[string]]{ param($s) $s -match "USER CUSTOM IGNORED DIALOGS" })
+            if ($anchorIdx -ge 0) {
+                $lines.InsertRange($anchorIdx + 1, $ruleLines)
+            } else {
+                $anchorIdx = $lines.FindIndex([Predicate[string]]{ param($s) $s -match "myenv-ignore-toast" })
+                if ($anchorIdx -ge 0) {
+                    $lines.InsertRange($anchorIdx + 1, $ruleLines)
+                }
+            }
+
+            [System.IO.File]::WriteAllLines($configPath, $lines, [System.Text.Encoding]::UTF8)
+            & glazewm.exe command wm-reload-config 2>$null
+        } else {
+            & glazewm.exe command wm-reload-config 2>$null
+        }
+    }
+
+    # Audio confirmation
+    try { [System.Media.SystemSounds]::Asterisk.Play() } catch {}
+
+    # Notification Toast
+    Show-NotificationToast "GlazeWM: Added to Permanent Ignore List" $ruleSummary
 
 } catch {
     # Non-blocking error handling

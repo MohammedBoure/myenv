@@ -151,6 +151,7 @@ Access all system documentation guides directly:
 | `Alt + Space` | Cycle window focus (tiling -> floating -> fullscreen) |
 | `Alt + Shift + Space` | Toggle window floating (centered) |
 | `Alt + Shift + I` | Permanently ignore focused dialog/window, shrink to centered dialog size, and persist rule |
+| `Alt + Shift + U` | Remove focused dialog/window from permanent ignore rules |
 | `Alt + Ctrl + I` | Temporarily unmanage focused window for current session, shrink to centered dialog size (`ignore`) |
 | `Alt + T` | Return window to tiling state |
 | `Alt + F` | Toggle window fullscreen |

@@ -117,6 +117,11 @@ window_rules:
       # Any window with float, dialog, or popup in title opens as completely ignored
       - window_title: { regex: '(?i).*(float|dialog|popup|jaber).*' }
 
+      # --- USER CUSTOM IGNORED DIALOGS (Managed via Alt+Shift+I / Alt+Shift+U) ---
+      # Custom rule: Ajout Rapide au Stock (Détaillé) [Added: 2026-09-22 00:38]
+      - window_process: { regex: '(?i)^python.*$' }
+        window_title: { regex: '(?i).*Ajout Rapide au Stock.*' }
+
   # Always tile terminals and text editors (CMD, PowerShell, Windows Terminal, NightPad)
   - commands: ['set-tiling']
     match:
@@ -256,6 +261,10 @@ keybindings:
   # Add focused dialog/window permanently to GlazeWM ignore rules & unmanage immediately (Alt+Shift+I)
   - commands: ['shell-exec powershell.exe -sta -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File %USERPROFILE%\Documents\myenv\scripts\ignore-focused-window.ps1']
     bindings: ['alt+shift+i']
+
+  # Remove focused dialog/window from permanent GlazeWM ignore rules (Alt+Shift+U)
+  - commands: ['shell-exec powershell.exe -sta -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File %USERPROFILE%\Documents\myenv\scripts\ignore-focused-window.ps1 -Remove']
+    bindings: ['alt+shift+u']
 
   # Instant session-only ignore without adding to config (Alt+Ctrl+I)
   - commands: ['shell-exec powershell.exe -sta -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File %USERPROFILE%\Documents\myenv\scripts\ignore-focused-window.ps1 -SessionOnly']
