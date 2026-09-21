@@ -1,20 +1,79 @@
 <#
 .SYNOPSIS
-    Instantly ignores the focused dialog or window and persists an ignore rule in GlazeWM config.
+    Instantly unmanages the focused dialog or window, shrinks/centers it to native dialog size, and persists an ignore rule.
 .DESCRIPTION
-    Triggered via Alt+Shift+I (or CLI).
+    Triggered via Alt+Shift+I (permanent rule) or Alt+Ctrl+I (session only).
     1. Queries the active focused window details via GlazeWM CLI.
     2. Immediately calls 'glazewm command ignore' to unmanage and untile the dialog right now.
-    3. Analyzes window process, title, and class to generate a precise non-intrusive rule.
-    4. Appends the rule to glazewm/config.yaml under window_rules (ignore).
-    5. Reloads GlazeWM configuration via 'wm-reload-config'.
-    6. Displays a subtle, non-activating dark toast notification and plays audio confirmation.
+    3. Restores window from maximized/stretched state, sets clean centered dialog dimensions via Win32.
+    4. If not -SessionOnly, appends rule to glazewm/config.yaml under window_rules (ignore) and reloads.
+    5. Displays a subtle, non-activating dark toast notification and plays audio confirmation.
 #>
 
 [CmdletBinding()]
 param(
     [switch]$SessionOnly
 )
+
+# Win32 API Helper for un-maximizing, resizing, and centering dialogs
+$win32Code = @"
+using System;
+using System.Runtime.InteropServices;
+
+public class Win32DialogResizer {
+    [DllImport("user32.dll")]
+    public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+    [DllImport("user32.dll")]
+    public static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
+
+    [DllImport("user32.dll")]
+    public static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct RECT {
+        public int Left;
+        public int Top;
+        public int Right;
+        public int Bottom;
+    }
+
+    public const int SW_RESTORE = 9;
+    public const uint SWP_NOZORDER = 0x0004;
+    public const uint SWP_FRAMECHANGED = 0x0020;
+    public const uint SWP_SHOWWINDOW = 0x0040;
+
+    public static void ShrinkAndCenter(IntPtr hWnd, int sLeft, int sTop, int sWidth, int sHeight) {
+        if (hWnd == IntPtr.Zero) return;
+        ShowWindow(hWnd, SW_RESTORE);
+
+        RECT rect;
+        GetWindowRect(hWnd, out rect);
+        int curW = rect.Right - rect.Left;
+        int curH = rect.Bottom - rect.Top;
+
+        int targetW = curW;
+        int targetH = curH;
+
+        // If stretched or enlarged near full screen
+        if (curW >= sWidth * 0.80 || curH >= sHeight * 0.80 || curW <= 0 || curH <= 0) {
+            targetW = Math.Min(860, (int)(sWidth * 0.55));
+            targetH = Math.Min(600, (int)(sHeight * 0.65));
+        }
+
+        int targetX = sLeft + (sWidth - targetW) / 2;
+        int targetY = sTop + (sHeight - targetH) / 2;
+
+        SetWindowPos(hWnd, IntPtr.Zero, targetX, targetY, targetW, targetH, SWP_NOZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
+    }
+}
+"@
+
+try {
+    if (-not ([System.Management.Automation.PSTypeName]'Win32DialogResizer').Type) {
+        Add-Type -TypeDefinition $win32Code -ErrorAction SilentlyContinue
+    }
+} catch {}
 
 try {
     # 1. Query focused window from GlazeWM
@@ -33,6 +92,7 @@ try {
     $className = if ($focused.className) { [string]$focused.className } else { "" }
     $title = if ($focused.title) { [string]$focused.title } else { "" }
     $windowId = $focused.id
+    $hwndVal = $focused.handle
 
     if (-not $procName -and -not $title -and -not $className) {
         exit 0
@@ -45,13 +105,23 @@ try {
         & glazewm.exe command ignore 2>$null
     }
 
+    # 3. Restore window from maximized/stretched state and center with clean dialog dimensions
+    if ($hwndVal) {
+        try {
+            Add-Type -AssemblyName PresentationFramework -ErrorAction SilentlyContinue
+            $screen = [System.Windows.SystemParameters]::WorkArea
+            $hWnd = [IntPtr][long]$hwndVal
+            [Win32DialogResizer]::ShrinkAndCenter($hWnd, [int]$screen.Left, [int]$screen.Top, [int]$screen.Width, [int]$screen.Height)
+        } catch {}
+    }
+
     # If user only wanted session-only ignore, play sound and exit
     if ($SessionOnly) {
         try { [System.Media.SystemSounds]::Asterisk.Play() } catch {}
         exit 0
     }
 
-    # 3. Locate GlazeWM config file
+    # 4. Locate GlazeWM config file
     $configPath = "$env:USERPROFILE\Documents\myenv\glazewm\config.yaml"
     if (-not (Test-Path $configPath)) {
         $configPath = "$env:USERPROFILE\.glzr\glazewm\config.yaml"
@@ -62,7 +132,7 @@ try {
 
     $configContent = [System.IO.File]::ReadAllText($configPath, [System.Text.Encoding]::UTF8)
 
-    # 4. Formulate precise matching rule
+    # 5. Formulate precise matching rule
     $dateStr = (Get-Date).ToString("yyyy-MM-dd HH:mm")
     $ruleSummary = ""
     $ruleLines = @()
@@ -80,7 +150,7 @@ try {
     if ($className -eq "#32770" -and $procName) {
         $ruleSummary = "$procName [Dialog #32770]"
         $ruleLines = @(
-            "      # Ignored standard dialog (#32770) added on $dateStr",
+            "      # Ignored standard dialog (#32770) added on $($dateStr)",
             "      - window_process: { regex: '(?i)^$([regex]::Escape($procName))$' }",
             "        window_class: { equals: '#32770' }"
         )
@@ -89,7 +159,7 @@ try {
         $displayTitle = if ($title.Length -gt 35) { $title.Substring(0, 32) + "..." } else { $title }
         $ruleSummary = "$procName ($displayTitle)"
         $ruleLines = @(
-            "      # Ignored dialog/window added on $dateStr: $displayTitle",
+            "      # Ignored dialog/window added on $($dateStr) - $displayTitle",
             "      - window_process: { regex: '(?i)^$([regex]::Escape($procName))$' }",
             "        window_title: { regex: '(?i).*$safeTitleRegex.*' }"
         )
@@ -97,7 +167,7 @@ try {
     elseif ($className -and $procName) {
         $ruleSummary = "$procName [Class: $className]"
         $ruleLines = @(
-            "      # Ignored dialog window added on $dateStr: Class $className",
+            "      # Ignored dialog window added on $($dateStr) - Class $className",
             "      - window_process: { regex: '(?i)^$([regex]::Escape($procName))$' }",
             "        window_class: { equals: '$className' }"
         )
@@ -105,7 +175,7 @@ try {
     elseif ($procName) {
         $ruleSummary = "$procName"
         $ruleLines = @(
-            "      # Ignored application added on $dateStr: $procName",
+            "      # Ignored application added on $($dateStr) - $procName",
             "      - window_process: { regex: '(?i)^$([regex]::Escape($procName))$' }"
         )
     }
@@ -131,7 +201,7 @@ try {
     # Audio confirmation
     try { [System.Media.SystemSounds]::Asterisk.Play() } catch {}
 
-    # 5. Fast non-intrusive notification toast (WPF)
+    # 6. Fast non-intrusive notification toast (WPF)
     try {
         Add-Type -AssemblyName PresentationFramework, PresentationCore, WindowsBase -ErrorAction SilentlyContinue
 
