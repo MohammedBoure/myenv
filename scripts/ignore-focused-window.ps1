@@ -25,6 +25,8 @@ if (-not (Test-Path $configPath)) {
     $configPath = "$env:USERPROFILE\.glzr\glazewm\config.yaml"
 }
 
+$utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+
 # 1. CLI List Mode
 if ($List) {
     if (-not (Test-Path $configPath)) {
@@ -32,7 +34,7 @@ if ($List) {
         exit 1
     }
 
-    $lines = [System.IO.File]::ReadAllLines($configPath, [System.Text.Encoding]::UTF8)
+    $lines = [System.IO.File]::ReadAllLines($configPath, $utf8NoBom)
     $inCustomSection = $false
     $rulesFound = 0
 
@@ -210,7 +212,7 @@ try {
     if ($Remove) {
         if (-not (Test-Path $configPath)) { exit 0 }
 
-        $lines = [System.Collections.Generic.List[string]]([System.IO.File]::ReadAllLines($configPath, [System.Text.Encoding]::UTF8))
+        $lines = [System.Collections.Generic.List[string]]([System.IO.File]::ReadAllLines($configPath, $utf8NoBom))
         $removed = $false
         $removedTitle = if ($title) { $title.Trim() } else { $procName }
 
@@ -247,7 +249,7 @@ try {
         }
 
         if ($removed) {
-            [System.IO.File]::WriteAllLines($configPath, $lines, [System.Text.Encoding]::UTF8)
+            [System.IO.File]::WriteAllLines($configPath, $lines, $utf8NoBom)
             & glazewm.exe command wm-reload-config 2>$null
             try { [System.Media.SystemSounds]::Asterisk.Play() } catch {}
             Show-NotificationToast "GlazeWM: Removed from Ignore List" $removedTitle
@@ -317,7 +319,7 @@ try {
     }
 
     if ($ruleLines.Count -gt 0) {
-        $lines = [System.Collections.Generic.List[string]]([System.IO.File]::ReadAllLines($configPath, [System.Text.Encoding]::UTF8))
+        $lines = [System.Collections.Generic.List[string]]([System.IO.File]::ReadAllLines($configPath, $utf8NoBom))
 
         # Check if identical match line already exists
         $alreadyPresent = $false
@@ -340,7 +342,7 @@ try {
                 }
             }
 
-            [System.IO.File]::WriteAllLines($configPath, $lines, [System.Text.Encoding]::UTF8)
+            [System.IO.File]::WriteAllLines($configPath, $lines, $utf8NoBom)
             & glazewm.exe command wm-reload-config 2>$null
         } else {
             & glazewm.exe command wm-reload-config 2>$null

@@ -118,6 +118,9 @@ window_rules:
       - window_title: { regex: '(?i).*(float|dialog|popup|jaber).*' }
 
       # --- USER CUSTOM IGNORED DIALOGS (Managed via Alt+Shift+I / Alt+Shift+U) ---
+      # Custom rule: Bayan [Added: 2026-09-23 09:46]
+      - window_process: { regex: '(?i)^nahw_app.*$' }
+        window_title: { regex: '(?i).*Bayan.*' }
       # Custom rule: Ajout Rapide au Stock (Détaillé) [Added: 2026-09-22 00:38]
       - window_process: { regex: '(?i)^python.*$' }
         window_title: { regex: '(?i).*Ajout Rapide au Stock.*' }
@@ -217,7 +220,7 @@ keybindings:
     bindings: ['alt+ctrl+v']
 
   - commands: ['wm-cycle-focus']
-    bindings: ['alt+space', 'alt+grave', 'alt+w']
+    bindings: ['alt+space', 'alt+oem_tilde', 'alt+w']
 
   # Centered application search dialog (Alt+Shift+Q)
   - commands: ['shell-exec powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File %USERPROFILE%\Documents\myenv\scripts\app-launcher.ps1']

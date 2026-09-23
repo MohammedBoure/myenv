@@ -155,7 +155,7 @@ namespace BarTranslator {
                 var regex = new Regex(pattern);
                 if (regex.IsMatch(yaml)) {
                     string updatedYaml = regex.Replace(yaml, newWidgetsBlock, 1);
-                    File.WriteAllText(ConfigPath, updatedYaml, Encoding.UTF8);
+                    File.WriteAllText(ConfigPath, updatedYaml, new UTF8Encoding(false));
                 }
             } catch {}
         }
