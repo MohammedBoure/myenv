@@ -117,7 +117,16 @@ window_rules:
       # Any window with float, dialog, or popup in title opens as completely ignored
       - window_title: { regex: '(?i).*(float|dialog|popup|jaber).*' }
 
-      # --- USER CUSTOM IGNORED DIALOGS (Managed via Alt+Shift+I / Alt+Shift+U) ---
+      # --- USER CUSTOM IGNORED DIALOGS (Managed via Alt+Shift+I) ---
+      # Custom rule: C:\Program Files\WindowsApps\Mic... [Added: 2026-09-26 21:50]
+      - window_process: { regex: '(?i)^pwsh.*$' }
+        window_title: { regex: '(?i).*C:\\Program Files\\WindowsApps\\Microsoft\.PowerShell_7\.6\.5\.0_x64__8wekyb3d8bbwe\\pwsh\.exe.*' }
+      # Custom rule: NaturaleMouseEvent - File Explorer [Added: 2026-09-26 21:50]
+      - window_process: { regex: '(?i)^explorer.*$' }
+        window_title: { regex: '(?i).*NaturaleMouseEvent - File Explorer.*' }
+      # Custom rule: trajectory_demo.png [Added: 2026-09-26 21:50]
+      - window_process: { regex: '(?i)^Photos.*$' }
+        window_title: { regex: '(?i).*trajectory_demo\.png.*' }
       # Custom rule: Bayan [Added: 2026-09-23 09:46]
       - window_process: { regex: '(?i)^nahw_app.*$' }
         window_title: { regex: '(?i).*Bayan.*' }
@@ -261,13 +270,9 @@ keybindings:
   - commands: ['toggle-floating --centered']
     bindings: ['alt+shift+space']
 
-  # Add focused dialog/window permanently to GlazeWM ignore rules & unmanage immediately (Alt+Shift+I)
+  # Toggle focused dialog/window permanent ignore rule in GlazeWM (Alt+Shift+I)
   - commands: ['shell-exec powershell.exe -sta -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File %USERPROFILE%\Documents\myenv\scripts\ignore-focused-window.ps1']
     bindings: ['alt+shift+i']
-
-  # Remove focused dialog/window from permanent GlazeWM ignore rules (Alt+Shift+U)
-  - commands: ['shell-exec powershell.exe -sta -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File %USERPROFILE%\Documents\myenv\scripts\ignore-focused-window.ps1 -Remove']
-    bindings: ['alt+shift+u']
 
   # Instant session-only ignore without adding to config (Alt+Ctrl+I)
   - commands: ['shell-exec powershell.exe -sta -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File %USERPROFILE%\Documents\myenv\scripts\ignore-focused-window.ps1 -SessionOnly']
