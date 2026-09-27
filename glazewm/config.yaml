@@ -118,9 +118,9 @@ window_rules:
       - window_title: { regex: '(?i).*(float|dialog|popup|jaber).*' }
 
       # --- USER CUSTOM IGNORED DIALOGS (Managed via Alt+Shift+I) ---
-      # Custom rule: C:\Program Files\WindowsApps\Mic... [Added: 2026-09-26 21:50]
-      - window_process: { regex: '(?i)^pwsh.*$' }
-        window_title: { regex: '(?i).*C:\\Program Files\\WindowsApps\\Microsoft\.PowerShell_7\.6\.5\.0_x64__8wekyb3d8bbwe\\pwsh\.exe.*' }
+      # Custom rule: NetLimiter [Added: 2026-09-27 17:00]
+      - window_process: { regex: '(?i)^NLClientApp.*$' }
+        window_title: { regex: '(?i).*NetLimiter.*' }
       # Custom rule: NaturaleMouseEvent - File Explorer [Added: 2026-09-26 21:50]
       - window_process: { regex: '(?i)^explorer.*$' }
         window_title: { regex: '(?i).*NaturaleMouseEvent - File Explorer.*' }

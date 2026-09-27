@@ -4,7 +4,7 @@
 .DESCRIPTION
     Keybinding:
       Alt+Shift+I : Toggle permanent ignore rule for focused window.
-                    - If rule exists: Removes rule from config.yaml, reloads WM, shows (Tiled).
+                    - If rule exists: Removes rule from config.yaml, reloads WM, adopts & tiles window, shows (Tiled).
                     - If rule does not exist: Adds rule to config.yaml, shrinks & centers, reloads WM, shows (Dialog).
 
     CLI Options:
@@ -67,15 +67,25 @@ if ($List) {
     exit 0
 }
 
-# Win32 API Definitions for window detection, placement, and centering
+# Win32 API Definitions for window detection, placement, centering, and adoption
 $win32Code = @"
 using System;
 using System.Text;
 using System.Runtime.InteropServices;
+using System.Diagnostics;
 
 public class Win32WindowDetect {
     [DllImport("user32.dll")]
     public static extern IntPtr GetForegroundWindow();
+
+    [DllImport("user32.dll")]
+    public static extern IntPtr GetWindow(IntPtr hWnd, uint uCmd);
+
+    [DllImport("user32.dll")]
+    public static extern IntPtr GetTopWindow(IntPtr hWnd);
+
+    [DllImport("user32.dll")]
+    public static extern bool IsWindowVisible(IntPtr hWnd);
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
     public static extern int GetWindowTextW(IntPtr hWnd, StringBuilder lpString, int nMaxCount);
@@ -88,6 +98,9 @@ public class Win32WindowDetect {
 
     [DllImport("user32.dll")]
     public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+    [DllImport("user32.dll")]
+    public static extern bool SetForegroundWindow(IntPtr hWnd);
 
     [DllImport("user32.dll")]
     public static extern bool SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int X, int Y, int cx, int cy, uint uFlags);
@@ -103,10 +116,80 @@ public class Win32WindowDetect {
         public int Bottom;
     }
 
+    public const int SW_MAXIMIZE = 3;
+    public const int SW_MINIMIZE = 6;
     public const int SW_RESTORE = 9;
+
+    public const uint GW_HWNDNEXT = 2;
     public const uint SWP_NOZORDER = 0x0004;
     public const uint SWP_FRAMECHANGED = 0x0020;
     public const uint SWP_SHOWWINDOW = 0x0040;
+
+    public static bool IsExcludedProcess(string procName) {
+        if (string.IsNullOrEmpty(procName)) return true;
+        string p = procName.ToLowerInvariant();
+        return p == "powershell" || p == "pwsh" || p == "cmd" || p == "conhost" ||
+               p == "openconsole" || p == "windowsterminal" || p == "glazewm" ||
+               p == "glazewm-watcher" || p == "focusedborder" || p == "bartranslator";
+    }
+
+    public static bool IsExcludedClass(string className) {
+        if (string.IsNullOrEmpty(className)) return false;
+        string c = className.ToLowerInvariant();
+        return c == "progman" || c == "workerw" || c == "shell_traywnd" ||
+               c == "shell_secondarytraywnd" || c == "consolewindowclass" ||
+               c == "pseudoconsolewindow";
+    }
+
+    public static bool IsValidTarget(IntPtr hWnd) {
+        if (hWnd == IntPtr.Zero) return false;
+        if (!IsWindowVisible(hWnd)) return false;
+
+        StringBuilder sbTitle = new StringBuilder(512);
+        GetWindowTextW(hWnd, sbTitle, 512);
+        string title = sbTitle.ToString().Trim();
+        if (string.IsNullOrEmpty(title)) return false;
+        if (title.Contains("myenv-ignore-toast") || title.Contains("myenv-app-launcher") || title == "Program Manager") return false;
+
+        StringBuilder sbClass = new StringBuilder(256);
+        GetClassNameW(hWnd, sbClass, 256);
+        string cls = sbClass.ToString().Trim();
+        if (IsExcludedClass(cls)) return false;
+
+        uint pid = 0;
+        GetWindowThreadProcessId(hWnd, out pid);
+        if (pid == 0) return false;
+        try {
+            string proc = Process.GetProcessById((int)pid).ProcessName;
+            if (IsExcludedProcess(proc)) return false;
+        } catch {
+            return false;
+        }
+
+        RECT r;
+        if (GetWindowRect(hWnd, out r)) {
+            if ((r.Right - r.Left) < 50 || (r.Bottom - r.Top) < 50) return false;
+        }
+
+        return true;
+    }
+
+    public static IntPtr FindActiveUserWindow() {
+        IntPtr fg = GetForegroundWindow();
+        if (IsValidTarget(fg)) {
+            return fg;
+        }
+
+        IntPtr cur = fg != IntPtr.Zero ? GetWindow(fg, GW_HWNDNEXT) : GetTopWindow(IntPtr.Zero);
+        int maxSteps = 100;
+        while (cur != IntPtr.Zero && maxSteps-- > 0) {
+            if (IsValidTarget(cur)) {
+                return cur;
+            }
+            cur = GetWindow(cur, GW_HWNDNEXT);
+        }
+        return IntPtr.Zero;
+    }
 
     public static void ShrinkAndCenter(IntPtr hWnd, int sLeft, int sTop, int sWidth, int sHeight) {
         if (hWnd == IntPtr.Zero) return;
@@ -129,6 +212,14 @@ public class Win32WindowDetect {
         int targetY = sTop + (sHeight - targetH) / 2;
 
         SetWindowPos(hWnd, IntPtr.Zero, targetX, targetY, targetW, targetH, SWP_NOZORDER | SWP_FRAMECHANGED | SWP_SHOWWINDOW);
+    }
+
+    public static void AdoptAndRestoreWindow(IntPtr hWnd) {
+        if (hWnd == IntPtr.Zero) return;
+        ShowWindow(hWnd, SW_MINIMIZE);
+        System.Threading.Thread.Sleep(60);
+        ShowWindow(hWnd, SW_RESTORE);
+        SetForegroundWindow(hWnd);
     }
 }
 "@
@@ -292,34 +383,37 @@ try {
             $json = $raw | ConvertFrom-Json
             if ($json.success -and $json.data.focused -and $json.data.focused.type -eq "window") {
                 $focused = $json.data.focused
-                $procName = if ($focused.processName) { [string]$focused.processName } else { "" }
-                $className = if ($focused.className) { [string]$focused.className } else { "" }
-                $title = if ($focused.title) { [string]$focused.title } else { "" }
-                $windowId = $focused.id
-                $hwndVal = $focused.handle
+                $candidateProc = if ($focused.processName) { [string]$focused.processName } else { "" }
+                if (-not [Win32WindowDetect]::IsExcludedProcess($candidateProc)) {
+                    $procName = $candidateProc
+                    $className = if ($focused.className) { [string]$focused.className } else { "" }
+                    $title = if ($focused.title) { [string]$focused.title } else { "" }
+                    $windowId = $focused.id
+                    $hwndVal = $focused.handle
+                }
             }
         }
     } catch {}
 
-    # Strategy B: Fallback to native Win32 foreground window (essential for already-ignored windows)
+    # Strategy B: Fallback to native Win32 foreground / Z-order walk (essential for already-ignored dialogs)
     if (-not $procName -or -not $title) {
         try {
-            $fgHwnd = [Win32WindowDetect]::GetForegroundWindow()
-            if ($fgHwnd -ne [IntPtr]::Zero) {
-                $hwndVal = $fgHwnd.ToInt64()
+            $targetHwnd = [Win32WindowDetect]::FindActiveUserWindow()
+            if ($targetHwnd -ne [IntPtr]::Zero) {
+                $hwndVal = $targetHwnd.ToInt64()
 
                 $sbTitle = New-Object System.Text.StringBuilder 512
-                [Win32WindowDetect]::GetWindowTextW($fgHwnd, $sbTitle, 512) | Out-Null
-                $nativeTitle = $sbTitle.ToString()
+                [Win32WindowDetect]::GetWindowTextW($targetHwnd, $sbTitle, 512) | Out-Null
+                $nativeTitle = $sbTitle.ToString().Trim()
                 if (-not $title -and $nativeTitle) { $title = $nativeTitle }
 
                 $sbClass = New-Object System.Text.StringBuilder 256
-                [Win32WindowDetect]::GetClassNameW($fgHwnd, $sbClass, 256) | Out-Null
-                $nativeClass = $sbClass.ToString()
+                [Win32WindowDetect]::GetClassNameW($targetHwnd, $sbClass, 256) | Out-Null
+                $nativeClass = $sbClass.ToString().Trim()
                 if (-not $className -and $nativeClass) { $className = $nativeClass }
 
                 $pidVal = 0
-                [Win32WindowDetect]::GetWindowThreadProcessId($fgHwnd, [ref]$pidVal) | Out-Null
+                [Win32WindowDetect]::GetWindowThreadProcessId($targetHwnd, [ref]$pidVal) | Out-Null
                 if ($pidVal -gt 0) {
                     try {
                         $nativeProc = [System.Diagnostics.Process]::GetProcessById($pidVal).ProcessName
@@ -330,12 +424,8 @@ try {
         } catch {}
     }
 
-    if (-not $procName -and -not $title -and -not $className) { exit 0 }
-
-    # Exclude system shells
-    if ($className -in @("Progman", "WorkerW", "Shell_TrayWnd", "Shell_SecondaryTrayWnd") -or ($procName -eq "explorer" -and (-not $title -or $title -eq "Program Manager"))) {
-        exit 0
-    }
+    if (-not $procName -or -not $title) { exit 0 }
+    if ([Win32WindowDetect]::IsExcludedProcess($procName)) { exit 0 }
 
     # 3. Session-Only Mode
     if ($SessionOnly) {
@@ -412,7 +502,7 @@ try {
     if (-not $displayTitle) { $displayTitle = $procName }
 
     # =========================================================================
-    # CASE A: Rule Exists -> TOGGLE OFF (Remove rule, reload, tile window)
+    # CASE A: Rule Exists -> TOGGLE OFF (Remove rule, reload, restore & tile window)
     # =========================================================================
     if ($existingRuleStart -ne -1) {
         $countToRemove = ($existingRuleEnd - $existingRuleStart) + 1
@@ -422,10 +512,39 @@ try {
 
         [System.IO.File]::WriteAllLines($configPath, $lines, $utf8NoBom)
 
-        # Reload GlazeWM and re-tile window
+        # 1. Reload GlazeWM config so the ignore rule is removed
         & glazewm.exe command wm-reload-config 2>$null
+
+        # 2. Trigger WinEvents (minimize & restore) to force GlazeWM to adopt the window
+        if ($hwndVal -ne 0) {
+            $hWnd = [IntPtr][long]$hwndVal
+            [Win32WindowDetect]::AdoptAndRestoreWindow($hWnd)
+        }
+
+        Start-Sleep -Milliseconds 120
+
+        # 3. Explicitly set tiling and focus on the window in GlazeWM
+        if ($hwndVal -ne 0) {
+            try {
+                $rawWins = & glazewm.exe query windows 2>$null
+                if ($rawWins) {
+                    $wJson = $rawWins | ConvertFrom-Json
+                    $matchedWin = $wJson.data.windows | Where-Object { $_.handle -eq $hwndVal }
+                    if ($matchedWin) {
+                        & glazewm.exe command set-tiling --id $matchedWin.id 2>$null
+                        & glazewm.exe command focus --id $matchedWin.id 2>$null
+                    } else {
+                        & glazewm.exe command set-tiling 2>$null
+                    }
+                }
+            } catch {
+                & glazewm.exe command set-tiling 2>$null
+            }
+        } else {
+            & glazewm.exe command set-tiling 2>$null
+        }
+
         & glazewm.exe command wm-redraw 2>$null
-        & glazewm.exe command set-tiling 2>$null
 
         try { [System.Media.SystemSounds]::Asterisk.Play() } catch {}
         Show-NotificationToast "GlazeWM: Removed from Ignore List (Tiled)" "$procName ($displayTitle)"
