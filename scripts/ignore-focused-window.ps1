@@ -303,12 +303,12 @@ function Test-RuleBlockMatch([System.Collections.Generic.List[string]]$Lines, [i
         $l = $Lines[$idx].Trim()
 
         if ($l -match "window_process:\s*\{\s*regex:\s*['`"](?:\(\?i\)\^)?(.*?)(?:\.\*\$|\$)?['`"]\s*\}") {
-            $pPattern = $Matches[1]
+            $pPattern = $Matches[1].Replace("''", "'")
             if ($Proc -match "(?i)^$([regex]::Escape($pPattern))") {
                 $procMatched = $true
             }
         } elseif ($l -match "window_process:\s*\{\s*equals:\s*['`"](.*?)['`"]\s*\}") {
-            $pVal = $Matches[1]
+            $pVal = $Matches[1].Replace("''", "'")
             if ($Proc.Equals($pVal, [System.StringComparison]::OrdinalIgnoreCase)) {
                 $procMatched = $true
             }
@@ -316,7 +316,7 @@ function Test-RuleBlockMatch([System.Collections.Generic.List[string]]$Lines, [i
 
         if ($l -match "window_title:\s*\{\s*regex:\s*['`"](?:\(\?i\)\.\*)?(.*?)(?:\.\*)?['`"]\s*\}") {
             $hasTitleRule = $true
-            $tPattern = $Matches[1]
+            $tPattern = $Matches[1].Replace("''", "'")
             try {
                 if ($Title -match "(?i)$tPattern" -or $Title -match "(?i)$([regex]::Escape($tPattern))") {
                     $titleMatched = $true
@@ -328,7 +328,7 @@ function Test-RuleBlockMatch([System.Collections.Generic.List[string]]$Lines, [i
             }
         } elseif ($l -match "window_title:\s*\{\s*equals:\s*['`"](.*?)['`"]\s*\}") {
             $hasTitleRule = $true
-            $tVal = $Matches[1]
+            $tVal = $Matches[1].Replace("''", "'")
             if ($Title.Equals($tVal, [System.StringComparison]::OrdinalIgnoreCase)) {
                 $titleMatched = $true
             }
@@ -336,7 +336,7 @@ function Test-RuleBlockMatch([System.Collections.Generic.List[string]]$Lines, [i
 
         if ($l -match "window_class:\s*\{\s*equals:\s*['`"](.*?)['`"]\s*\}") {
             $hasClassRule = $true
-            $cVal = $Matches[1]
+            $cVal = $Matches[1].Replace("''", "'")
             if ($Class.Equals($cVal, [System.StringComparison]::OrdinalIgnoreCase)) {
                 $classMatched = $true
             }
@@ -572,28 +572,31 @@ try {
         } catch {}
     }
 
-    # 3. Formulate rule lines (Unicode safe, escaped regex metacharacters)
+    # 3. Formulate rule lines (Unicode safe, escaped regex metacharacters and YAML quotes)
     $dateStr = (Get-Date).ToString("yyyy-MM-dd HH:mm")
     $safeTitle = if ($trimmedTitle) { [regex]::Replace($trimmedTitle, '([\\\[\]\(\)\{\}\.\*\+\?\^\$\|])', '\$1') } else { "" }
     $safeProc = if ($procName) { [regex]::Replace($procName, '([\\\[\]\(\)\{\}\.\*\+\?\^\$\|])', '\$1') } else { "" }
+    $yamlTitle = if ($safeTitle) { $safeTitle.Replace("'", "''") } else { "" }
+    $yamlProc = if ($safeProc) { $safeProc.Replace("'", "''") } else { "" }
+    $yamlClass = if ($className) { $className.Replace("'", "''") } else { "" }
 
     $ruleLines = [System.Collections.Generic.List[string]]::new()
     $ruleLines.Add("      # Custom rule: $displayTitle [Added: $dateStr]")
 
     if ($className -eq "#32770" -and $procName) {
-        $ruleLines.Add("      - window_process: { regex: '(?i)^" + $safeProc + ".*$' }")
+        $ruleLines.Add("      - window_process: { regex: '(?i)^" + $yamlProc + ".*$' }")
         $ruleLines.Add("        window_class: { equals: '#32770' }")
     }
     elseif ($safeTitle -and $procName) {
-        $ruleLines.Add("      - window_process: { regex: '(?i)^" + $safeProc + ".*$' }")
-        $ruleLines.Add("        window_title: { regex: '(?i).*" + $safeTitle + ".*' }")
+        $ruleLines.Add("      - window_process: { regex: '(?i)^" + $yamlProc + ".*$' }")
+        $ruleLines.Add("        window_title: { regex: '(?i).*" + $yamlTitle + ".*' }")
     }
     elseif ($className -and $procName) {
-        $ruleLines.Add("      - window_process: { regex: '(?i)^" + $safeProc + ".*$' }")
-        $ruleLines.Add("        window_class: { equals: '" + $className + "' }")
+        $ruleLines.Add("      - window_process: { regex: '(?i)^" + $yamlProc + ".*$' }")
+        $ruleLines.Add("        window_class: { equals: '" + $yamlClass + "' }")
     }
     elseif ($procName) {
-        $ruleLines.Add("      - window_process: { regex: '(?i)^" + $safeProc + ".*$' }")
+        $ruleLines.Add("      - window_process: { regex: '(?i)^" + $yamlProc + ".*$' }")
     }
 
     # 4. Insert rule into config.yaml

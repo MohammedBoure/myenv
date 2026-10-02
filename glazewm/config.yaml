@@ -118,6 +118,9 @@ window_rules:
       - window_title: { regex: '(?i).*(float|dialog|popup|jaber).*' }
 
       # --- USER CUSTOM IGNORED DIALOGS (Managed via Alt+Shift+I) ---
+      # Custom rule: Options d'impression & Notes [Added: 2026-10-01 13:27]
+      - window_process: { regex: '(?i)^python.*$' }
+        window_title: { regex: '(?i).*Options d''impression.*' }
       # Custom rule: NetLimiter [Added: 2026-09-27 17:00]
       - window_process: { regex: '(?i)^NLClientApp.*$' }
         window_title: { regex: '(?i).*NetLimiter.*' }
