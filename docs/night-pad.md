@@ -17,11 +17,13 @@ A fast, lightweight, and keyboard-driven text and code editor built natively for
   - Monitors open files using kernel-level `FileSystemWatcher` event hooks (zero polling, 0% CPU strain).
   - Automatically prompts via a non-intrusive warning banner when an external program updates, renames, or deletes the active file.
   - One-click `[Reload]` (or `F5`) updates buffer while preserving caret position; internal saves are automatically de-duplicated.
-- **Clipboard Image Pasting & External Viewer Integration**:
+- **Clipboard Image Pasting & Markdown Live Preview**:
   - Paste images directly from the clipboard (`Ctrl + V`) or copied from File Explorer.
   - Automatically saves the image into `./assets/image_YYYYMMDD_HHMMSS.png` relative to the open document.
   - Generates standard Markdown syntax `![image](assets/filename.png)` so images copy cleanly with the text.
-  - Embedded image rendering in the split Markdown Live Preview with click-to-open capability.
+  - Automatically activates the Markdown Live Preview panel upon pasting, rendering the image immediately.
+  - Interactive image preview cards featuring a direct one-click clipboard copy button (`[Copy]`), external viewer launch (`[Open]`), and document/disk deletion mechanism (`[Delete]`).
+  - Full native Markdown table parsing and rendering supporting custom alignments (`:---:`, `---:`, `:---`), proportional column widths, dark styling, cell wrapping, and bidirectional RTL Arabic text.
   - Quick external viewing directly from the editor buffer via `Alt + O`, `Ctrl + Click`, or right-click context menu (`Open Externally` / `Reveal in File Explorer`).
 - **Quick Symbols & Frequent Words Palette (`Ctrl + .` / `F4`)**:
   - Instant modal palette for fast access to symbols, arrows, bullets, math characters, markdown snippets, and frequent Arabic phrases.

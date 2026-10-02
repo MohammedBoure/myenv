@@ -803,8 +803,81 @@ public partial class MainWindow : Window
     private void UpdateMarkdownPreview()
     {
         bool isRtl = MainEditor.FlowDirection == FlowDirection.RightToLeft;
-        string? baseDir = !string.IsNullOrEmpty(_currentFilePath) ? Path.GetDirectoryName(_currentFilePath) : null;
-        MarkdownViewer.Document = MarkdownRenderService.Render(MainEditor.Document.Text, isRtl, baseDir);
+        string? baseDir = !string.IsNullOrEmpty(_currentFilePath)
+            ? Path.GetDirectoryName(_currentFilePath)
+            : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "NightPad");
+
+        MarkdownViewer.Document = MarkdownRenderService.Render(
+            MainEditor.Document.Text,
+            isRtl,
+            baseDir,
+            onCopyImage: (src, resolved) =>
+            {
+                StatusDocStats.Text = $"Copied: {Path.GetFileName(resolved)}";
+            },
+            onDeleteImage: (src, resolved) =>
+            {
+                OnDeleteImageRequested(src, resolved);
+            });
+    }
+
+    private void OnDeleteImageRequested(string src, string resolvedPath)
+    {
+        string fileName = !string.IsNullOrEmpty(resolvedPath) ? Path.GetFileName(resolvedPath) : src;
+        var result = MessageBox.Show(
+            $"Do you want to delete this image?\n\nImage: {fileName}\n\n• Yes: Remove from note and permanently delete file from disk\n• No: Remove reference from note only (keep file on disk)\n• Cancel: Abort and keep image",
+            "Delete Image / مسح الصورة",
+            MessageBoxButton.YesNoCancel,
+            MessageBoxImage.Question);
+
+        if (result == MessageBoxResult.Cancel)
+            return;
+
+        // 1. Remove markdown reference from MainEditor.Document
+        RemoveImageMarkdownFromDocument(src, resolvedPath);
+
+        // 2. If Yes, delete the physical file
+        if (result == MessageBoxResult.Yes)
+        {
+            try
+            {
+                if (!string.IsNullOrEmpty(resolvedPath) && File.Exists(resolvedPath))
+                {
+                    File.Delete(resolvedPath);
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Could not delete file from disk: {ex.Message}", "Delete File Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        UpdateStatusBar();
+        if (PreviewContainer.Visibility == Visibility.Visible)
+        {
+            UpdateMarkdownPreview();
+        }
+    }
+
+    private void RemoveImageMarkdownFromDocument(string src, string resolvedPath)
+    {
+        string docText = MainEditor.Document.Text;
+        string fileName = Path.GetFileName(src);
+
+        var regex = new Regex(@"^[ \t]*!\[[^\]]*\]\([^\)]*" + Regex.Escape(fileName) + @"[^\)]*\)[ \t]*(\r?\n)?", RegexOptions.Multiline | RegexOptions.IgnoreCase);
+        var match = regex.Match(docText);
+        if (!match.Success)
+        {
+            regex = new Regex(@"!\[[^\]]*\]\(\s*" + Regex.Escape(src) + @"\s*\)(\r?\n)?", RegexOptions.IgnoreCase);
+            match = regex.Match(docText);
+        }
+
+        if (match.Success)
+        {
+            MainEditor.Document.Remove(match.Index, match.Length);
+            _isModified = true;
+            UpdateTitle();
+        }
     }
 
     private void BtnToggleMarkdownPreview_Click(object sender, RoutedEventArgs e) => ToggleMarkdownPreview();
@@ -1410,11 +1483,29 @@ public partial class MainWindow : Window
             string markdownRef = $"![image]({relativeDir}/{fileName})";
 
             int caret = MainEditor.CaretOffset;
-            MainEditor.Document.Insert(caret, markdownRef);
-            MainEditor.CaretOffset = caret + markdownRef.Length;
+            string toInsert = markdownRef;
+            if (MainEditor.Document.TextLength > 0)
+            {
+                var curLine = MainEditor.Document.GetLineByOffset(caret);
+                if (curLine.Length > 0 && caret > curLine.Offset)
+                {
+                    toInsert = Environment.NewLine + markdownRef + Environment.NewLine;
+                }
+                else
+                {
+                    toInsert = markdownRef + Environment.NewLine;
+                }
+            }
+
+            MainEditor.Document.Insert(caret, toInsert);
+            MainEditor.CaretOffset = caret + toInsert.Length;
 
             UpdateStatusBar();
-            if (PreviewContainer.Visibility == Visibility.Visible)
+            if (PreviewContainer.Visibility != Visibility.Visible)
+            {
+                ToggleMarkdownPreview();
+            }
+            else
             {
                 UpdateMarkdownPreview();
             }

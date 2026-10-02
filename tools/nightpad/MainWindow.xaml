@@ -380,7 +380,7 @@
                                               Grid.Row="1"
                                               Background="{StaticResource BgSurfaceBrush}"
                                               Foreground="{StaticResource TextPrimaryBrush}"
-                                              HorizontalScrollBarVisibility="Disabled"
+                                              HorizontalScrollBarVisibility="Auto"
                                               VerticalScrollBarVisibility="Auto"
                                               IsToolBarVisible="False"
                                               Padding="8,6" />

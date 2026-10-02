@@ -38,16 +38,21 @@ public static partial class MarkdownRenderService
     [GeneratedRegex(@"`([^`]+)`")]
     private static partial Regex InlineCodeRegex();
 
-    [GeneratedRegex(@"^!\[([^\]]*)\]\(([^)]+)\)$")]
+    [GeneratedRegex(@"^!\[(?<alt>[^\]]*)\]\((?<src>[^)\s]+)(?:\s+[""'][^""']*[""'])?\)\s*$")]
     private static partial Regex ImageRegex();
 
     [GeneratedRegex(@"\[([^\]]+)\]\(([^)]+)\)")]
     private static partial Regex LinkRegex();
 
     /// <summary>
-    /// Renders raw Markdown text into a styled WPF FlowDocument.
+    /// Renders raw Markdown text into a styled WPF FlowDocument with interactive table and image controls.
     /// </summary>
-    public static FlowDocument Render(string markdownText, bool isRtl = false, string? baseDirectory = null)
+    public static FlowDocument Render(
+        string markdownText,
+        bool isRtl = false,
+        string? baseDirectory = null,
+        Action<string, string>? onCopyImage = null,
+        Action<string, string>? onDeleteImage = null)
     {
         var doc = new FlowDocument
         {
@@ -162,9 +167,47 @@ public static partial class MarkdownRenderService
             var imgMatch = ImageRegex().Match(trimmed);
             if (imgMatch.Success)
             {
-                string alt = imgMatch.Groups[1].Value;
-                string src = imgMatch.Groups[2].Value.Trim();
-                doc.Blocks.Add(CreateImageBlock(alt, src, baseDirectory));
+                string alt = imgMatch.Groups["alt"].Value;
+                string src = imgMatch.Groups["src"].Value.Trim().Trim('<', '>');
+                doc.Blocks.Add(CreateImageBlock(alt, src, baseDirectory, onCopyImage, onDeleteImage));
+                continue;
+            }
+
+            // Table Block (| Col 1 | Col 2 | ... followed by |---|---|)
+            if (trimmed.Contains('|') && i + 1 < lines.Length && IsTableDelimiter(lines[i + 1]))
+            {
+                var headerCells = SplitTableRow(trimmed);
+                var delimiterCells = SplitTableRow(lines[i + 1]);
+                var alignments = ParseTableAlignments(delimiterCells, isRtl);
+
+                int colCount = Math.Max(headerCells.Count, alignments.Count);
+                var dataRows = new List<List<string>>();
+
+                int nextIdx = i + 2;
+                while (nextIdx < lines.Length)
+                {
+                    string rowTrimmed = lines[nextIdx].Trim();
+                    if (string.IsNullOrWhiteSpace(rowTrimmed) ||
+                        rowTrimmed.StartsWith("```") ||
+                        rowTrimmed.StartsWith('#'))
+                    {
+                        break;
+                    }
+
+                    if (rowTrimmed.Contains('|'))
+                    {
+                        var rowCells = SplitTableRow(rowTrimmed);
+                        dataRows.Add(rowCells);
+                        nextIdx++;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+
+                doc.Blocks.Add(CreateTable(headerCells, alignments, dataRows, colCount, isRtl));
+                i = nextIdx - 1;
                 continue;
             }
 
@@ -303,19 +346,62 @@ public static partial class MarkdownRenderService
         return section;
     }
 
-    private static Block CreateImageBlock(string alt, string src, string? baseDirectory)
+    private static Block CreateImageBlock(
+        string alt,
+        string src,
+        string? baseDirectory,
+        Action<string, string>? onCopyImage = null,
+        Action<string, string>? onDeleteImage = null)
     {
-        string resolvedPath = src;
-        bool isHttp = src.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
-                      src.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
+        string resolvedPath = src.Trim().Trim('"', '\'');
+        bool isHttp = resolvedPath.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                      resolvedPath.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
 
-        if (!isHttp && !Path.IsPathRooted(src) && !string.IsNullOrEmpty(baseDirectory))
+        if (!isHttp)
         {
-            try
+            string localCandidate = resolvedPath.Replace('/', '\\');
+
+            if (Path.IsPathRooted(localCandidate))
             {
-                resolvedPath = Path.GetFullPath(Path.Combine(baseDirectory, src));
+                try
+                {
+                    resolvedPath = Path.GetFullPath(localCandidate);
+                }
+                catch { }
             }
-            catch { }
+            else
+            {
+                if (!string.IsNullOrEmpty(baseDirectory))
+                {
+                    try
+                    {
+                        string candidate = Path.GetFullPath(Path.Combine(baseDirectory, localCandidate));
+                        if (File.Exists(candidate))
+                        {
+                            resolvedPath = candidate;
+                        }
+                        else
+                        {
+                            resolvedPath = candidate;
+                        }
+                    }
+                    catch { }
+                }
+
+                if (!File.Exists(resolvedPath))
+                {
+                    try
+                    {
+                        string defaultAssetsParent = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "NightPad");
+                        string candidate = Path.GetFullPath(Path.Combine(defaultAssetsParent, localCandidate));
+                        if (File.Exists(candidate))
+                        {
+                            resolvedPath = candidate;
+                        }
+                    }
+                    catch { }
+                }
+            }
         }
 
         bool fileExists = false;
@@ -325,6 +411,7 @@ public static partial class MarkdownRenderService
         }
         catch { }
 
+        BitmapSource? bitmap = null;
         if (fileExists || isHttp)
         {
             try
@@ -338,49 +425,420 @@ public static partial class MarkdownRenderService
                 }
                 bi.EndInit();
                 bi.Freeze();
-
-                var img = new Image
-                {
-                    Source = bi,
-                    MaxWidth = 650,
-                    Stretch = Stretch.Uniform,
-                    Margin = new Thickness(0, 4, 0, 4),
-                    Cursor = Cursors.Hand,
-                    ToolTip = $"Click to open externally: {(isHttp ? src : Path.GetFileName(resolvedPath))}"
-                };
-
-                img.MouseLeftButtonUp += (s, e) =>
-                {
-                    try
-                    {
-                        Process.Start(new ProcessStartInfo(resolvedPath) { UseShellExecute = true });
-                    }
-                    catch { }
-                };
-
-                return new BlockUIContainer(img)
-                {
-                    Margin = new Thickness(0, 6, 0, 6)
-                };
+                bitmap = bi;
             }
             catch
             {
-                // Fallback to text card if bitmap decoding fails
+                bitmap = null;
             }
         }
 
-        // Placeholder for missing local file or failed decode
-        var p = new Paragraph
+        var outerCard = new Border
         {
-            Margin = new Thickness(0, 4, 0, 4),
-            Foreground = TextSecondaryBrush
+            Background = new SolidColorBrush(Color.FromRgb(0x16, 0x1B, 0x22)),
+            BorderBrush = CodeBorderBrush,
+            BorderThickness = new Thickness(1),
+            CornerRadius = new CornerRadius(6),
+            Margin = new Thickness(0, 8, 0, 10),
+            MaxWidth = 720,
+            HorizontalAlignment = HorizontalAlignment.Left
         };
-        p.Inlines.Add(new Run($"🖼️ [{(!string.IsNullOrWhiteSpace(alt) ? alt : "Image")}: {src}]")
+
+        var mainGrid = new Grid();
+        mainGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        mainGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        outerCard.Child = mainGrid;
+
+        // Toolbar Header
+        var toolbarBorder = new Border
         {
-            FontStyle = FontStyles.Italic,
-            Foreground = AccentBlueBrush
+            Background = new SolidColorBrush(Color.FromRgb(0x21, 0x26, 0x2D)),
+            BorderBrush = CodeBorderBrush,
+            BorderThickness = new Thickness(0, 0, 0, 1),
+            CornerRadius = new CornerRadius(5, 5, 0, 0),
+            Padding = new Thickness(8, 4, 8, 4)
+        };
+
+        var toolbarGrid = new Grid();
+        toolbarGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        toolbarGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        toolbarBorder.Child = toolbarGrid;
+
+        // File info
+        var infoStack = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+        infoStack.Children.Add(new TextBlock
+        {
+            Text = "🖼️ ",
+            FontSize = 11,
+            VerticalAlignment = VerticalAlignment.Center
         });
-        return p;
+
+        string displayName = !string.IsNullOrWhiteSpace(alt)
+            ? alt
+            : (!isHttp ? Path.GetFileName(resolvedPath) : src);
+
+        if (bitmap != null)
+        {
+            displayName += $" ({bitmap.PixelWidth}×{bitmap.PixelHeight})";
+        }
+
+        infoStack.Children.Add(new TextBlock
+        {
+            Text = displayName,
+            Foreground = TextSecondaryBrush,
+            FontSize = 11,
+            FontWeight = FontWeights.SemiBold,
+            TextTrimming = TextTrimming.CharacterEllipsis,
+            VerticalAlignment = VerticalAlignment.Center,
+            ToolTip = resolvedPath
+        });
+        Grid.SetColumn(infoStack, 0);
+        toolbarGrid.Children.Add(infoStack);
+
+        // Action Buttons
+        var btnStack = new StackPanel
+        {
+            Orientation = Orientation.Horizontal,
+            VerticalAlignment = VerticalAlignment.Center
+        };
+
+        if (bitmap != null)
+        {
+            var btnCopy = new Button
+            {
+                Content = "📋 Copy",
+                ToolTip = "Copy image to clipboard / نسخ الصورة",
+                Background = new SolidColorBrush(Color.FromRgb(0x30, 0x36, 0x3D)),
+                Foreground = AccentBlueBrush,
+                BorderThickness = new Thickness(0),
+                Padding = new Thickness(8, 2, 8, 2),
+                Margin = new Thickness(0, 0, 6, 0),
+                FontSize = 11,
+                FontWeight = FontWeights.SemiBold,
+                Cursor = Cursors.Hand
+            };
+
+            btnCopy.Click += (s, e) =>
+            {
+                try
+                {
+                    var data = new DataObject();
+                    data.SetImage(bitmap);
+                    if (fileExists && File.Exists(resolvedPath))
+                    {
+                        var sc = new System.Collections.Specialized.StringCollection { resolvedPath };
+                        data.SetFileDropList(sc);
+                    }
+                    Clipboard.SetDataObject(data, true);
+
+                    btnCopy.Content = "✓ Copied!";
+                    btnCopy.Foreground = new SolidColorBrush(Color.FromRgb(0x3F, 0xB9, 0x50));
+
+                    var timer = new System.Windows.Threading.DispatcherTimer
+                    {
+                        Interval = TimeSpan.FromSeconds(1.5)
+                    };
+                    timer.Tick += (ts, te) =>
+                    {
+                        timer.Stop();
+                        btnCopy.Content = "📋 Copy";
+                        btnCopy.Foreground = AccentBlueBrush;
+                    };
+                    timer.Start();
+
+                    onCopyImage?.Invoke(src, resolvedPath);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Could not copy image:\n{ex.Message}", "Copy Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                }
+            };
+            btnStack.Children.Add(btnCopy);
+
+            var btnOpen = new Button
+            {
+                Content = "↗ Open",
+                ToolTip = "Open in external photo viewer",
+                Background = new SolidColorBrush(Color.FromRgb(0x30, 0x36, 0x3D)),
+                Foreground = TextPrimaryBrush,
+                BorderThickness = new Thickness(0),
+                Padding = new Thickness(6, 2, 6, 2),
+                Margin = new Thickness(0, 0, 6, 0),
+                FontSize = 11,
+                Cursor = Cursors.Hand
+            };
+            btnOpen.Click += (s, e) =>
+            {
+                try
+                {
+                    Process.Start(new ProcessStartInfo(resolvedPath) { UseShellExecute = true });
+                }
+                catch { }
+            };
+            btnStack.Children.Add(btnOpen);
+        }
+
+        var btnDelete = new Button
+        {
+            Content = "🗑️ Delete",
+            ToolTip = "Remove image from document and disk / مسح الصورة",
+            Background = new SolidColorBrush(Color.FromRgb(0x30, 0x36, 0x3D)),
+            Foreground = new SolidColorBrush(Color.FromRgb(0xF8, 0x51, 0x49)),
+            BorderThickness = new Thickness(0),
+            Padding = new Thickness(6, 2, 6, 2),
+            FontSize = 11,
+            FontWeight = FontWeights.SemiBold,
+            Cursor = Cursors.Hand
+        };
+        btnDelete.Click += (s, e) =>
+        {
+            onDeleteImage?.Invoke(src, resolvedPath);
+        };
+        btnStack.Children.Add(btnDelete);
+
+        Grid.SetColumn(btnStack, 1);
+        toolbarGrid.Children.Add(btnStack);
+
+        Grid.SetRow(toolbarBorder, 0);
+        mainGrid.Children.Add(toolbarBorder);
+
+        if (bitmap != null)
+        {
+            var imgContainer = new Border
+            {
+                Background = new SolidColorBrush(Color.FromRgb(0x0D, 0x11, 0x17)),
+                CornerRadius = new CornerRadius(0, 0, 5, 5),
+                Padding = new Thickness(6),
+                HorizontalAlignment = HorizontalAlignment.Center
+            };
+
+            var img = new Image
+            {
+                Source = bitmap,
+                MaxWidth = 680,
+                MaxHeight = 520,
+                Stretch = Stretch.Uniform,
+                Cursor = Cursors.Hand,
+                ToolTip = $"Click to open externally:\n{resolvedPath}"
+            };
+
+            img.MouseLeftButtonUp += (s, e) =>
+            {
+                try
+                {
+                    Process.Start(new ProcessStartInfo(resolvedPath) { UseShellExecute = true });
+                }
+                catch { }
+            };
+
+            imgContainer.Child = img;
+            Grid.SetRow(imgContainer, 1);
+            mainGrid.Children.Add(imgContainer);
+        }
+        else
+        {
+            var missingContainer = new Border
+            {
+                Background = new SolidColorBrush(Color.FromRgb(0x1F, 0x16, 0x16)),
+                CornerRadius = new CornerRadius(0, 0, 5, 5),
+                Padding = new Thickness(12, 10, 12, 10)
+            };
+
+            var missingText = new TextBlock
+            {
+                Text = $"⚠️ Image not found or could not be loaded: {src}",
+                Foreground = new SolidColorBrush(Color.FromRgb(0xF8, 0x51, 0x49)),
+                FontStyle = FontStyles.Italic,
+                FontSize = 12
+            };
+            missingContainer.Child = missingText;
+            Grid.SetRow(missingContainer, 1);
+            mainGrid.Children.Add(missingContainer);
+        }
+
+        return new BlockUIContainer(outerCard)
+        {
+            Margin = new Thickness(0, 4, 0, 8)
+        };
+    }
+
+    private static Block CreateTable(
+        List<string> headerCells,
+        List<TextAlignment> alignments,
+        List<List<string>> dataRows,
+        int colCount,
+        bool isRtl)
+    {
+        var table = new Table
+        {
+            CellSpacing = 0,
+            Margin = new Thickness(0, 8, 0, 12),
+            BorderBrush = CodeBorderBrush,
+            BorderThickness = new Thickness(1),
+            Background = CodeBgBrush
+        };
+
+        int[] maxColLengths = new int[colCount];
+        for (int c = 0; c < colCount; c++)
+        {
+            maxColLengths[c] = c < headerCells.Count ? headerCells[c].Length : 5;
+        }
+        foreach (var row in dataRows)
+        {
+            for (int c = 0; c < colCount; c++)
+            {
+                if (c < row.Count)
+                {
+                    maxColLengths[c] = Math.Max(maxColLengths[c], row[c].Length);
+                }
+            }
+        }
+
+        for (int c = 0; c < colCount; c++)
+        {
+            double weight = Math.Max(1.0, Math.Min(5.0, maxColLengths[c] / 12.0));
+            table.Columns.Add(new TableColumn
+            {
+                Width = new GridLength(weight, GridUnitType.Star)
+            });
+        }
+
+        var rowGroup = new TableRowGroup();
+        table.RowGroups.Add(rowGroup);
+
+        // Header Row
+        var headerRow = new TableRow
+        {
+            Background = new SolidColorBrush(Color.FromRgb(0x1F, 0x24, 0x2C))
+        };
+
+        for (int c = 0; c < colCount; c++)
+        {
+            string cellText = c < headerCells.Count ? headerCells[c] : "";
+            var align = c < alignments.Count ? alignments[c] : (isRtl ? TextAlignment.Right : TextAlignment.Left);
+
+            var p = new Paragraph
+            {
+                TextAlignment = align,
+                FontWeight = FontWeights.Bold,
+                Foreground = AccentBlueBrush,
+                Margin = new Thickness(0),
+                LineHeight = 20
+            };
+            ApplyInlineFormatting(p, cellText);
+
+            var cell = new TableCell(p)
+            {
+                Padding = new Thickness(10, 8, 10, 8),
+                BorderBrush = CodeBorderBrush,
+                BorderThickness = new Thickness(0, 0, c < colCount - 1 ? 1 : 0, 2)
+            };
+            headerRow.Cells.Add(cell);
+        }
+        rowGroup.Rows.Add(headerRow);
+
+        // Data Rows
+        for (int r = 0; r < dataRows.Count; r++)
+        {
+            var rowData = dataRows[r];
+            var isEven = r % 2 == 0;
+            var row = new TableRow
+            {
+                Background = isEven
+                    ? new SolidColorBrush(Color.FromRgb(0x0D, 0x11, 0x17))
+                    : new SolidColorBrush(Color.FromRgb(0x16, 0x1B, 0x22))
+            };
+
+            bool isLastRow = r == dataRows.Count - 1;
+
+            for (int c = 0; c < colCount; c++)
+            {
+                string cellText = c < rowData.Count ? rowData[c] : "";
+                var align = c < alignments.Count ? alignments[c] : (isRtl ? TextAlignment.Right : TextAlignment.Left);
+
+                var p = new Paragraph
+                {
+                    TextAlignment = align,
+                    Foreground = TextPrimaryBrush,
+                    Margin = new Thickness(0),
+                    LineHeight = 20
+                };
+                ApplyInlineFormatting(p, cellText);
+
+                var cell = new TableCell(p)
+                {
+                    Padding = new Thickness(10, 6, 10, 6),
+                    BorderBrush = new SolidColorBrush(Color.FromRgb(0x25, 0x2C, 0x35)),
+                    BorderThickness = new Thickness(0, 0, c < colCount - 1 ? 1 : 0, isLastRow ? 0 : 1)
+                };
+                row.Cells.Add(cell);
+            }
+            rowGroup.Rows.Add(row);
+        }
+
+        return table;
+    }
+
+    private static bool IsTableDelimiter(string line)
+    {
+        string trimmed = line.Trim();
+        if (string.IsNullOrEmpty(trimmed) || !trimmed.Contains('-') || !trimmed.Contains('|'))
+            return false;
+
+        var cells = SplitTableRow(trimmed);
+        if (cells.Count == 0)
+            return false;
+
+        foreach (var cell in cells)
+        {
+            string c = cell.Trim();
+            if (c.Length == 0 || !Regex.IsMatch(c, @"^:?-+:?$"))
+                return false;
+        }
+
+        return true;
+    }
+
+    private static List<string> SplitTableRow(string line)
+    {
+        var list = new List<string>();
+        string trimmed = line.Trim();
+        if (trimmed.StartsWith('|'))
+            trimmed = trimmed[1..];
+        if (trimmed.EndsWith('|'))
+            trimmed = trimmed[..^1];
+
+        var parts = Regex.Split(trimmed, @"(?<!\\)\|");
+        foreach (var p in parts)
+        {
+            list.Add(p.Trim().Replace(@"\|", "|"));
+        }
+        return list;
+    }
+
+    private static List<TextAlignment> ParseTableAlignments(List<string> delimiterCells, bool isRtl)
+    {
+        var alignments = new List<TextAlignment>();
+        foreach (var cell in delimiterCells)
+        {
+            string c = cell.Trim();
+            bool left = c.StartsWith(':');
+            bool right = c.EndsWith(':');
+
+            if (left && right)
+                alignments.Add(TextAlignment.Center);
+            else if (right)
+                alignments.Add(TextAlignment.Right);
+            else if (left)
+                alignments.Add(TextAlignment.Left);
+            else
+                alignments.Add(isRtl ? TextAlignment.Right : TextAlignment.Left);
+        }
+        return alignments;
     }
 
     private static Block CreateHorizontalRule(double thickness = 1.0)
@@ -395,22 +853,23 @@ public static partial class MarkdownRenderService
     }
 
     /// <summary>
-    /// Parses inline Markdown (bold, italic, inline code, links) and populates inlines of a paragraph.
+    /// Parses inline Markdown (bold, italic, inline code, links, breaks) and populates inlines of a paragraph.
     /// </summary>
     private static void ApplyInlineFormatting(Paragraph paragraph, string text)
     {
         if (string.IsNullOrEmpty(text))
             return;
 
-        // Tokenize and parse inline elements (code, bold, italic, links)
         int index = 0;
         while (index < text.Length)
         {
-            // Inline Code `...`
             int codeStart = text.IndexOf('`', index);
             int boldStart1 = text.IndexOf("**", index, StringComparison.Ordinal);
             int boldStart2 = text.IndexOf("__", index, StringComparison.Ordinal);
             int linkStart = text.IndexOf('[', index);
+            int brStart1 = text.IndexOf("<br>", index, StringComparison.OrdinalIgnoreCase);
+            int brStart2 = text.IndexOf("<br/>", index, StringComparison.OrdinalIgnoreCase);
+            int brStart3 = text.IndexOf("<br />", index, StringComparison.OrdinalIgnoreCase);
 
             int nextSpecial = -1;
             string specialType = "";
@@ -428,10 +887,12 @@ public static partial class MarkdownRenderService
             CheckSpecial(boldStart1, "bold**");
             CheckSpecial(boldStart2, "bold__");
             CheckSpecial(linkStart, "link");
+            CheckSpecial(brStart1, "br4");
+            CheckSpecial(brStart2, "br5");
+            CheckSpecial(brStart3, "br6");
 
             if (nextSpecial == -1)
             {
-                // Remaining plain text
                 paragraph.Inlines.Add(new Run(text[index..]));
                 break;
             }
@@ -491,8 +952,25 @@ public static partial class MarkdownRenderService
                     continue;
                 }
             }
+            else if (specialType == "br4")
+            {
+                paragraph.Inlines.Add(new LineBreak());
+                index += 4;
+                continue;
+            }
+            else if (specialType == "br5")
+            {
+                paragraph.Inlines.Add(new LineBreak());
+                index += 5;
+                continue;
+            }
+            else if (specialType == "br6")
+            {
+                paragraph.Inlines.Add(new LineBreak());
+                index += 6;
+                continue;
+            }
 
-            // If not matching a pattern, output single character and advance
             paragraph.Inlines.Add(new Run(text[index].ToString()));
             index++;
         }
