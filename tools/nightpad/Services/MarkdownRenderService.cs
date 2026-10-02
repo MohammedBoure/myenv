@@ -99,7 +99,19 @@ public static partial class MarkdownRenderService
                 else
                 {
                     inCodeBlock = false;
-                    doc.Blocks.Add(CreateCodeBlock(codeBlockLines, codeBlockLang));
+                    if (MathPlotService.IsPlotLanguage(codeBlockLang))
+                    {
+                        doc.Blocks.Add(MathPlotService.CreatePlotBlock(codeBlockLines));
+                    }
+                    else if (MathFormulaService.IsMathLanguage(codeBlockLang))
+                    {
+                        string mathText = string.Join(Environment.NewLine, codeBlockLines);
+                        doc.Blocks.Add(MathFormulaService.CreateMathBlock(mathText, isRtl));
+                    }
+                    else
+                    {
+                        doc.Blocks.Add(CreateCodeBlock(codeBlockLines, codeBlockLang));
+                    }
                     codeBlockLines.Clear();
                 }
                 continue;
@@ -115,6 +127,44 @@ public static partial class MarkdownRenderService
             if (string.IsNullOrWhiteSpace(trimmed))
             {
                 continue;
+            }
+
+            // Block Math: $$ ... $$
+            if (trimmed.StartsWith("$$"))
+            {
+                if (trimmed.EndsWith("$$") && trimmed.Length >= 4)
+                {
+                    string formula = trimmed[2..^2].Trim();
+                    doc.Blocks.Add(MathFormulaService.CreateMathBlock(formula, isRtl));
+                    continue;
+                }
+                else
+                {
+                    var mathLines = new List<string>();
+                    string firstLineMath = trimmed[2..].Trim();
+                    if (!string.IsNullOrEmpty(firstLineMath))
+                        mathLines.Add(firstLineMath);
+
+                    int mathIdx = i + 1;
+                    while (mathIdx < lines.Length)
+                    {
+                        string mLine = lines[mathIdx].Trim();
+                        if (mLine.EndsWith("$$"))
+                        {
+                            string lastMath = mLine[..^2].Trim();
+                            if (!string.IsNullOrEmpty(lastMath))
+                                mathLines.Add(lastMath);
+                            break;
+                        }
+                        mathLines.Add(lines[mathIdx]);
+                        mathIdx++;
+                    }
+
+                    string fullMath = string.Join(Environment.NewLine, mathLines);
+                    doc.Blocks.Add(MathFormulaService.CreateMathBlock(fullMath, isRtl));
+                    i = mathIdx;
+                    continue;
+                }
             }
 
             // Horizontal Rule
@@ -218,7 +268,19 @@ public static partial class MarkdownRenderService
         // Handle unterminated code block at EOF
         if (inCodeBlock && codeBlockLines.Count > 0)
         {
-            doc.Blocks.Add(CreateCodeBlock(codeBlockLines, codeBlockLang));
+            if (MathPlotService.IsPlotLanguage(codeBlockLang))
+            {
+                doc.Blocks.Add(MathPlotService.CreatePlotBlock(codeBlockLines));
+            }
+            else if (MathFormulaService.IsMathLanguage(codeBlockLang))
+            {
+                string mathText = string.Join(Environment.NewLine, codeBlockLines);
+                doc.Blocks.Add(MathFormulaService.CreateMathBlock(mathText, isRtl));
+            }
+            else
+            {
+                doc.Blocks.Add(CreateCodeBlock(codeBlockLines, codeBlockLang));
+            }
         }
 
         return doc;
@@ -871,6 +933,27 @@ public static partial class MarkdownRenderService
             int brStart2 = text.IndexOf("<br/>", index, StringComparison.OrdinalIgnoreCase);
             int brStart3 = text.IndexOf("<br />", index, StringComparison.OrdinalIgnoreCase);
 
+            int mathStart = -1;
+            int dollarIdx = text.IndexOf('$', index);
+            if (dollarIdx >= index && dollarIdx + 1 < text.Length && text[dollarIdx + 1] != '$' && !char.IsWhiteSpace(text[dollarIdx + 1]))
+            {
+                bool escaped = dollarIdx > 0 && text[dollarIdx - 1] == '\\';
+                bool prevDollar = dollarIdx > 0 && text[dollarIdx - 1] == '$';
+                if (!escaped && !prevDollar)
+                {
+                    int closingDollar = text.IndexOf('$', dollarIdx + 1);
+                    if (closingDollar > dollarIdx + 1 && !char.IsWhiteSpace(text[closingDollar - 1]))
+                    {
+                        bool closeEscaped = text[closingDollar - 1] == '\\';
+                        bool nextDollar = closingDollar + 1 < text.Length && text[closingDollar + 1] == '$';
+                        if (!closeEscaped && !nextDollar)
+                        {
+                            mathStart = dollarIdx;
+                        }
+                    }
+                }
+            }
+
             int nextSpecial = -1;
             string specialType = "";
 
@@ -887,6 +970,7 @@ public static partial class MarkdownRenderService
             CheckSpecial(boldStart1, "bold**");
             CheckSpecial(boldStart2, "bold__");
             CheckSpecial(linkStart, "link");
+            CheckSpecial(mathStart, "math");
             CheckSpecial(brStart1, "br4");
             CheckSpecial(brStart2, "br5");
             CheckSpecial(brStart3, "br6");
@@ -949,6 +1033,17 @@ public static partial class MarkdownRenderService
                     };
                     paragraph.Inlines.Add(linkRun);
                     index += match.Length;
+                    continue;
+                }
+            }
+            else if (specialType == "math")
+            {
+                int mathClose = text.IndexOf('$', index + 1);
+                if (mathClose > index + 1)
+                {
+                    string formula = text.Substring(index + 1, mathClose - index - 1);
+                    paragraph.Inlines.Add(MathFormulaService.CreateInlineMath(formula));
+                    index = mathClose + 1;
                     continue;
                 }
             }

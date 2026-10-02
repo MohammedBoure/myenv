@@ -24,6 +24,8 @@ A fast, lightweight, and keyboard-driven text and code editor built natively for
   - Automatically activates the Markdown Live Preview panel upon pasting, rendering the image immediately.
   - Interactive image preview cards featuring a direct one-click clipboard copy button (`[Copy]`), external viewer launch (`[Open]`), and document/disk deletion mechanism (`[Delete]`).
   - Full native Markdown table parsing and rendering supporting custom alignments (`:---:`, `---:`, `:---`), proportional column widths, dark styling, cell wrapping, and bidirectional RTL Arabic text.
+  - Native mathematical function graphing and Cartesian coordinate plotting (`plot`, `graph`, `math-plot` code blocks) with automatic domain/range scaling, grid lines, multi-function curves, real-time crosshair coordinate tracking, and direct one-click clipboard image export.
+  - Comprehensive LaTeX mathematical formula rendering for block cards (`$$...$$` and `math` blocks) and inline equations (`$...$`) supporting fractions, radicals, summations, integrals, Greek characters, operators, matrices, and one-click LaTeX code copying.
   - Quick external viewing directly from the editor buffer via `Alt + O`, `Ctrl + Click`, or right-click context menu (`Open Externally` / `Reveal in File Explorer`).
 - **Quick Symbols & Frequent Words Palette (`Ctrl + .` / `F4`)**:
   - Instant modal palette for fast access to symbols, arrows, bullets, math characters, markdown snippets, and frequent Arabic phrases.
