@@ -72,29 +72,51 @@ window_behavior:
       shown_on_top: false
 
 workspaces:
-  # Left monitor DISPLAY1 (monitor index 0)
+  # Screen 1: PLAYER MSG12 (Middle / Primary - Monitor Index 1)
   - name: '1'
-    bind_to_monitor: 0
+    bind_to_monitor: 1
   - name: '2'
-    bind_to_monitor: 0
+    bind_to_monitor: 1
   - name: '3'
-    bind_to_monitor: 0
+    bind_to_monitor: 1
   - name: '4'
-    bind_to_monitor: 0
+    bind_to_monitor: 1
   - name: '5'
-    bind_to_monitor: 0
+    bind_to_monitor: 1
   - name: '6'
-    bind_to_monitor: 0
+    bind_to_monitor: 1
   - name: '7'
-    bind_to_monitor: 0
+    bind_to_monitor: 1
   - name: '8'
-    bind_to_monitor: 0
-
-  # Right monitor DISPLAY8 (monitor index 1)
+    bind_to_monitor: 1
   - name: '9'
     bind_to_monitor: 1
   - name: '10'
     bind_to_monitor: 1
+
+  # Screen 2: Fujitsu (Right - Monitor Index 2)
+  - name: 'a'
+    bind_to_monitor: 2
+  - name: 'z'
+    bind_to_monitor: 2
+  - name: 'e'
+    bind_to_monitor: 2
+  - name: 'r'
+    bind_to_monitor: 2
+  - name: 't'
+    bind_to_monitor: 2
+
+  # Screen 3: Deskreen Virtual Display (Left - Monitor Index 0)
+  - name: 'y'
+    bind_to_monitor: 0
+  - name: 'u'
+    bind_to_monitor: 0
+  - name: 'i'
+    bind_to_monitor: 0
+  - name: 'o'
+    bind_to_monitor: 0
+  - name: 'p'
+    bind_to_monitor: 0
 
 window_rules:
   - commands: ['ignore']
@@ -118,6 +140,12 @@ window_rules:
       - window_title: { regex: '(?i).*(float|dialog|popup|jaber).*' }
 
       # --- USER CUSTOM IGNORED DIALOGS (Managed via Alt+Shift+I) ---
+      # Custom rule: Modifier le Partenaire [Added: 2026-10-04 02:00]
+      - window_process: { regex: '(?i)^python.*$' }
+        window_title: { regex: '(?i).*Modifier le Partenaire.*' }
+      # Custom rule: Détails du Lot : 2405967 [Added: 2026-10-04 01:59]
+      - window_process: { regex: '(?i)^python.*$' }
+        window_title: { regex: '(?i).*Détails du Lot : 2405967.*' }
       # Custom rule: Options d'impression & Notes [Added: 2026-10-01 13:27]
       - window_process: { regex: '(?i)^python.*$' }
         window_title: { regex: '(?i).*Options d''impression.*' }
@@ -207,21 +235,21 @@ keybindings:
   - commands: ['move --direction down']
     bindings: ['alt+shift+j', 'alt+shift+down']
 
-  # Resize window
+  # Resize window (Direct & Interactive Mode)
   - commands: ['resize --width -2%']
-    bindings: ['alt+u']
+    bindings: ['alt+ctrl+left', 'alt+ctrl+u']
   - commands: ['resize --width +2%']
-    bindings: ['alt+p']
+    bindings: ['alt+ctrl+right', 'alt+ctrl+p']
   - commands: ['resize --height +2%']
-    bindings: ['alt+o']
+    bindings: ['alt+ctrl+down', 'alt+ctrl+o']
   - commands: ['resize --height -2%']
-    bindings: ['alt+i']
+    bindings: ['alt+ctrl+up', 'alt+ctrl+k']
 
   - commands: ['wm-enable-binding-mode --name resize']
-    bindings: ['alt+r']
+    bindings: ['alt+ctrl+r']
 
   - commands: ['wm-toggle-pause']
-    bindings: ['alt+shift+p']
+    bindings: ['alt+ctrl+p']
 
   # Change tiling direction (Toggle, Vertical, Horizontal)
   - commands: ['toggle-tiling-direction']
@@ -240,15 +268,15 @@ keybindings:
 
   # Quick Screen Region OCR & Translation (Win+Shift+Q or Alt+Shift+T)
   - commands: ['shell-exec %USERPROFILE%\Documents\myenv\scripts\quick-translate\QuickTranslate.exe']
-    bindings: ['win+shift+q', 'alt+shift+t']
+    bindings: ['win+shift+q']
 
   # Quick Clipboard Text Translation (Win+Shift+C or Alt+Shift+C)
   - commands: ['shell-exec %USERPROFILE%\Documents\myenv\scripts\quick-translate\QuickTranslate.exe --clipboard']
     bindings: ['win+shift+c', 'alt+shift+c']
 
-  # Quick Type & Paste Translation (Win+Shift+X or Alt+Shift+E)
+  # Quick Type & Paste Translation (Win+Shift+X or Alt+Ctrl+E)
   - commands: ['shell-exec %USERPROFILE%\Documents\myenv\scripts\quick-translate\QuickTranslate.exe --type']
-    bindings: ['win+shift+x', 'alt+shift+e']
+    bindings: ['win+shift+x', 'alt+ctrl+e']
 
   # Global Quick Symbols & Frequent Words Palette (Win+Shift+W or Alt+Shift+W)
   - commands: ['shell-exec %USERPROFILE%\Documents\myenv\scripts\quick-symbols\QuickSymbols.exe']
@@ -266,23 +294,23 @@ keybindings:
   - commands: ['shell-exec powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File %USERPROFILE%\Documents\myenv\scripts\toggle-mute.ps1']
     bindings: ['alt+shift+m']
 
-  # Toggle Window Transparency 80% / 100% (Alt+Shift+Z)
+  # Toggle Window Transparency 80% / 100% (Alt+Ctrl+Z)
   - commands: ['shell-exec powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File %USERPROFILE%\Documents\myenv\scripts\toggle-window-transparency.ps1']
-    bindings: ['alt+shift+z']
+    bindings: ['alt+ctrl+z']
 
   - commands: ['toggle-floating --centered']
     bindings: ['alt+shift+space']
 
-  # Toggle focused dialog/window permanent ignore rule in GlazeWM (Alt+Shift+I)
+  # Toggle focused dialog/window permanent ignore rule in GlazeWM (Alt+Ctrl+Shift+I)
   - commands: ['shell-exec powershell.exe -sta -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File %USERPROFILE%\Documents\myenv\scripts\ignore-focused-window.ps1']
-    bindings: ['alt+shift+i']
+    bindings: ['alt+ctrl+shift+i']
 
   # Instant session-only ignore without adding to config (Alt+Ctrl+I)
   - commands: ['shell-exec powershell.exe -sta -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File %USERPROFILE%\Documents\myenv\scripts\ignore-focused-window.ps1 -SessionOnly']
     bindings: ['alt+ctrl+i']
 
   - commands: ['toggle-tiling']
-    bindings: ['alt+t']
+    bindings: ['alt+ctrl+t']
 
   - commands: ['toggle-fullscreen']
     bindings: ['alt+f']
@@ -294,13 +322,13 @@ keybindings:
     bindings: ['alt+q']
 
   - commands: ['wm-exit']
-    bindings: ['alt+shift+e']
+    bindings: ['alt+ctrl+shift+e']
 
   - commands: ['wm-reload-config']
-    bindings: ['alt+shift+r']
+    bindings: ['alt+ctrl+shift+r']
 
   - commands: ['wm-redraw']
-    bindings: ['alt+shift+w']
+    bindings: ['alt+ctrl+w']
 
   # Terminals (Fast C# launcher with zero window flash)
   - commands: ['shell-exec %USERPROFILE%\Documents\myenv\scripts\open-terminal-here.exe cmd']
@@ -313,8 +341,6 @@ keybindings:
   - commands: ['shell-exec %USERPROFILE%\Documents\myenv\scripts\nightpad\NightPad.exe']
     bindings: ['alt+n']
 
-
-
   # Workspaces Navigation
   - commands: ['focus --prev-workspace']
     bindings: ['alt+page_up']
@@ -324,6 +350,7 @@ keybindings:
   - commands: ['focus --recent-workspace']
     bindings: ['alt+d']
 
+  # Screen 1 (Primary - PLAYER MSG12): Focus Workspaces 1..10
   - commands: ['focus --workspace 1']
     bindings: ['alt+1']
   - commands: ['focus --workspace 2']
@@ -345,17 +372,41 @@ keybindings:
   - commands: ['focus --workspace 10']
     bindings: ['alt+0']
 
+  # Screen 2 (Right - Fujitsu): Focus Workspaces a, z, e, r, t
+  - commands: ['focus --workspace a']
+    bindings: ['alt+a']
+  - commands: ['focus --workspace z']
+    bindings: ['alt+z']
+  - commands: ['focus --workspace e']
+    bindings: ['alt+e']
+  - commands: ['focus --workspace r']
+    bindings: ['alt+r']
+  - commands: ['focus --workspace t']
+    bindings: ['alt+t']
+
+  # Screen 3 (Left - Deskreen Virtual Display): Focus Workspaces y, u, i, o, p
+  - commands: ['focus --workspace y']
+    bindings: ['alt+y']
+  - commands: ['focus --workspace u']
+    bindings: ['alt+u']
+  - commands: ['focus --workspace i']
+    bindings: ['alt+i']
+  - commands: ['focus --workspace o']
+    bindings: ['alt+o']
+  - commands: ['focus --workspace p']
+    bindings: ['alt+p']
+
   # Move Workspace to Monitor
   - commands: ['move-workspace --direction left']
-    bindings: ['alt+shift+a']
+    bindings: ['alt+ctrl+shift+left', 'alt+ctrl+shift+a']
   - commands: ['move-workspace --direction right']
-    bindings: ['alt+shift+f']
+    bindings: ['alt+ctrl+shift+right', 'alt+ctrl+shift+f']
   - commands: ['move-workspace --direction up']
-    bindings: ['alt+shift+d']
+    bindings: ['alt+ctrl+shift+up', 'alt+ctrl+shift+d']
   - commands: ['move-workspace --direction down']
-    bindings: ['alt+shift+down', 'alt+shift+g']
+    bindings: ['alt+ctrl+shift+down', 'alt+ctrl+shift+g']
 
-  # Move Window to Workspace
+  # Move Window to Workspace - Screen 1 (1..10)
   - commands: ['move --workspace 1', 'focus --workspace 1']
     bindings: ['alt+shift+1']
   - commands: ['move --workspace 2', 'focus --workspace 2']
@@ -376,3 +427,28 @@ keybindings:
     bindings: ['alt+shift+9']
   - commands: ['move --workspace 10', 'focus --workspace 10']
     bindings: ['alt+shift+0']
+
+  # Move Window to Workspace - Screen 2 (a, z, e, r, t)
+  - commands: ['move --workspace a', 'focus --workspace a']
+    bindings: ['alt+shift+a']
+  - commands: ['move --workspace z', 'focus --workspace z']
+    bindings: ['alt+shift+z']
+  - commands: ['move --workspace e', 'focus --workspace e']
+    bindings: ['alt+shift+e']
+  - commands: ['move --workspace r', 'focus --workspace r']
+    bindings: ['alt+shift+r']
+  - commands: ['move --workspace t', 'focus --workspace t']
+
+  # Move Window to Workspace - Screen 3 (y, u, i, o, p)
+  - commands: ['move --workspace y', 'focus --workspace y']
+    bindings: ['alt+shift+y']
+  - commands: ['move --workspace u', 'focus --workspace u']
+    bindings: ['alt+shift+u']
+  - commands: ['move --workspace i', 'focus --workspace i']
+    bindings: ['alt+shift+i']
+  - commands: ['move --workspace o', 'focus --workspace o']
+    bindings: ['alt+shift+o']
+  - commands: ['move --workspace p', 'focus --workspace p']
+    bindings: ['alt+shift+p']
+
+
