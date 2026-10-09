@@ -95,6 +95,8 @@ workspaces:
     bind_to_monitor: 1
 
   # Screen 2: Fujitsu (Right - Monitor Index 2)
+  - name: 'a'
+    bind_to_monitor: 2
   - name: 'z'
     bind_to_monitor: 2
   - name: 'e'
@@ -371,7 +373,9 @@ keybindings:
   - commands: ['focus --workspace 10']
     bindings: ['alt+0']
 
-  # Screen 2 (Right - Fujitsu): Focus Workspaces z, e, r, t
+  # Screen 2 (Right - Fujitsu): Focus Workspaces a, z, e, r, t
+  - commands: ['focus --workspace a']
+    bindings: ['alt+a']
   - commands: ['focus --workspace z']
     bindings: ['alt+z']
   - commands: ['focus --workspace e']
@@ -425,7 +429,9 @@ keybindings:
   - commands: ['move --workspace 10', 'focus --workspace 10']
     bindings: ['alt+shift+0', 'shift+alt+0']
 
-  # Move Window to Workspace - Screen 2 (z, e, r, t)
+  # Move Window to Workspace - Screen 2 (a, z, e, r, t)
+  - commands: ['move --workspace a', 'focus --workspace a']
+    bindings: ['alt+shift+a', 'shift+alt+a']
   - commands: ['move --workspace z', 'focus --workspace z']
     bindings: ['alt+shift+z', 'shift+alt+z']
   - commands: ['move --workspace e', 'focus --workspace e']

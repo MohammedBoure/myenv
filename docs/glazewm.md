@@ -49,15 +49,15 @@ GlazeWM is a high-performance, keyboard-driven tiling window manager for Windows
 
 ### Workspaces & Multi-Monitor Setup
 - **Screen 1 `DISPLAY1` (Monitor Index 1 - Center Primary: PLAYER MSG12)**: Workspaces `1` to `10`
-- **Screen 2 `DISPLAY8` (Monitor Index 2 - Right: Fujitsu L20T-1 ECO)**: Workspaces `z`, `e`, `r`, `t`
+- **Screen 2 `DISPLAY8` (Monitor Index 2 - Right: Fujitsu L20T-1 ECO)**: Workspaces `a`, `z`, `e`, `r`, `t`
 - **Screen 3 `DISPLAY13` (Monitor Index 0 - Left Virtual: Deskreen VDD by MTT)**: Workspaces `y`, `u`, `i`, `o`, `p`
 
 | Keybinding | Action / Description |
 |---|---|
 | `Alt + 1..0` | Focus workspace 1-10 (Screen 1: Primary Center) |
 | `Alt + Shift + 1..0` / `Shift + Alt + 1..0` | Move focused window to workspace 1-10 and follow focus |
-| `Alt + Z / E / R / T` | Focus workspace z, e, r, t (Screen 2: Right Fujitsu) |
-| `Alt + Shift + Z / E / R / T` / `Shift + Alt + Z / E / R / T` | Move focused window to workspace z, e, r, t and follow focus |
+| `Alt + A / Z / E / R / T` | Focus workspace a, z, e, r, t (Screen 2: Right Fujitsu) |
+| `Alt + Shift + A / Z / E / R / T` / `Shift + Alt + A / Z / E / R / T` | Move focused window to workspace a, z, e, r, t and follow focus |
 | `Alt + Y / U / I / O / P` | Focus workspace y, u, i, o, p (Screen 3: Left Deskreen Virtual) |
 | `Alt + Shift + Y / U / I / O / P` / `Shift + Alt + Y / U / I / O / P` | Move focused window to workspace y, u, i, o, p and follow focus |
 | `Alt + PageUp` | Focus previous workspace |
