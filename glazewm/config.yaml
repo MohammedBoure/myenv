@@ -95,8 +95,6 @@ workspaces:
     bind_to_monitor: 1
 
   # Screen 2: Fujitsu (Right - Monitor Index 2)
-  - name: 'a'
-    bind_to_monitor: 2
   - name: 'z'
     bind_to_monitor: 2
   - name: 'e'
@@ -235,21 +233,21 @@ keybindings:
   - commands: ['move --direction down']
     bindings: ['alt+shift+j', 'alt+shift+down']
 
-  # Resize window (Direct & Interactive Mode)
+  # Resize window (Direct Mode via Arrows)
   - commands: ['resize --width -2%']
-    bindings: ['alt+ctrl+left', 'alt+ctrl+u']
+    bindings: ['alt+ctrl+left']
   - commands: ['resize --width +2%']
-    bindings: ['alt+ctrl+right', 'alt+ctrl+p']
+    bindings: ['alt+ctrl+right']
   - commands: ['resize --height +2%']
-    bindings: ['alt+ctrl+down', 'alt+ctrl+o']
+    bindings: ['alt+ctrl+down']
   - commands: ['resize --height -2%']
-    bindings: ['alt+ctrl+up', 'alt+ctrl+k']
+    bindings: ['alt+ctrl+up']
 
   - commands: ['wm-enable-binding-mode --name resize']
-    bindings: ['alt+ctrl+r']
+    bindings: ['alt+ctrl+space']
 
   - commands: ['wm-toggle-pause']
-    bindings: ['alt+ctrl+p']
+    bindings: ['alt+ctrl+pause', 'win+pause']
 
   # Change tiling direction (Toggle, Vertical, Horizontal)
   - commands: ['toggle-tiling-direction']
@@ -266,7 +264,7 @@ keybindings:
   - commands: ['shell-exec powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File %USERPROFILE%\Documents\myenv\scripts\app-launcher.ps1']
     bindings: ['alt+shift+q']
 
-  # Quick Screen Region OCR & Translation (Win+Shift+Q or Alt+Shift+T)
+  # Quick Screen Region OCR & Translation (Win+Shift+Q)
   - commands: ['shell-exec %USERPROFILE%\Documents\myenv\scripts\quick-translate\QuickTranslate.exe']
     bindings: ['win+shift+q']
 
@@ -274,9 +272,9 @@ keybindings:
   - commands: ['shell-exec %USERPROFILE%\Documents\myenv\scripts\quick-translate\QuickTranslate.exe --clipboard']
     bindings: ['win+shift+c', 'alt+shift+c']
 
-  # Quick Type & Paste Translation (Win+Shift+X or Alt+Ctrl+E)
+  # Quick Type & Paste Translation (Win+Shift+X)
   - commands: ['shell-exec %USERPROFILE%\Documents\myenv\scripts\quick-translate\QuickTranslate.exe --type']
-    bindings: ['win+shift+x', 'alt+ctrl+e']
+    bindings: ['win+shift+x']
 
   # Global Quick Symbols & Frequent Words Palette (Win+Shift+W or Alt+Shift+W)
   - commands: ['shell-exec %USERPROFILE%\Documents\myenv\scripts\quick-symbols\QuickSymbols.exe']
@@ -294,23 +292,23 @@ keybindings:
   - commands: ['shell-exec powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File %USERPROFILE%\Documents\myenv\scripts\toggle-mute.ps1']
     bindings: ['alt+shift+m']
 
-  # Toggle Window Transparency 80% / 100% (Alt+Ctrl+Z)
+  # Toggle Window Transparency 80% / 100% (Win+Shift+Z)
   - commands: ['shell-exec powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File %USERPROFILE%\Documents\myenv\scripts\toggle-window-transparency.ps1']
-    bindings: ['alt+ctrl+z']
+    bindings: ['win+shift+z']
 
   - commands: ['toggle-floating --centered']
     bindings: ['alt+shift+space']
 
-  # Toggle focused dialog/window permanent ignore rule in GlazeWM (Alt+Ctrl+Shift+I)
+  # Toggle focused dialog/window permanent ignore rule in GlazeWM (Win+Shift+I)
   - commands: ['shell-exec powershell.exe -sta -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File %USERPROFILE%\Documents\myenv\scripts\ignore-focused-window.ps1']
-    bindings: ['alt+ctrl+shift+i']
+    bindings: ['win+shift+i']
 
-  # Instant session-only ignore without adding to config (Alt+Ctrl+I)
+  # Instant session-only ignore without adding to config (Win+Ctrl+I)
   - commands: ['shell-exec powershell.exe -sta -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File %USERPROFILE%\Documents\myenv\scripts\ignore-focused-window.ps1 -SessionOnly']
-    bindings: ['alt+ctrl+i']
+    bindings: ['win+ctrl+i']
 
   - commands: ['toggle-tiling']
-    bindings: ['alt+ctrl+t']
+    bindings: ['win+t']
 
   - commands: ['toggle-fullscreen']
     bindings: ['alt+f']
@@ -318,14 +316,15 @@ keybindings:
   - commands: ['toggle-minimized']
     bindings: ['alt+m']
 
+  # Close focused window (Strictly Alt+Q)
   - commands: ['close']
     bindings: ['alt+q']
 
   - commands: ['wm-exit']
-    bindings: ['alt+ctrl+shift+e']
+    bindings: ['win+shift+escape', 'alt+shift+escape']
 
   - commands: ['wm-reload-config']
-    bindings: ['alt+ctrl+shift+r']
+    bindings: ['win+shift+r', 'alt+shift+f5']
 
   - commands: ['wm-redraw']
     bindings: ['alt+ctrl+w']
@@ -372,9 +371,7 @@ keybindings:
   - commands: ['focus --workspace 10']
     bindings: ['alt+0']
 
-  # Screen 2 (Right - Fujitsu): Focus Workspaces a, z, e, r, t
-  - commands: ['focus --workspace a']
-    bindings: ['alt+a']
+  # Screen 2 (Right - Fujitsu): Focus Workspaces z, e, r, t
   - commands: ['focus --workspace z']
     bindings: ['alt+z']
   - commands: ['focus --workspace e']
@@ -396,59 +393,59 @@ keybindings:
   - commands: ['focus --workspace p']
     bindings: ['alt+p']
 
-  # Move Workspace to Monitor
+  # Move Workspace to Monitor (Arrows only)
   - commands: ['move-workspace --direction left']
-    bindings: ['alt+ctrl+shift+left', 'alt+ctrl+shift+a']
+    bindings: ['alt+ctrl+shift+left']
   - commands: ['move-workspace --direction right']
-    bindings: ['alt+ctrl+shift+right', 'alt+ctrl+shift+f']
+    bindings: ['alt+ctrl+shift+right']
   - commands: ['move-workspace --direction up']
-    bindings: ['alt+ctrl+shift+up', 'alt+ctrl+shift+d']
+    bindings: ['alt+ctrl+shift+up']
   - commands: ['move-workspace --direction down']
-    bindings: ['alt+ctrl+shift+down', 'alt+ctrl+shift+g']
+    bindings: ['alt+ctrl+shift+down']
 
   # Move Window to Workspace - Screen 1 (1..10)
   - commands: ['move --workspace 1', 'focus --workspace 1']
-    bindings: ['alt+shift+1']
+    bindings: ['alt+shift+1', 'shift+alt+1']
   - commands: ['move --workspace 2', 'focus --workspace 2']
-    bindings: ['alt+shift+2']
+    bindings: ['alt+shift+2', 'shift+alt+2']
   - commands: ['move --workspace 3', 'focus --workspace 3']
-    bindings: ['alt+shift+3']
+    bindings: ['alt+shift+3', 'shift+alt+3']
   - commands: ['move --workspace 4', 'focus --workspace 4']
-    bindings: ['alt+shift+4']
+    bindings: ['alt+shift+4', 'shift+alt+4']
   - commands: ['move --workspace 5', 'focus --workspace 5']
-    bindings: ['alt+shift+5']
+    bindings: ['alt+shift+5', 'shift+alt+5']
   - commands: ['move --workspace 6', 'focus --workspace 6']
-    bindings: ['alt+shift+6']
+    bindings: ['alt+shift+6', 'shift+alt+6']
   - commands: ['move --workspace 7', 'focus --workspace 7']
-    bindings: ['alt+shift+7']
+    bindings: ['alt+shift+7', 'shift+alt+7']
   - commands: ['move --workspace 8', 'focus --workspace 8']
-    bindings: ['alt+shift+8']
+    bindings: ['alt+shift+8', 'shift+alt+8']
   - commands: ['move --workspace 9', 'focus --workspace 9']
-    bindings: ['alt+shift+9']
+    bindings: ['alt+shift+9', 'shift+alt+9']
   - commands: ['move --workspace 10', 'focus --workspace 10']
-    bindings: ['alt+shift+0']
+    bindings: ['alt+shift+0', 'shift+alt+0']
 
-  # Move Window to Workspace - Screen 2 (a, z, e, r, t)
-  - commands: ['move --workspace a', 'focus --workspace a']
-    bindings: ['alt+shift+a']
+  # Move Window to Workspace - Screen 2 (z, e, r, t)
   - commands: ['move --workspace z', 'focus --workspace z']
-    bindings: ['alt+shift+z']
+    bindings: ['alt+shift+z', 'shift+alt+z']
   - commands: ['move --workspace e', 'focus --workspace e']
-    bindings: ['alt+shift+e']
+    bindings: ['alt+shift+e', 'shift+alt+e']
   - commands: ['move --workspace r', 'focus --workspace r']
-    bindings: ['alt+shift+r']
+    bindings: ['alt+shift+r', 'shift+alt+r']
   - commands: ['move --workspace t', 'focus --workspace t']
+    bindings: ['alt+shift+t', 'shift+alt+t']
 
   # Move Window to Workspace - Screen 3 (y, u, i, o, p)
   - commands: ['move --workspace y', 'focus --workspace y']
-    bindings: ['alt+shift+y']
+    bindings: ['alt+shift+y', 'shift+alt+y']
   - commands: ['move --workspace u', 'focus --workspace u']
-    bindings: ['alt+shift+u']
+    bindings: ['alt+shift+u', 'shift+alt+u']
   - commands: ['move --workspace i', 'focus --workspace i']
-    bindings: ['alt+shift+i']
+    bindings: ['alt+shift+i', 'shift+alt+i']
   - commands: ['move --workspace o', 'focus --workspace o']
-    bindings: ['alt+shift+o']
+    bindings: ['alt+shift+o', 'shift+alt+o']
   - commands: ['move --workspace p', 'focus --workspace p']
-    bindings: ['alt+shift+p']
+    bindings: ['alt+shift+p', 'shift+alt+p']
+
 
 
