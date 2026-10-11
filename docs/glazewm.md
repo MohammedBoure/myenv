@@ -21,7 +21,7 @@ GlazeWM is a high-performance, keyboard-driven tiling window manager for Windows
 | `Alt + J` / `Alt + Down` | Focus window below |
 | `Alt + Shift + H/L/K/J` | Move focused window in specified direction |
 | `Alt + Space` / `Alt + W` | Cycle window state |
-| `Alt + Ctrl + Pause` / `Win + Pause` | Pause GlazeWM (revert to legacy Windows window behavior) |
+| `Win + Shift + P` / `Alt + Shift + F12` | Pause GlazeWM (revert to legacy Windows window behavior) |
 | `Alt + Shift + Space` | Toggle window floating & center |
 | `Win + Shift + I` | Toggle permanent ignore rule for focused window (shrinks/centers dialog or removes rule to re-tile) |
 | `Win + Ctrl + I` | Temporarily unmanage focused window for current session, shrink to centered dialog size (`ignore`) |

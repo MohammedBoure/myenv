@@ -249,7 +249,7 @@ keybindings:
     bindings: ['alt+ctrl+space']
 
   - commands: ['wm-toggle-pause']
-    bindings: ['alt+ctrl+pause', 'win+pause']
+    bindings: ['win+shift+p', 'alt+shift+f12']
 
   # Change tiling direction (Toggle, Vertical, Horizontal)
   - commands: ['toggle-tiling-direction']
