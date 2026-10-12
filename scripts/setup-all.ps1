@@ -60,6 +60,10 @@ foreach ($j in $junctions) {
     }
 }
 
+# Run Gemini & Antigravity environment setup
+& "$myenvPath\scripts\setup-gemini-config.ps1"
+
+
 # 7. Manage Services (Stop Zebar & Reload YASB)
 Write-Host "`n[7/12] Managing Bar Services..." -ForegroundColor Cyan
 Get-Process -Name zebar -ErrorAction SilentlyContinue | Stop-Process -Force
