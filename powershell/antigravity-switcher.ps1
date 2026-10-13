@@ -114,15 +114,45 @@ function Switch-AgyCredential {
     $tokenDir = Join-Path $HOME ".gemini\tokens"
     $tokenFile = Join-Path $tokenDir "$accountName.token"
 
-    # Check for explicit re-sync / login flags
+    # Check for explicit login or logout requests
     $isLoginRequest = $false
+    $isLogoutRequest = $false
     if ($null -ne $ArgsList) {
         foreach ($arg in $ArgsList) {
-            if ($arg -in @('--login', '-login', '/login', '--sync', '-sync')) {
+            if ($arg -in @('login', '--login', '-login', '/login', 'auth', '--auth', '-auth', 'reauth', '--reauth', 'sync', '--sync', '-sync')) {
                 $isLoginRequest = $true
                 break
             }
+            if ($arg -in @('logout', '--logout', '-logout', '/logout', 'clear', '--clear', '-clear', 'reset', '--reset')) {
+                $isLogoutRequest = $true
+                break
+            }
         }
+    }
+
+    $mutexName = "Global\AgyCredentialMutex"
+
+    # =========================================================================
+    # CASE 1: Explicit Logout / Reset (agy<N> logout or agy-logout <N>)
+    # =========================================================================
+    if ($isLogoutRequest) {
+        if (Test-Path -LiteralPath $tokenFile) {
+            Remove-Item -LiteralPath $tokenFile -Force -ErrorAction SilentlyContinue
+        }
+        $mutex = $null
+        $hasLock = $false
+        try {
+            $mutex = New-Object System.Threading.Mutex($false, $mutexName)
+            try { $hasLock = $mutex.WaitOne(5000, $false) } catch [System.Threading.AbandonedMutexException] { $hasLock = $true }
+            [AgyCredVault]::Delete("gemini:antigravity") | Out-Null
+            Start-Sleep -Milliseconds 150
+        } finally {
+            if ($hasLock -and $null -ne $mutex) { $mutex.ReleaseMutex() }
+            if ($null -ne $mutex) { $mutex.Dispose() }
+        }
+        Write-Host "[$accountName] Logged out successfully. Slot $AccountIndex cleared." -ForegroundColor Green
+        Write-Host "[$accountName] Run '$accountName' or '$accountName login' to sign in with a new Google Account." -ForegroundColor Cyan
+        return 101
     }
 
     # Inspect token file
@@ -134,10 +164,8 @@ function Switch-AgyCredential {
         }
     }
 
-    $mutexName = "Global\AgyCredentialMutex"
-
     # =========================================================================
-    # CASE A: Explicit setup or re-sync (agy-sync or missing token)
+    # CASE 2: Explicit Login or Unconfigured Slot
     # =========================================================================
     if ($isLoginRequest -or [string]::IsNullOrWhiteSpace($token)) {
         if ($isLoginRequest) {
@@ -145,7 +173,8 @@ function Switch-AgyCredential {
         } else {
             Write-Host "[$accountName] Account not configured yet." -ForegroundColor Yellow
         }
-        Write-Host "[$accountName] Launching Antigravity CLI. Please complete Google OAuth in your browser..." -ForegroundColor Cyan
+        Write-Host "[$accountName] Opening Antigravity CLI to sign in with Google..." -ForegroundColor Cyan
+        Write-Host "[$accountName] Hint in browser: Select 'Use another account' if you want to connect a different Gmail." -ForegroundColor Magenta
 
         $mutex = $null
         $hasLock = $false
@@ -161,7 +190,7 @@ function Switch-AgyCredential {
 
         & agy.exe
 
-        # Capture newly created credential ONLY on initial setup / explicit sync
+        # Capture newly created credential from Credential Manager
         $capturedToken = [AgyCredVault]::Read("gemini:antigravity")
         if (-not [string]::IsNullOrWhiteSpace($capturedToken)) {
             if (-not (Test-Path -LiteralPath $tokenDir)) {
@@ -181,7 +210,7 @@ function Switch-AgyCredential {
     }
 
     # =========================================================================
-    # CASE B: Normal execution with saved token (credential restoration only)
+    # CASE 3: Normal Execution with Saved Token (Credential Restoration)
     # =========================================================================
     $mutex = $null
     $hasLock = $false
@@ -224,30 +253,87 @@ function Switch-AgyCredential {
     return 0
 }
 
-# Helper command to re-authenticate or sync any account at will
-function global:agy-sync {
+# ==============================================================================
+# Global Account Management Helper Commands
+# ==============================================================================
+
+# Re-authenticate slot with a new Google Account
+function global:agy-login {
     param(
         [Parameter(Mandatory = $true, Position = 0)]
         [int]$AccountIndex
     )
     if ($AccountIndex -lt 1 -or $AccountIndex -gt 20) {
-        Write-Error "Please specify an account index between 1 and 20 (e.g. agy-sync 1)."
+        Write-Error "Please specify an account index between 1 and 20 (e.g. agy-login 2)."
         return 1
     }
-    Switch-AgyCredential -AccountIndex $AccountIndex -ArgsList @('--login') | Out-Null
+    Switch-AgyCredential -AccountIndex $AccountIndex -ArgsList @('login') | Out-Null
 }
 
-# Dynamically define agy1 through agy20 in global scope sharing central settings and sessions
+# Log out / remove account from slot
+function global:agy-logout {
+    param(
+        [Parameter(Mandatory = $true, Position = 0)]
+        [int]$AccountIndex
+    )
+    if ($AccountIndex -lt 1 -or $AccountIndex -gt 20) {
+        Write-Error "Please specify an account index between 1 and 20 (e.g. agy-logout 2)."
+        return 1
+    }
+    Switch-AgyCredential -AccountIndex $AccountIndex -ArgsList @('logout') | Out-Null
+}
+
+function global:agy-sync {
+    param([Parameter(Mandatory = $true, Position = 0)][int]$AccountIndex)
+    agy-login $AccountIndex
+}
+
+# View all slots and configured Google Accounts in a clean table
+function global:agy-list {
+    $tokenDir = Join-Path $HOME ".gemini\tokens"
+    Write-Host "`n=== Antigravity Multi-Account Slots (agy1..agy20) ===" -ForegroundColor Cyan
+    $results = @()
+    1..20 | ForEach-Object {
+        $slotName = "agy$_"
+        $tokenFile = Join-Path $tokenDir "$slotName.token"
+        $email = $null
+        $status = "Not configured"
+        if (Test-Path -LiteralPath $tokenFile) {
+            $raw = Get-Content -LiteralPath $tokenFile -Raw -ErrorAction SilentlyContinue
+            if (-not [string]::IsNullOrWhiteSpace($raw)) {
+                $email = Get-AgyTokenEmail $raw.Trim()
+                if ($email) { $status = "Active" } else { $status = "Invalid/Malformed" }
+            }
+        }
+        $results += [PSCustomObject]@{
+            Slot   = $slotName
+            Email  = if ($email) { $email } else { "-" }
+            Status = $status
+        }
+    }
+    $results | Format-Table -AutoSize
+    Write-Host "Helper Commands:" -ForegroundColor Gray
+    Write-Host "  agy<N>            : Run CLI using account <N> (e.g. agy1)" -ForegroundColor Gray
+    Write-Host "  agy<N> login      : Sign in with a new Google Account on slot <N> (e.g. agy2 login)" -ForegroundColor Gray
+    Write-Host "  agy<N> logout     : Disconnect account from slot <N> (e.g. agy2 logout)" -ForegroundColor Gray
+    Write-Host "  agy-list          : View all slots and configured accounts`n" -ForegroundColor Gray
+}
+
+Set-Alias -Name agy-accounts -Value agy-list -Option AllScope -ErrorAction SilentlyContinue
+
+# ==============================================================================
+# Dynamically define agy1 through agy20 in global scope
+# ==============================================================================
 1..20 | ForEach-Object {
     $idx = $_
     $functionBody = @"
 function global:agy$idx {
     `$RemainingArgs = `$args
 
-    # 1. Credential switch logic (Mutex + Credential Store restore)
+    # 1. Credential switch / login / logout logic
     `$status = Switch-AgyCredential -AccountIndex $idx -ArgsList `$RemainingArgs
     if (`$status -ne 0) {
-        if (`$status -eq 100) {
+        if (`$status -in @(100, 101)) {
             `$global:LASTEXITCODE = 0
             return
         }
@@ -267,18 +353,20 @@ function global:agy$idx {
     }
     `$global:LASTEXITCODE = `$LASTEXITCODE
 
-    # 3. Synchronize refreshed session token if updated by OAuth
+    # 3. Synchronize session token (including account changes or OAuth token refresh)
     `$tokenFile = Join-Path `$HOME ".gemini\tokens\agy$idx.token"
-    if (Test-Path -LiteralPath `$tokenFile) {
-        `$savedToken = Get-Content -LiteralPath `$tokenFile -Raw -ErrorAction SilentlyContinue
-        if (`$savedToken) {
-            `$expectedEmail = Get-AgyTokenEmail `$savedToken
-            `$currentCred = [AgyCredVault]::Read("gemini:antigravity")
-            if (`$currentCred -and `$expectedEmail) {
-                `$currentEmail = Get-AgyTokenEmail `$currentCred
-                if (`$currentEmail -eq `$expectedEmail -and `$currentCred.Trim() -ne `$savedToken.Trim()) {
-                    [System.IO.File]::WriteAllText(`$tokenFile, `$currentCred.Trim(), [System.Text.Encoding]::UTF8)
-                }
+    `$currentCred = [AgyCredVault]::Read("gemini:antigravity")
+    if (-not [string]::IsNullOrWhiteSpace(`$currentCred)) {
+        `$currentEmail = Get-AgyTokenEmail `$currentCred
+        `$savedToken = if (Test-Path -LiteralPath `$tokenFile) { Get-Content -LiteralPath `$tokenFile -Raw -ErrorAction SilentlyContinue } else { `$null }
+        `$savedEmail = if (`$savedToken) { Get-AgyTokenEmail `$savedToken } else { `$null }
+
+        if (`$currentEmail) {
+            if (`$currentEmail -ne `$savedEmail) {
+                [System.IO.File]::WriteAllText(`$tokenFile, `$currentCred.Trim(), [System.Text.Encoding]::UTF8)
+                Write-Host "[agy$idx] Account updated to: `$currentEmail" -ForegroundColor Green
+            } elseif (`$currentCred.Trim() -ne `$savedToken.Trim()) {
+                [System.IO.File]::WriteAllText(`$tokenFile, `$currentCred.Trim(), [System.Text.Encoding]::UTF8)
             }
         }
     }
