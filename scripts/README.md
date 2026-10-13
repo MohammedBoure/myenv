@@ -34,5 +34,7 @@ Central automation scripts, system configuration utilities, and native binary la
 | [`setup-gemini-config.ps1`](file:///C:/Users/moham/Documents/myenv/scripts/setup-gemini-config.ps1) | Sets up central directory junction linking `%USERPROFILE%\.gemini\config` to `%USERPROFILE%\Documents\myenv\gemini`. |
 | [`install-len.ps1`](file:///C:/Users/moham/Documents/myenv/scripts/install-len.ps1) | Automated installer and smart updater for **len (ProjectLens)** CLI tool from remote GitHub repository. |
 | [`install-lensbridge.ps1`](file:///C:/Users/moham/Documents/myenv/scripts/install-lensbridge.ps1) | Automated installer, repository manager (`D:\git\LensBridge`), isolated venv builder, and background service manager for **LensBridge Server**. |
+| [`install-micro.ps1`](file:///C:/Users/moham/Documents/myenv/scripts/install-micro.ps1) | Installs Micro text editor via WinGet, Scoop, or direct GitHub release fallback. |
+| [`setup-micro.ps1`](file:///C:/Users/moham/Documents/myenv/scripts/setup-micro.ps1) | Configures Micro text editor for VS Code parity, links configurations, installs `filemanager` plugin, and sets Git default editor. |
 | [`ignore-focused-window.ps1`](file:///C:/Users/moham/Documents/myenv/scripts/ignore-focused-window.ps1) | Toggles ignore state for focused window, shrinks & centers dialogs, and persists rules to GlazeWM config (`Alt + Shift + I` toggle, `-List` to view). |
 | [`docs.ps1`](file:///C:/Users/moham/Documents/myenv/scripts/docs.ps1) | Interactive CLI documentation viewer. |

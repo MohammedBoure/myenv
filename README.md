@@ -20,6 +20,7 @@ Access all system documentation guides directly:
 | QuickTranslate Tool | [`docs/quick-translate.md`](file:///%USERPROFILE%/Documents/myenv/docs/quick-translate.md) |
 | BarTranslator (Status Bar Translator) | [`docs/bar-translator.md`](file:///%USERPROFILE%/Documents/myenv/docs/bar-translator.md) |
 | NightPad (Editor) | [`docs/night-pad.md`](file:///%USERPROFILE%/Documents/myenv/docs/night-pad.md) |
+| Micro Terminal Editor | [`docs/micro.md`](file:///%USERPROFILE%/Documents/myenv/docs/micro.md) |
 | NetLimiter (Bandwidth Control) | [`docs/netlimiter.md`](file:///%USERPROFILE%/Documents/myenv/docs/netlimiter.md) |
 | Gemini Antigravity (AI) | [`docs/gemini-antigravity.md`](file:///%USERPROFILE%/Documents/myenv/docs/gemini-antigravity.md) |
 | len (ProjectLens Tree Tool) | [`docs/len.md`](file:///%USERPROFILE%/Documents/myenv/docs/len.md) |
@@ -110,6 +111,7 @@ Access all system documentation guides directly:
 | **BarTranslator Source** | [tools/bar-translator/](file:///%USERPROFILE%/Documents/myenv/tools/bar-translator) | Source code for BarTranslator background selection monitor (.NET 10) |
 | **BarTranslator Binary** | [scripts/bar-translator/BarTranslator.exe](file:///%USERPROFILE%/Documents/myenv/scripts/bar-translator/BarTranslator.exe) | Compiled standalone background daemon for status bar translator |
 | **Gemini Antigravity** | [gemini/](file:///%USERPROFILE%/Documents/myenv/gemini) | Global Antigravity instructions (`GEMINI.md`), MCP config, rules, and skills linked to `%USERPROFILE%\.gemini\config` |
+| **Micro Editor Config** | [micro/](file:///%USERPROFILE%/Documents/myenv/micro) | Configuration (`settings.json`, `bindings.json`, `midnight-aurora.micro`) for VS Code-like terminal editor linked to `%USERPROFILE%\.config\micro\` |
 | **Package Manifest** | [winget-packages.json](file:///%USERPROFILE%/Documents/myenv/winget-packages.json) | Exported Winget package manifest for developer tools |
 
 ---
@@ -131,6 +133,7 @@ Access all system documentation guides directly:
 | **`cb.cmd`** | [scripts/cb.cmd](file:///%USERPROFILE%/Documents/myenv/scripts/cb.cmd) | Runs a command, outputs results directly to terminal, and copies output to system clipboard. |
 | **`install-len.ps1`** | [scripts/install-len.ps1](file:///%USERPROFILE%/Documents/myenv/scripts/install-len.ps1) | Automated installer and smart commit-based updater for `len` CLI tool from remote GitHub repository. |
 | **`install-lensbridge.ps1`** | [scripts/install-lensbridge.ps1](file:///%USERPROFILE%/Documents/myenv/scripts/install-lensbridge.ps1) | Automated installer, repository manager (`D:\git\LensBridge`), isolated venv builder, and background service manager for LensBridge Server. |
+| **`setup-micro.ps1`** | [scripts/setup-micro.ps1](file:///%USERPROFILE%/Documents/myenv/scripts/setup-micro.ps1) | Deploys VS Code parity configuration for Micro editor, links settings/bindings, installs `filemanager` plugin, and sets Git default editor. |
 | **`open-terminal-here.exe`** | [scripts/open-terminal-here.exe](file:///%USERPROFILE%/Documents/myenv/scripts/open-terminal-here.exe) | Instant native launcher (< 10ms, 0% window flash) to open CMD or PS at active File Explorer path. |
 
 

@@ -1,0 +1,40 @@
+# Midnight Aurora Theme for Micro Editor
+# Synchronized with MyEnv Windows Terminal & PowerShell Midnight Aurora Palette
+
+color-link default "#E6EDF3,#000000"
+color-link comment "#6E7681"
+color-link comment.bright "#8B949E"
+
+# UI Elements
+color-link cursor-line "#161B22"
+color-link current-line-number "#58A6FF,#161B22"
+color-link line-number "#484F58"
+color-link statusline "#000000,#58A6FF"
+color-link tabbar "#E6EDF3,#0D1117"
+color-link indent-char "#30363D"
+color-link divider "#30363D"
+color-link gutter-error "#F85149"
+color-link gutter-warning "#D29922"
+color-link scrollbar "#30363D"
+
+# Syntax Highlighting Tokens
+color-link identifier "#79C0FF"
+color-link identifier.class "#FFA657"
+color-link identifier.var "#79C0FF"
+color-link identifier.macro "#D2A8FF"
+color-link constant "#79C0FF"
+color-link constant.number "#79C0FF"
+color-link constant.string "#7EE787"
+color-link constant.string.url "#58A6FF"
+color-link statement "#FF7B72"
+color-link symbol "#FFA657"
+color-link symbol.brackets "#E6EDF3"
+color-link symbol.operator "#79C0FF"
+color-link symbol.tag "#7EE787"
+color-link preproc "#FFA657"
+color-link type "#FF7B72"
+color-link type.keyword "#FF7B72"
+color-link special "#D2A8FF"
+color-link underlined "#58A6FF"
+color-link error "bold #F85149"
+color-link todo "bold #D29922"

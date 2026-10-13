@@ -25,8 +25,8 @@ $env:LC_ALL = 'en_US.UTF-8'
 $env:PYTHONIOENCODING = 'utf-8'
 $env:PYTHONUTF8 = '1'
 $env:LESSCHARSET = 'utf-8'
-$env:VISUAL = 'code --wait'
-$env:EDITOR = 'code --wait'
+$env:VISUAL = 'micro'
+$env:EDITOR = 'micro'
 
 # Dynamic User Profile and Repository Path
 $userProfile = $env:USERPROFILE
@@ -179,6 +179,16 @@ function np {
 }
 Set-Alias -Name nightpad -Value np -Option AllScope -ErrorAction SilentlyContinue
 Set-Alias -Name notepad -Value np -Option AllScope -ErrorAction SilentlyContinue
+
+# Micro Terminal Editor (Default VS Code-like Editor)
+if (Get-Command git -ErrorAction SilentlyContinue) {
+    $currentGitEditor = git config --global --get core.editor 2>$null
+    if ($currentGitEditor -ne 'micro') {
+        git config --global core.editor "micro"
+    }
+}
+Set-Alias -Name m -Value micro -Option AllScope -ErrorAction SilentlyContinue
+Set-Alias -Name mc -Value micro -Option AllScope -ErrorAction SilentlyContinue
 
 # ==============================================================================
 # Arabic Reshaper & Interactive CLI Helper Utilities

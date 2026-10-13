@@ -201,6 +201,10 @@
 				{
 					"PackageIdentifier" : "Genymobile.scrcpy",
 					"Version" : "4.1"
+				},
+				{
+					"PackageIdentifier" : "zyedidia.micro",
+					"Version" : "2.0.15"
 				}
 			],
 			"SourceDetails" : 

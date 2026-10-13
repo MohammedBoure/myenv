@@ -1,0 +1,23 @@
+{
+    "autoclose": true,
+    "autoindent": true,
+    "clipboard": "external",
+    "colorscheme": "darcula",
+    "cursorline": true,
+    "cursorstyle": "line",
+    "eofnewline": true,
+    "fastdirty": false,
+    "incsearch": true,
+    "matchbrace": true,
+    "mouse": true,
+    "pluginrepos": [],
+    "ruler": true,
+    "savecursor": true,
+    "saveundo": true,
+    "scrollbar": true,
+    "smartpaste": true,
+    "softwrap": true,
+    "statusline": true,
+    "tabsize": 4,
+    "wordwrap": true
+}

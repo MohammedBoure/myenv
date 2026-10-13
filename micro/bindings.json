@@ -1,0 +1,17 @@
+{
+    "Ctrl-c": "Copy",
+    "Ctrl-v": "Paste",
+    "Ctrl-x": "Cut",
+    "Ctrl-z": "Undo",
+    "Ctrl-y": "Redo",
+    "Ctrl-s": "Save",
+    "Ctrl-f": "Find",
+    "Ctrl-b": "command:tree",
+    "Ctrl-d": "SpawnMultiCursor",
+    "Shift-Alt-Up": "DuplicateLine",
+    "Shift-Alt-Down": "DuplicateLine",
+    "Alt-Shift-Up": "DuplicateLine",
+    "Alt-Shift-Down": "DuplicateLine",
+    "Alt-Up": "MoveLinesUp",
+    "Alt-Down": "MoveLinesDown"
+}

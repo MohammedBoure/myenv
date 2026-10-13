@@ -12,6 +12,7 @@ Central documentation repository for the MyEnv environment architecture, core co
 | [`glazewm.md`](file:///C:/Users/moham/Documents/myenv/docs/glazewm.md) | GlazeWM tiling window manager configuration and keybindings cheat sheet. |
 | [`yasb.md`](file:///C:/Users/moham/Documents/myenv/docs/yasb.md) | YASB status bar configuration, widgets, and sharp dark styling. |
 | [`night-pad.md`](file:///C:/Users/moham/Documents/myenv/docs/night-pad.md) | NightPad text and code editor usage, features, and keybindings. |
+| [`micro.md`](file:///C:/Users/moham/Documents/myenv/docs/micro.md) | Guide for Micro terminal text editor, VS Code keybindings parity, and shell integration. |
 | [`quick-translate.md`](file:///C:/Users/moham/Documents/myenv/docs/quick-translate.md) | QuickTranslate screen OCR and instant translation tool. |
 | [`quick-symbols.md`](file:///C:/Users/moham/Documents/myenv/docs/quick-symbols.md) | QuickSymbols global keyboard-driven symbol and word palette. |
 | [`bar-translator.md`](file:///C:/Users/moham/Documents/myenv/docs/bar-translator.md) | BarTranslator real-time status bar selection monitor and translator daemon. |
