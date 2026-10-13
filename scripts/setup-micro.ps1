@@ -93,6 +93,7 @@ function Sync-MicroConfigFile {
 Write-Host "`n[*] Deploying VS Code parity configurations..." -ForegroundColor Cyan
 Sync-MicroConfigFile -SourcePath (Join-Path $microSrcDir "settings.json") -TargetPath (Join-Path $microTargetDir "settings.json")
 Sync-MicroConfigFile -SourcePath (Join-Path $microSrcDir "bindings.json") -TargetPath (Join-Path $microTargetDir "bindings.json")
+Sync-MicroConfigFile -SourcePath (Join-Path $microSrcDir "init.lua") -TargetPath (Join-Path $microTargetDir "init.lua")
 
 # 4. Deploy Custom Colorschemes
 $srcColorsDir = Join-Path $microSrcDir "colorschemes"
@@ -129,7 +130,28 @@ if (Test-Path -LiteralPath $srcPluginFile) {
     Write-Host "[+] Applied enhanced filemanager patch (Enter key file opening & tree expansion enabled)." -ForegroundColor Green
 }
 
-# 6. Configure Git core.editor
+# Deploy LSP Plugin for Autocomplete & Diagnostics
+$lspSrcDir = Join-Path $microSrcDir "plug\lsp"
+$lspTargetDir = Join-Path $microTargetDir "plug\lsp"
+if (Test-Path -LiteralPath $lspSrcDir) {
+    if (-not (Test-Path -LiteralPath $lspTargetDir)) {
+        New-Item -ItemType Directory -Path $lspTargetDir -Force | Out-Null
+    }
+    Copy-Item -Path "$lspSrcDir\*" -Destination $lspTargetDir -Recurse -Force
+    Write-Host "[+] Deployed LSP plugin (Autocomplete, Hover, Definitions, Diagnostics)." -ForegroundColor Green
+}
+
+# 6. Configure Console Cursor to Vertical Line / I-Beam
+try {
+    Set-ItemProperty -Path "HKCU:\Console" -Name "CursorType" -Value 2 -Type DWord -Force -ErrorAction SilentlyContinue
+    Set-ItemProperty -Path "HKCU:\Console" -Name "CursorSize" -Value 25 -Type DWord -Force -ErrorAction SilentlyContinue
+    Get-ChildItem -Path "HKCU:\Console" -ErrorAction SilentlyContinue | ForEach-Object {
+        Set-ItemProperty -Path $_.PSPath -Name "CursorType" -Value 2 -Type DWord -Force -ErrorAction SilentlyContinue
+    }
+    Write-Host "[+] Configured console cursor to Line/I-Beam (CursorType=2)." -ForegroundColor Green
+} catch {}
+
+# 7. Configure Git core.editor
 Write-Host "`n[*] Configuring Git default editor to Micro..." -ForegroundColor Cyan
 if (Get-Command "git" -ErrorAction SilentlyContinue) {
     try {
@@ -141,7 +163,7 @@ if (Get-Command "git" -ErrorAction SilentlyContinue) {
     }
 }
 
-# 7. Set session environment variables
+# 8. Set session environment variables
 $env:EDITOR = "micro"
 $env:VISUAL = "micro"
 
@@ -157,4 +179,10 @@ Write-Host "  Ctrl+B       : Toggle File Manager Tree (VS Code Sidebar)"
 Write-Host "  Ctrl+D       : Multi-cursor select next occurrence"
 Write-Host "  Alt+Up/Down  : Move lines up / down"
 Write-Host "  Shift+Alt+Up/Down : Duplicate line up / down"
+Write-Host "  Ctrl+Space   : Trigger LSP Code Autocompletion"
+Write-Host "  Tab          : Accept Autocomplete suggestion"
+Write-Host "  Alt+K        : Hover documentation"
+Write-Host "  Alt+D        : Go to definition"
+Write-Host "  Alt+F        : Format code"
 Write-Host "  Ctrl+Q       : Quit editor"
+

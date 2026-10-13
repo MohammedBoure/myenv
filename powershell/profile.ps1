@@ -203,6 +203,9 @@ function Invoke-MicroEditor {
         [Console]::Write("`e[6 q")
     }
 }
+function micro {
+    Invoke-MicroEditor @args
+}
 Set-Alias -Name m -Value Invoke-MicroEditor -Option AllScope -ErrorAction SilentlyContinue
 Set-Alias -Name mc -Value Invoke-MicroEditor -Option AllScope -ErrorAction SilentlyContinue
 [Console]::Write("`e[6 q")

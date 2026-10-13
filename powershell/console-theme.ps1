@@ -63,8 +63,8 @@ foreach ($key in $keys) {
     # WindowAlpha: 173 = 68% opacity / 32% transparency
     Set-ItemProperty -Path $key -Name WindowAlpha -Type DWord -Value 173
     Set-ItemProperty -Path $key -Name CursorColor -Type DWord -Value (Convert-HexToConsoleColor '#FFFFFF')
-    Set-ItemProperty -Path $key -Name CursorType -Type DWord -Value 0
-    Set-ItemProperty -Path $key -Name CursorSize -Type DWord -Value 10
+    Set-ItemProperty -Path $key -Name CursorType -Type DWord -Value 2
+    Set-ItemProperty -Path $key -Name CursorSize -Type DWord -Value 25
     Set-ItemProperty -Path $key -Name QuickEdit -Type DWord -Value 1
     Set-ItemProperty -Path $key -Name InsertMode -Type DWord -Value 1
     Set-ItemProperty -Path $key -Name InterceptCopyPaste -Type DWord -Value 1
@@ -74,6 +74,12 @@ foreach ($key in $keys) {
     Set-ItemProperty -Path $key -Name HistoryBufferSize -Type DWord -Value 50
     Set-ItemProperty -Path $key -Name VirtualTerminalLevel -Type DWord -Value 1
     Remove-ItemProperty -Path $key -Name CodePage -ErrorAction SilentlyContinue
+}
+
+# Enforce CursorType = 2 across any existing application console subkeys (e.g. pwsh)
+Get-ChildItem -Path 'HKCU:\Console' -ErrorAction SilentlyContinue | ForEach-Object {
+    Set-ItemProperty -Path $_.PSPath -Name CursorType -Type DWord -Value 2 -Force -ErrorAction SilentlyContinue
+    Set-ItemProperty -Path $_.PSPath -Name CursorSize -Type DWord -Value 25 -Force -ErrorAction SilentlyContinue
 }
 Set-ItemProperty -Path $configuredMarker -Name $markerName -Type DWord -Value 2 -Force
 [Console]::Write("`e[6 q")

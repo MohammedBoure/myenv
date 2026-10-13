@@ -1,0 +1,45 @@
+# Soft Dark Eye-Comfort Theme for Micro Editor
+# Engineered for maximum clarity, low eye strain, and zero glare
+
+# Base Text & Solid Matte Background (prevents wallpaper bleed through)
+color-link default "#E1E2E7,#191A24"
+
+# UI Elements (Calm, non-glaring tones)
+color-link cursor-line ",#222330"
+color-link current-line-number "#C4A7E7,#191A24"
+color-link line-number "#5E6482,#191A24"
+color-link statusline "#E1E2E7,#222330"
+color-link tabbar "#E1E2E7,#191A24"
+color-link divider "#36384C,#191A24"
+color-link selection "#E1E2E7,#2E3352"
+color-link indent-char "#36384C"
+color-link scrollbar "#36384C,#191A24"
+
+# Syntax Highlighting - Soft pastel tones with crystal clear contrast
+color-link comment "#6E738D"
+color-link comment.bright "#838BA7"
+color-link constant "#FAB387"
+color-link constant.number "#FAB387"
+color-link constant.string "#A6E3A1"
+color-link constant.bool "#FAB387"
+color-link identifier "#89DCEB"
+color-link identifier.class "#F9E2AF"
+color-link identifier.var "#E1E2E7"
+color-link identifier.macro "#F5C2E7"
+color-link statement "#C4A7E7"
+color-link symbol "#89B4FA"
+color-link symbol.brackets "#E1E2E7"
+color-link symbol.operator "#89DCEB"
+color-link symbol.tag "#F38BA8"
+color-link preproc "#F38BA8"
+color-link type "#94E2D5"
+color-link type.keyword "#C4A7E7"
+color-link special "#F5C2E7"
+color-link underlined "#89DCEB"
+color-link error "bold #F38BA8"
+color-link todo "bold #FAB387"
+color-link gutter-error "#F38BA8"
+color-link gutter-warning "#F9E2AF"
+color-link diff-added "#A6E3A1"
+color-link diff-modified "#89B4FA"
+color-link diff-deleted "#F38BA8"
