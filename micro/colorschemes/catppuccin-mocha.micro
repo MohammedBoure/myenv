@@ -1,0 +1,45 @@
+# Catppuccin Mocha Theme for Micro Editor
+# Designed for maximum eye comfort, low contrast glare, and zero eye strain
+
+# Base Text & Solid Background (Prevents desktop wallpaper transparency bleed)
+color-link default "#CDD6F4,#1E1E2E"
+
+# UI Elements
+color-link cursor-line ",#313244"
+color-link current-line-number "#CBA6F7,#313244"
+color-link line-number "#6C7086,#1E1E2E"
+color-link statusline "#CDD6F4,#181825"
+color-link tabbar "#CDD6F4,#181825"
+color-link divider "#45475A,#181825"
+color-link selection "#CDD6F4,#45475A"
+color-link indent-char "#45475A"
+color-link scrollbar "#45475A,#181825"
+
+# Syntax Highlighting - Soft pastel tones (zero eye fatigue)
+color-link comment "#7F849C"
+color-link comment.bright "#9399B2"
+color-link constant "#FAB387"
+color-link constant.number "#FAB387"
+color-link constant.string "#A6E3A1"
+color-link constant.bool "#FAB387"
+color-link identifier "#89DCEB"
+color-link identifier.class "#F9E2AF"
+color-link identifier.var "#CDD6F4"
+color-link identifier.macro "#F5C2E7"
+color-link statement "#CBA6F7"
+color-link symbol "#89B4FA"
+color-link symbol.brackets "#CDD6F4"
+color-link symbol.operator "#89DCEB"
+color-link symbol.tag "#F38BA8"
+color-link preproc "#F38BA8"
+color-link type "#89B4FA"
+color-link type.keyword "#CBA6F7"
+color-link special "#F5C2E7"
+color-link underlined "#89DCEB"
+color-link error "bold #F38BA8"
+color-link todo "bold #FAB387"
+color-link gutter-error "#F38BA8"
+color-link gutter-warning "#F9E2AF"
+color-link diff-added "#A6E3A1"
+color-link diff-modified "#89B4FA"
+color-link diff-deleted "#F38BA8"

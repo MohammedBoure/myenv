@@ -11,9 +11,10 @@ The **Micro** terminal text editor is integrated into **MyEnv** as the absolute 
 - **System Clipboard Integration**: True Windows clipboard sync (`Ctrl+C`, `Ctrl+V`, `Ctrl+X`).
 - **Multi-Cursor Support**: `Ctrl+D` spawns multiple cursors at subsequent occurrences of the selected word.
 - **VS Code Sidebar File Tree**: Toggleable file explorer tree view via `Ctrl+B` using the `filemanager` plugin.
-- **Line Manipulation**: Move lines up/down (`Alt+Up` / `Alt+Down`) and duplicate lines (`Shift+Alt+Up` / `Shift+Alt+Down`).
-- **Dark Theming**: Modern dark themes (`darcula` and custom `midnight-aurora.micro` matching the PowerShell prompt and terminal colors).
-- **Auto-Closing**: Automatically pairs parentheses, brackets, and quotes (`autoclose`).
+- **Eye-Comfort Dark Theming**: Soft, solid-background dark themes that prevent wallpaper transparency bleed-through and reduce eye strain:
+  - `catppuccin-mocha`: Celebrated soothing pastel dark palette (`#1E1E2E`).
+  - `vscode-dark`: Official VS Code Dark Modern aesthetic (`#1E1E1E`).
+  - `midnight-aurora`: Solid dark blue-gray (`#0D1117`) matching MyEnv's terminal palette.
 
 ---
 
@@ -29,6 +30,7 @@ The **Micro** terminal text editor is integrated into **MyEnv** as the absolute 
 | `Ctrl + Y` | Redo last undone edit | Redo |
 | `Ctrl + F` | Interactive text search | Find |
 | `Ctrl + B` | Toggle file tree sidebar (`filemanager`) | Toggle Primary Side Bar |
+| `Enter` / `Tab` | Open file or expand/collapse folder in file tree | Open file / expand folder |
 | `Ctrl + D` | Select next occurrence (multi-cursor) | Add Selection To Next Find Match |
 | `Alt + Up` | Move current line or selection up | Move Line Up |
 | `Alt + Down` | Move current line or selection down | Move Line Down |

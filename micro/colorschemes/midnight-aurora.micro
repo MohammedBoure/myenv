@@ -1,18 +1,19 @@
 # Midnight Aurora Theme for Micro Editor
-# Synchronized with MyEnv Windows Terminal & PowerShell Midnight Aurora Palette
+# Synchronized with MyEnv Windows Terminal & PowerShell Palette (Solid Background)
 
-color-link default "#E6EDF3,#000000"
+color-link default "#E6EDF3,#0D1117"
 color-link comment "#6E7681"
 color-link comment.bright "#8B949E"
 
 # UI Elements
-color-link cursor-line "#161B22"
+color-link cursor-line ",#161B22"
 color-link current-line-number "#58A6FF,#161B22"
-color-link line-number "#484F58"
-color-link statusline "#000000,#58A6FF"
-color-link tabbar "#E6EDF3,#0D1117"
+color-link line-number "#484F58,#0D1117"
+color-link statusline "#FFFFFF,#1F6FEB"
+color-link tabbar "#E6EDF3,#090D12"
 color-link indent-char "#30363D"
-color-link divider "#30363D"
+color-link divider "#30363D,#090D12"
+color-link selection "#FFFFFF,#1F6FEB"
 color-link gutter-error "#F85149"
 color-link gutter-warning "#D29922"
 color-link scrollbar "#30363D"

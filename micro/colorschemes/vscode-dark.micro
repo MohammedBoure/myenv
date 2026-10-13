@@ -1,0 +1,43 @@
+# VS Code Dark Modern Theme for Micro Editor
+# Faithful, comfortable dark theme matching standard Visual Studio Code
+
+# Base Text & Solid Background
+color-link default "#D4D4D4,#1E1E1E"
+
+# UI Elements
+color-link cursor-line ",#282828"
+color-link current-line-number "#C6C6C6,#282828"
+color-link line-number "#6E7681,#1E1E1E"
+color-link statusline "#FFFFFF,#007ACC"
+color-link tabbar "#D4D4D4,#252526"
+color-link divider "#333333,#252526"
+color-link selection "#FFFFFF,#264F78"
+color-link indent-char "#404040"
+color-link scrollbar "#424242"
+
+# Syntax Highlighting
+color-link comment "#6A9955"
+color-link comment.bright "#85C46C"
+color-link constant "#4FC1FF"
+color-link constant.number "#B5CEA8"
+color-link constant.string "#CE9178"
+color-link constant.bool "#569CD6"
+color-link identifier "#9CDCFE"
+color-link identifier.class "#4EC9B0"
+color-link identifier.var "#9CDCFE"
+color-link statement "#C586C0"
+color-link symbol "#D4D4D4"
+color-link symbol.brackets "#FFD700"
+color-link symbol.operator "#D4D4D4"
+color-link preproc "#569CD6"
+color-link type "#4EC9B0"
+color-link type.keyword "#569CD6"
+color-link special "#D7BA7D"
+color-link underlined "#4FC1FF"
+color-link error "#F44747"
+color-link todo "#FF8800"
+color-link gutter-error "#F44747"
+color-link gutter-warning "#CCA700"
+color-link diff-added "#2EA043"
+color-link diff-modified "#0078D4"
+color-link diff-deleted "#F85149"

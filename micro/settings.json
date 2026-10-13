@@ -2,7 +2,7 @@
     "autoclose": true,
     "autoindent": true,
     "clipboard": "external",
-    "colorscheme": "darcula",
+    "colorscheme": "catppuccin-mocha",
     "cursorline": true,
     "cursorstyle": "line",
     "eofnewline": true,

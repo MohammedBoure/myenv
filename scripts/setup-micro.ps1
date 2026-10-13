@@ -117,8 +117,16 @@ if (-not (Test-Path -LiteralPath $filemanagerDir)) {
     } catch {
         Write-Host "[!] Failed to install filemanager plugin: $_" -ForegroundColor Red
     }
-} else {
-    Write-Host "[+] 'filemanager' plugin is already installed." -ForegroundColor Green
+}
+
+# Deploy enhanced/patched filemanager.lua (with Enter key file opening & tree expansion enabled)
+$srcPluginFile = Join-Path $microSrcDir "plug\filemanager\filemanager.lua"
+if (Test-Path -LiteralPath $srcPluginFile) {
+    if (-not (Test-Path -LiteralPath $filemanagerDir)) {
+        New-Item -ItemType Directory -Path $filemanagerDir -Force | Out-Null
+    }
+    Copy-Item -LiteralPath $srcPluginFile -Destination (Join-Path $filemanagerDir "filemanager.lua") -Force
+    Write-Host "[+] Applied enhanced filemanager patch (Enter key file opening & tree expansion enabled)." -ForegroundColor Green
 }
 
 # 6. Configure Git core.editor
