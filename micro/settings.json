@@ -2,8 +2,8 @@
     "autoclose": true,
     "autoindent": true,
     "clipboard": "external",
-    "colorscheme": "catppuccin-mocha",
-    "cursorline": true,
+    "colorscheme": "vscode-dark",
+    "cursorline": false,
     "cursorstyle": "line",
     "eofnewline": true,
     "fastdirty": false,
@@ -19,5 +19,6 @@
     "softwrap": true,
     "statusline": true,
     "tabsize": 4,
+    "truecolor": "true",
     "wordwrap": true
 }

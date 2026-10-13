@@ -27,6 +27,8 @@ $env:PYTHONUTF8 = '1'
 $env:LESSCHARSET = 'utf-8'
 $env:VISUAL = 'micro'
 $env:EDITOR = 'micro'
+$env:COLORTERM = 'truecolor'
+$env:MICRO_TRUECOLOR = '1'
 
 # Dynamic User Profile and Repository Path
 $userProfile = $env:USERPROFILE
@@ -187,8 +189,23 @@ if (Get-Command git -ErrorAction SilentlyContinue) {
         git config --global core.editor "micro"
     }
 }
-Set-Alias -Name m -Value micro -Option AllScope -ErrorAction SilentlyContinue
-Set-Alias -Name mc -Value micro -Option AllScope -ErrorAction SilentlyContinue
+
+function Invoke-MicroEditor {
+    [Console]::Write("`e[6 q")
+    try {
+        $microApp = Get-Command micro.exe -CommandType Application -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source -First 1
+        if ($microApp) {
+            & $microApp @args
+        } else {
+            micro @args
+        }
+    } finally {
+        [Console]::Write("`e[6 q")
+    }
+}
+Set-Alias -Name m -Value Invoke-MicroEditor -Option AllScope -ErrorAction SilentlyContinue
+Set-Alias -Name mc -Value Invoke-MicroEditor -Option AllScope -ErrorAction SilentlyContinue
+[Console]::Write("`e[6 q")
 
 # ==============================================================================
 # Arabic Reshaper & Interactive CLI Helper Utilities
