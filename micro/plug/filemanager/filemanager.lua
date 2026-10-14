@@ -526,12 +526,34 @@ local function try_open_at_y(y)
 		elseif scanlist[y].dirmsg ~= "" then
 			update_current_dir(scanlist[y].abspath)
 		else
-			-- If it's a file, then open it
+			-- If it's a file, then open it directly in the existing editor pane without creating a new split
 			micro.InfoBar():Message("Filemanager opened ", scanlist[y].abspath)
-			-- Opens the absolute path in new vertical view
-			micro.CurPane():VSplitIndex(buffer.NewBufferFromFile(scanlist[y].abspath), true)
-			-- Resizes all views after opening a file
-			-- tabs[curTab + 1]:Resize()
+			local new_buf = buffer.NewBufferFromFile(scanlist[y].abspath)
+			local opened = false
+			local t = nil
+			if tree_view ~= nil then
+				t = tree_view:Tab()
+			end
+			if t ~= nil and t.Panes ~= nil then
+				for i = 1, #t.Panes do
+					local p = t.Panes[i]
+					if p ~= tree_view then
+						p:OpenBuffer(new_buf)
+						local ok = false
+						if t.SetActive ~= nil then
+							ok = pcall(function() t:SetActive(i - 1) end)
+						end
+						if not ok and tree_view ~= nil then
+							tree_view:NextSplit()
+						end
+						opened = true
+						break
+					end
+				end
+			end
+			if not opened then
+				micro.CurPane():VSplitIndex(new_buf, true)
+			end
 		end
 	else
 		micro.InfoBar():Error("Can't open that")
