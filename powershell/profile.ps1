@@ -34,6 +34,12 @@ $env:MICRO_TRUECOLOR = '1'
 $userProfile = $env:USERPROFILE
 $myenvDir = Join-Path $userProfile "Documents\myenv"
 
+# Preload consolidated MyEnv C# helper library (FolderSizeEngine, AgyCredVault)
+$helpersDll = Join-Path $myenvDir "powershell\MyEnv.Helpers.dll"
+if (Test-Path -LiteralPath $helpersDll) {
+    [System.Reflection.Assembly]::LoadFrom($helpersDll) | Out-Null
+}
+
 # Central development environment paths.
 $pathsToAdd = @(
     "$userProfile\development\msys64\ucrt64\bin",
@@ -66,26 +72,59 @@ foreach ($p in $pathsToAdd) {
     }
 }
 
-# Dynamically resolve WinGet package executable directories (scrcpy, ffmpeg, fzf, fastfetch, etc.)
-$wingetPackagesDir = Join-Path $userProfile "AppData\Local\Microsoft\WinGet\Packages"
-if (Test-Path -LiteralPath $wingetPackagesDir) {
-    Get-ChildItem -LiteralPath $wingetPackagesDir -Directory -ErrorAction SilentlyContinue | ForEach-Object {
-        $pkgDir = $_.FullName
-        $subDirs = Get-ChildItem -LiteralPath $pkgDir -Directory -ErrorAction SilentlyContinue
-        $targetDirs = @($pkgDir)
-        if ($subDirs) {
-            foreach ($sub in $subDirs) {
-                $targetDirs += $sub.FullName
-                $nestedBin = Join-Path $sub.FullName "bin"
-                if (Test-Path -LiteralPath $nestedBin) { $targetDirs += $nestedBin }
+# Fast cached resolution of WinGet package executable directories (scrcpy, ffmpeg, fzf, fastfetch, micro)
+function Update-WinGetPathCache {
+    [CmdletBinding()]
+    param()
+    $wingetDir = Join-Path $env:USERPROFILE "AppData\Local\Microsoft\WinGet\Packages"
+    $cachePath = Join-Path $myenvDir "powershell\winget-paths.cache"
+    $bins = @()
+    if (Test-Path -LiteralPath $wingetDir) {
+        Get-ChildItem -LiteralPath $wingetDir -Directory -ErrorAction SilentlyContinue | ForEach-Object {
+            $pkgDir = $_.FullName
+            $subDirs = Get-ChildItem -LiteralPath $pkgDir -Directory -ErrorAction SilentlyContinue
+            $targetDirs = @($pkgDir)
+            if ($subDirs) {
+                foreach ($sub in $subDirs) {
+                    $targetDirs += $sub.FullName
+                    $nestedBin = Join-Path $sub.FullName "bin"
+                    if (Test-Path -LiteralPath $nestedBin) { $targetDirs += $nestedBin }
+                }
+            }
+            foreach ($td in $targetDirs) {
+                if (Get-ChildItem -LiteralPath $td -Filter "*.exe" -File -ErrorAction SilentlyContinue) {
+                    $bins += $td
+                }
             }
         }
-        foreach ($td in $targetDirs) {
-            if (Get-ChildItem -LiteralPath $td -Filter "*.exe" -File -ErrorAction SilentlyContinue) {
-                $existing = @($env:Path -split ';' | Where-Object { $_ -ne '' })
-                if (-not ($existing | Where-Object { $_.TrimEnd('\') -ieq $td.TrimEnd('\') })) {
-                    $env:Path = "$td;$env:Path"
-                }
+    }
+    $bins = @($bins | Select-Object -Unique)
+    $bins | Out-File -FilePath $cachePath -Encoding utf8 -Force
+    return $bins
+}
+
+$wingetPackagesDir = Join-Path $userProfile "AppData\Local\Microsoft\WinGet\Packages"
+$wingetCache = Join-Path $myenvDir "powershell\winget-paths.cache"
+$wingetBinDirs = @()
+
+if (Test-Path -LiteralPath $wingetPackagesDir) {
+    if (Test-Path -LiteralPath $wingetCache) {
+        $cacheItem = Get-Item -LiteralPath $wingetCache
+        $pkgItem = Get-Item -LiteralPath $wingetPackagesDir
+        if ($cacheItem.LastWriteTime -ge $pkgItem.LastWriteTime) {
+            $wingetBinDirs = @(Get-Content -LiteralPath $wingetCache -Encoding utf8 | Where-Object { $_ -ne '' })
+        } else {
+            $wingetBinDirs = Update-WinGetPathCache
+        }
+    } else {
+        $wingetBinDirs = Update-WinGetPathCache
+    }
+
+    foreach ($td in $wingetBinDirs) {
+        if (Test-Path -LiteralPath $td) {
+            $existing = @($env:Path -split ';' | Where-Object { $_ -ne '' })
+            if (-not ($existing | Where-Object { $_.TrimEnd('\') -ieq $td.TrimEnd('\') })) {
+                $env:Path = "$td;$env:Path"
             }
         }
     }
@@ -137,14 +176,22 @@ if (Test-Path $themePath) { . $themePath }
 $consoleThemePath = Join-Path $myenvDir "powershell\console-theme.ps1"
 if (Test-Path $consoleThemePath) { . $consoleThemePath }
 
-# Fastfetch runs once per interactive console session.
-if (-not [Console]::IsInputRedirected -and -not [Console]::IsOutputRedirected -and -not $global:__MyEnvFastfetchShown) {
-    $global:__MyEnvFastfetchShown = $true
-    $fastfetch = Get-Command fastfetch -ErrorAction SilentlyContinue
-    $fastConfig = Join-Path $userProfile ".config\fastfetch\config.jsonc"
-    if ($fastfetch -and (Test-Path $fastConfig)) {
-        fastfetch -c $fastConfig
+# Fastfetch - System & Hardware Summary (Deferred from synchronous startup for instant shell readiness)
+# To display automatically on shell startup, set $env:MYENV_SHOW_FASTFETCH = '1'. Run 'sysinfo' or 'fetch' anytime.
+function sysinfo {
+    $fastfetch = Get-Command fastfetch.exe -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Source -First 1
+    $fastConfig = Join-Path $env:USERPROFILE ".config\fastfetch\config.jsonc"
+    if ($fastfetch) {
+        if (Test-Path $fastConfig) { & $fastfetch -c $fastConfig } else { & $fastfetch }
+    } else {
+        Write-Warning "fastfetch is not installed."
     }
+}
+Set-Alias -Name fetch -Value sysinfo -Option AllScope -ErrorAction SilentlyContinue
+
+if ($env:MYENV_SHOW_FASTFETCH -eq '1' -and -not [Console]::IsInputRedirected -and -not [Console]::IsOutputRedirected -and -not $global:__MyEnvFastfetchShown) {
+    $global:__MyEnvFastfetchShown = $true
+    sysinfo
 }
 
 # Sudo Utility Function for PowerShell (Elevates command or opens elevated PowerShell in current working directory)
@@ -183,12 +230,7 @@ Set-Alias -Name nightpad -Value np -Option AllScope -ErrorAction SilentlyContinu
 Set-Alias -Name notepad -Value np -Option AllScope -ErrorAction SilentlyContinue
 
 # Micro Terminal Editor (Default VS Code-like Editor)
-if (Get-Command git -ErrorAction SilentlyContinue) {
-    $currentGitEditor = git config --global --get core.editor 2>$null
-    if ($currentGitEditor -ne 'micro') {
-        git config --global core.editor "micro"
-    }
-}
+# Git core.editor is preconfigured to 'micro' globally in ~/.gitconfig to avoid spawning git.exe on shell startup.
 
 function Invoke-MicroEditor {
     [Console]::Write("`e[6 q")

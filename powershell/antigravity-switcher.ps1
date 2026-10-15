@@ -82,6 +82,15 @@ public class AgyCredVault {
 '@
 
 if (-not ('AgyCredVault' -as [type])) {
+    $helpersDll = Join-Path $PSScriptRoot "MyEnv.Helpers.dll"
+    if (-not (Test-Path -LiteralPath $helpersDll)) {
+        $helpersDll = "$env:USERPROFILE\Documents\myenv\powershell\MyEnv.Helpers.dll"
+    }
+    if (Test-Path -LiteralPath $helpersDll) {
+        [System.Reflection.Assembly]::LoadFrom($helpersDll) | Out-Null
+    }
+}
+if (-not ('AgyCredVault' -as [type])) {
     Add-Type -TypeDefinition $agyVaultDefinition -Language CSharp
 }
 

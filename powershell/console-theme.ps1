@@ -31,7 +31,8 @@ $palette = @{
 # Check if console theme is already configured in HKCU:\Console to prevent hundreds of registry writes on every shell launch
 $configuredMarker = 'HKCU:\Console'
 $markerName = 'MyEnvThemeApplied_v1'
-if ((Get-ItemProperty -Path $configuredMarker -Name $markerName -ErrorAction SilentlyContinue).$markerName -eq 1) {
+$markerVal = (Get-ItemProperty -Path $configuredMarker -Name $markerName -ErrorAction SilentlyContinue).$markerName
+if ($null -ne $markerVal -and $markerVal -ge 1) {
     return
 }
 

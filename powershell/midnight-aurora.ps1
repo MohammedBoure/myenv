@@ -122,6 +122,15 @@ function prompt {
 
 # Human-readable size formatting and FolderSizeEngine with live progressive counting
 if (-not ('FolderSizeEngine' -as [type])) {
+    $helpersDll = Join-Path $PSScriptRoot "MyEnv.Helpers.dll"
+    if (-not (Test-Path -LiteralPath $helpersDll)) {
+        $helpersDll = "$env:USERPROFILE\Documents\myenv\powershell\MyEnv.Helpers.dll"
+    }
+    if (Test-Path -LiteralPath $helpersDll) {
+        [System.Reflection.Assembly]::LoadFrom($helpersDll) | Out-Null
+    }
+}
+if (-not ('FolderSizeEngine' -as [type])) {
     Add-Type -TypeDefinition @'
     using System;
     using System.IO;
