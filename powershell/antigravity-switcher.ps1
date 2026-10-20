@@ -371,10 +371,10 @@ function global:agy$idx {
         `$savedEmail = if (`$savedToken) { Get-AgyTokenEmail `$savedToken } else { `$null }
 
         if (`$currentEmail) {
-            if (`$currentEmail -ne `$savedEmail) {
+            if (-not `$savedEmail) {
                 [System.IO.File]::WriteAllText(`$tokenFile, `$currentCred.Trim(), [System.Text.Encoding]::UTF8)
-                Write-Host "[agy$idx] Account updated to: `$currentEmail" -ForegroundColor Green
-            } elseif (`$currentCred.Trim() -ne `$savedToken.Trim()) {
+                Write-Host "[agy$idx] Account initialized to: `$currentEmail" -ForegroundColor Green
+            } elseif (`$currentEmail -ieq `$savedEmail -and `$currentCred.Trim() -ne `$savedToken.Trim()) {
                 [System.IO.File]::WriteAllText(`$tokenFile, `$currentCred.Trim(), [System.Text.Encoding]::UTF8)
             }
         }
