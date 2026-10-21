@@ -6,6 +6,8 @@
     sessions, settings, and Google account tokens.
 #>
 param(
+    [Alias('u')]
+    [switch]$Usage,
     [Parameter(Position = 0)]
     [string]$Action = "list",
     [Parameter(Position = 1)]
@@ -22,8 +24,14 @@ if (-not (Test-Path -LiteralPath $switcherScript)) {
 . $switcherScript
 
 $allArgs = @()
-if ($Action) { $allArgs += $Action }
-if ($Target) { $allArgs += $Target }
+if ($Usage) {
+    $allArgs += "-u"
+    if ($Action -and $Action -ne 'list') { $allArgs += $Action }
+    if ($Target) { $allArgs += $Target }
+} else {
+    if ($Action) { $allArgs += $Action }
+    if ($Target) { $allArgs += $Target }
+}
 if ($RemainingArgs) { $allArgs += $RemainingArgs }
 
 & agys @allArgs

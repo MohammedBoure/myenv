@@ -510,11 +510,203 @@ function Get-AgyInstanceList {
     Write-Host "  agy<N> login       : Sign in with a distinct Google Account for slot <N>" -ForegroundColor Gray
     Write-Host "  agy<N> logout      : Disconnect account from slot <N>" -ForegroundColor Gray
     Write-Host "  agys -l            : List all instances, accounts, and session counts" -ForegroundColor Gray
+    Write-Host "  agys -u [<N>]      : Display 5-hour and weekly usage quotas with progress bar" -ForegroundColor Gray
     Write-Host "  agys rm <N>        : Delete instance folder and credentials for slot <N>`n" -ForegroundColor Gray
+}
+
+function Get-AgyProgressBar {
+    param([int]$pct, [int]$barWidth = 10)
+    if ($pct -lt 0) { $pct = 0 }
+    if ($pct -gt 100) { $pct = 100 }
+    $filled = [int][Math]::Round(($pct / 100.0) * $barWidth)
+    $empty = $barWidth - $filled
+    $fillChar = [char]0x2588
+    $emptyChar = [char]0x2591
+    $bar = ([string]$fillChar * $filled) + ([string]$emptyChar * $empty)
+    return "[$bar] $pct%"
+}
+
+function Format-AgyResetTime {
+    param([string]$isoStr)
+    if ([string]::IsNullOrWhiteSpace($isoStr)) { return "-" }
+    try {
+        $dto = [DateTimeOffset]::Parse($isoStr)
+        $local = $dto.LocalDateTime
+        $now = [DateTime]::Now
+        if ($local.Date -eq $now.Date) {
+            return "Today " + $local.ToString("HH:mm")
+        } elseif ($local.Date -eq $now.AddDays(1).Date) {
+            return "Tomorrow " + $local.ToString("HH:mm")
+        } else {
+            return $local.ToString("MMM dd HH:mm")
+        }
+    } catch {
+        return $isoStr
+    }
+}
+
+function Get-AgyUsageReport {
+    param([string]$TargetSlot)
+
+    $realUserProfile = [Environment]::GetEnvironmentVariable("USERPROFILE")
+    if (-not $realUserProfile) { $realUserProfile = [Environment]::GetFolderPath([Environment+SpecialFolder]::UserProfile) }
+    $instancesRoot = Join-Path $realUserProfile ".gemini\instances"
+    $tokensDir = Join-Path $realUserProfile ".gemini\tokens"
+
+    $slots = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+    if (Test-Path -LiteralPath $instancesRoot) {
+        Get-ChildItem -LiteralPath $instancesRoot -Directory -ErrorAction SilentlyContinue | ForEach-Object {
+            if ($_.Name -match '^agy(\d+)$') { $slots.Add($_.Name) | Out-Null }
+        }
+    }
+    if (Test-Path -LiteralPath $tokensDir) {
+        Get-ChildItem -LiteralPath $tokensDir -Filter "*.token" -ErrorAction SilentlyContinue | ForEach-Object {
+            $base = [System.IO.Path]::GetFileNameWithoutExtension($_.Name)
+            if ($base -match '^agy(\d+)$') { $slots.Add($base) | Out-Null }
+        }
+    }
+
+    $sortedSlots = $slots | Sort-Object { if ($_ -match '^agy(\d+)$') { [int]$Matches[1] } else { 999999 } }
+
+    if (-not [string]::IsNullOrWhiteSpace($TargetSlot)) {
+        $filterSlot = if ($TargetSlot -match '^\d+$') { "agy$TargetSlot" } else { $TargetSlot.ToLowerInvariant() }
+        $sortedSlots = $sortedSlots | Where-Object { $_.ToLowerInvariant() -eq $filterSlot }
+        if (-not $sortedSlots) {
+            Write-Host "[!] Slot not found: $TargetSlot" -ForegroundColor Yellow
+            return
+        }
+    }
+
+    $origCred = [AgyCredVault]::Read('gemini:antigravity')
+    $tokenUsageCache = @{}
+
+    try {
+        $tableRows = @()
+        foreach ($slot in $sortedSlots) {
+            $instanceDir = Join-Path $instancesRoot $slot
+            $instanceToken = Join-Path $instanceDir "token.json"
+            $legacyToken = Join-Path $tokensDir "$slot.token"
+            $tokenRaw = $null
+
+            if (Test-Path -LiteralPath $instanceToken) {
+                $tokenRaw = Get-Content -LiteralPath $instanceToken -Raw -ErrorAction SilentlyContinue
+            } elseif (Test-Path -LiteralPath $legacyToken) {
+                $tokenRaw = Get-Content -LiteralPath $legacyToken -Raw -ErrorAction SilentlyContinue
+            }
+
+            $email = if ($tokenRaw) { Get-AgyTokenEmail $tokenRaw } else { $null }
+
+            if (-not $tokenRaw -or -not $email) {
+                $tableRows += [PSCustomObject]@{
+                    Slot                  = $slot
+                    Email                 = if ($email) { $email } else { "-" }
+                    '5h (Gemini)' = "[!] Needs Login"
+                    'Reset 5h'         = "-"
+                    'Weekly (Gemini)' = "[!] Needs Login"
+                    'Reset Wk'         = "-"
+                    'Claude/GPT'          = "-"
+                }
+                continue
+            }
+
+            $cacheKey = $email.ToLowerInvariant()
+            $parsedUsage = $null
+
+            if ($tokenUsageCache.ContainsKey($cacheKey)) {
+                $parsedUsage = $tokenUsageCache[$cacheKey]
+            } else {
+                [AgyCredVault]::Write('gemini:antigravity', 'antigravity', $tokenRaw) | Out-Null
+                $lines = & agy.exe -p "/usage" 2>&1
+
+                $pInfo = @{
+                    Gemini5hPct   = $null
+                    Gemini5hReset = "-"
+                    GeminiWkPct   = $null
+                    GeminiWkReset = "-"
+                    Claude5hPct   = $null
+                    ClaudeWkPct   = $null
+                    ErrorMsg      = $null
+                }
+
+                $rawText = ($lines | Out-String)
+                if ($rawText -match "Eligibility check failed|not eligible") {
+                    $pInfo.ErrorMsg = "[!] Not Eligible"
+                } elseif ($rawText -match "login|sign in|auth") {
+                    $pInfo.ErrorMsg = "[!] Needs Login"
+                } else {
+                    foreach ($l in $lines) {
+                        $parts = $l -split "`t"
+                        if ($parts.Count -ge 3) {
+                            $fam = $parts[0].Trim()
+                            $lim = $parts[1].Trim()
+                            $pct = [int]($parts[2] -replace '[^\d]', '')
+                            $rst = if ($parts.Count -ge 4) { $parts[3].Trim() } else { "" }
+
+                            if ($fam -like "*Gemini*") {
+                                if ($lim -like "*Five Hour*") {
+                                    $pInfo.Gemini5hPct = $pct
+                                    $pInfo.Gemini5hReset = Format-AgyResetTime $rst
+                                } elseif ($lim -like "*Weekly*") {
+                                    $pInfo.GeminiWkPct = $pct
+                                    $pInfo.GeminiWkReset = Format-AgyResetTime $rst
+                                }
+                            } elseif ($fam -like "*Claude*") {
+                                if ($lim -like "*Five Hour*") {
+                                    $pInfo.Claude5hPct = $pct
+                                } elseif ($lim -like "*Weekly*") {
+                                    $pInfo.ClaudeWkPct = $pct
+                                }
+                            }
+                        }
+                    }
+                }
+
+                $tokenUsageCache[$cacheKey] = $pInfo
+                $parsedUsage = $pInfo
+            }
+
+            if ($parsedUsage.ErrorMsg) {
+                $tableRows += [PSCustomObject]@{
+                    Slot                  = $slot
+                    Email                 = $email
+                    '5h (Gemini)' = $parsedUsage.ErrorMsg
+                    'Reset 5h'         = "-"
+                    'Weekly (Gemini)' = $parsedUsage.ErrorMsg
+                    'Reset Wk'         = "-"
+                    'Claude/GPT'          = "-"
+                }
+            } else {
+                $g5hStr = if ($parsedUsage.Gemini5hPct -ne $null) { Get-AgyProgressBar $parsedUsage.Gemini5hPct } else { "-" }
+                $gWkStr = if ($parsedUsage.GeminiWkPct -ne $null) { Get-AgyProgressBar $parsedUsage.GeminiWkPct } else { "-" }
+                $cStr   = if ($parsedUsage.Claude5hPct -ne $null) { Get-AgyProgressBar $parsedUsage.Claude5hPct } else { "-" }
+
+                $tableRows += [PSCustomObject]@{
+                    Slot                  = $slot
+                    Email                 = $email
+                    '5h (Gemini)' = $g5hStr
+                    'Reset 5h'         = $parsedUsage.Gemini5hReset
+                    'Weekly (Gemini)' = $gWkStr
+                    'Reset Wk'         = $parsedUsage.GeminiWkReset
+                    'Claude/GPT'          = $cStr
+                }
+            }
+        }
+
+        Write-Host "`n==========================================================================================================" -ForegroundColor Cyan
+        Write-Host "                            Antigravity Accounts Usage & Quotas (agys -u)                                " -ForegroundColor Cyan
+        Write-Host "==========================================================================================================" -ForegroundColor Cyan
+        $tableRows | Format-Table -AutoSize
+    } finally {
+        if ($origCred) {
+            [AgyCredVault]::Write('gemini:antigravity', 'antigravity', $origCred) | Out-Null
+        }
+    }
 }
 
 function global:agys {
     param(
+        [Alias('u')]
+        [switch]$Usage,
         [Parameter(Position = 0)]
         [string]$Action = "list",
         [Parameter(Position = 1)]
@@ -522,6 +714,12 @@ function global:agys {
         [Parameter(ValueFromRemainingArguments = $true)]
         [string[]]$RemainingArgs
     )
+
+    if ($Usage -or $Action -in @('-u', '--usage', 'usage', '-quota', '--quota', 'quota')) {
+        $slotTarget = if ($Usage -and $Action -and $Action -ne 'list') { $Action } else { $Target }
+        Get-AgyUsageReport -TargetSlot $slotTarget
+        return
+    }
 
     if ($Action -in @('-l', '--list', 'list', 'ls', 'status') -or [string]::IsNullOrWhiteSpace($Action)) {
         Get-AgyInstanceList
