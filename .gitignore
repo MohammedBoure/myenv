@@ -7,3 +7,8 @@ tools/focused-border/bin/
 tools/focused-border/obj/
 tools/bar-translator/bin/
 tools/bar-translator/obj/
+
+*.old
+*.old.*
+*.pdb
+tools/rtlterminal/RtlTerminal.pdb

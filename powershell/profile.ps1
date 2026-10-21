@@ -64,13 +64,22 @@ $pathsToAdd = @(
     "$myenvDir\scripts\nightpad",
     "$myenvDir\scripts"
 )
-foreach ($p in $pathsToAdd) {
-    if (Test-Path -LiteralPath $p) {
-        $existing = @($env:Path -split ';' | Where-Object { $_ -ne '' })
-        if (-not ($existing | Where-Object { $_.TrimEnd('\') -ieq $p.TrimEnd('\') })) {
-            $env:Path = "$p;$env:Path"
-        }
+$existingPathSet = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::OrdinalIgnoreCase)
+foreach ($part in ($env:Path -split ';')) {
+    if (-not [string]::IsNullOrWhiteSpace($part)) {
+        [void]$existingPathSet.Add($part.TrimEnd('\'))
     }
+}
+$toPrependPaths = [System.Collections.Generic.List[string]]::new()
+foreach ($p in $pathsToAdd) {
+    $norm = $p.TrimEnd('\')
+    if (-not $existingPathSet.Contains($norm) -and (Test-Path -LiteralPath $p)) {
+        [void]$existingPathSet.Add($norm)
+        $toPrependPaths.Add($p)
+    }
+}
+if ($toPrependPaths.Count -gt 0) {
+    $env:Path = ($toPrependPaths -join ';') + ';' + $env:Path
 }
 
 # Fast cached resolution of WinGet package executable directories (scrcpy, ffmpeg, fzf, fastfetch, micro)
@@ -121,13 +130,16 @@ if (Test-Path -LiteralPath $wingetPackagesDir) {
         $wingetBinDirs = Update-WinGetPathCache
     }
 
+    $toPrependWinget = [System.Collections.Generic.List[string]]::new()
     foreach ($td in $wingetBinDirs) {
-        if (Test-Path -LiteralPath $td) {
-            $existing = @($env:Path -split ';' | Where-Object { $_ -ne '' })
-            if (-not ($existing | Where-Object { $_.TrimEnd('\') -ieq $td.TrimEnd('\') })) {
-                $env:Path = "$td;$env:Path"
-            }
+        $norm = $td.TrimEnd('\')
+        if (-not $existingPathSet.Contains($norm) -and (Test-Path -LiteralPath $td)) {
+            [void]$existingPathSet.Add($norm)
+            $toPrependWinget.Add($td)
         }
+    }
+    if ($toPrependWinget.Count -gt 0) {
+        $env:Path = ($toPrependWinget -join ';') + ';' + $env:Path
     }
 }
 

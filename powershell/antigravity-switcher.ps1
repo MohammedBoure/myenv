@@ -602,17 +602,22 @@ function Register-AgySlot {
     Invoke-Expression $cmd
 }
 
-# Pre-register 1..200
-1..200 | ForEach-Object { Register-AgySlot -Index $_ }
+# High-Performance Batched Registration of agy1..agy200 + existing slots
+$agySb = [System.Text.StringBuilder]::new(16384)
+foreach ($i in 1..200) {
+    [void]$agySb.Append('function global:agy').Append($i).Append(' { [CmdletBinding()] param([Parameter(ValueFromRemainingArguments = $true)]$RemainingArgs) Invoke-AgyInstance -Index ').Append($i).AppendLine(' -ArgsList $RemainingArgs }')
+}
 
-# Also scan any existing slots in instances or tokens directories beyond 200
 $realUserProfile = [Environment]::GetFolderPath('UserProfile')
 $existingDirs = Join-Path $realUserProfile ".gemini\instances"
 if (Test-Path -LiteralPath $existingDirs) {
     Get-ChildItem -LiteralPath $existingDirs -Directory -ErrorAction SilentlyContinue | ForEach-Object {
         if ($_.Name -match '^agy(\d+)$') {
             $num = [int]$Matches[1]
-            if ($num -gt 200) { Register-AgySlot -Index $num }
+            if ($num -gt 200) {
+                [void]$agySb.Append('function global:agy').Append($num).Append(' { [CmdletBinding()] param([Parameter(ValueFromRemainingArguments = $true)]$RemainingArgs) Invoke-AgyInstance -Index ').Append($num).AppendLine(' -ArgsList $RemainingArgs }')
+            }
         }
     }
 }
+Invoke-Expression $agySb.ToString()
