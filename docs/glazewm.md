@@ -48,9 +48,9 @@ GlazeWM is a high-performance, keyboard-driven tiling window manager for Windows
 ---
 
 ### Workspaces & Multi-Monitor Setup
-- **Screen 1 `DISPLAY1` (Monitor Index 1 - Center Primary: PLAYER MSG12)**: Workspaces `1` to `10`
-- **Screen 2 `DISPLAY8` (Monitor Index 2 - Right: Fujitsu L20T-1 ECO)**: Workspaces `a`, `z`, `e`, `r`, `t`
-- **Screen 3 `DISPLAY13` (Monitor Index 0 - Left Virtual: Deskreen VDD by MTT)**: Workspaces `y`, `u`, `i`, `o`, `p`
+- **Screen 1 `DISPLAY1` (Monitor Index 0 - Center Primary: PLAYER MSG12)**: Workspaces `1` to `10`
+- **Screen 2 `DISPLAY8` (Monitor Index 1 - Right: Fujitsu L20T-1 ECO)**: Workspaces `a`, `z`, `e`, `r`, `t`
+- **Screen 3 `DISPLAY13` (Monitor Index 2 - Virtual Display: Deskreen VDD by MTT)**: Workspaces `y`, `u`, `i`, `o`, `p`
 
 | Keybinding | Action / Description |
 |---|---|

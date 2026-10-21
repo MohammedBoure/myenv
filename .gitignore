@@ -12,3 +12,4 @@ tools/bar-translator/obj/
 *.old.*
 *.pdb
 tools/rtlterminal/RtlTerminal.pdb
+*.log.*

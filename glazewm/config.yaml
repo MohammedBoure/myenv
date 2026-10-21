@@ -72,51 +72,51 @@ window_behavior:
       shown_on_top: false
 
 workspaces:
-  # Screen 1: PLAYER MSG12 (Middle / Primary - Monitor Index 1)
+  # Screen 1: PLAYER MSG12 (Middle / Primary - Monitor Index 0)
   - name: '1'
-    bind_to_monitor: 1
+    bind_to_monitor: 0
   - name: '2'
-    bind_to_monitor: 1
+    bind_to_monitor: 0
   - name: '3'
-    bind_to_monitor: 1
+    bind_to_monitor: 0
   - name: '4'
-    bind_to_monitor: 1
+    bind_to_monitor: 0
   - name: '5'
-    bind_to_monitor: 1
+    bind_to_monitor: 0
   - name: '6'
-    bind_to_monitor: 1
+    bind_to_monitor: 0
   - name: '7'
-    bind_to_monitor: 1
+    bind_to_monitor: 0
   - name: '8'
-    bind_to_monitor: 1
+    bind_to_monitor: 0
   - name: '9'
-    bind_to_monitor: 1
+    bind_to_monitor: 0
   - name: '10'
+    bind_to_monitor: 0
+
+  # Screen 2: Fujitsu (Right - Monitor Index 1)
+  - name: 'a'
+    bind_to_monitor: 1
+  - name: 'z'
+    bind_to_monitor: 1
+  - name: 'e'
+    bind_to_monitor: 1
+  - name: 'r'
+    bind_to_monitor: 1
+  - name: 't'
     bind_to_monitor: 1
 
-  # Screen 2: Fujitsu (Right - Monitor Index 2)
-  - name: 'a'
-    bind_to_monitor: 2
-  - name: 'z'
-    bind_to_monitor: 2
-  - name: 'e'
-    bind_to_monitor: 2
-  - name: 'r'
-    bind_to_monitor: 2
-  - name: 't'
-    bind_to_monitor: 2
-
-  # Screen 3: Deskreen Virtual Display (Left - Monitor Index 0)
+  # Screen 3: Deskreen Virtual Display (Monitor Index 2)
   - name: 'y'
-    bind_to_monitor: 0
+    bind_to_monitor: 2
   - name: 'u'
-    bind_to_monitor: 0
+    bind_to_monitor: 2
   - name: 'i'
-    bind_to_monitor: 0
+    bind_to_monitor: 2
   - name: 'o'
-    bind_to_monitor: 0
+    bind_to_monitor: 2
   - name: 'p'
-    bind_to_monitor: 0
+    bind_to_monitor: 2
 
 window_rules:
   - commands: ['ignore']

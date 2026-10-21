@@ -167,11 +167,6 @@ widgets:
         cancel:
         - ''
         - Cancel
-  glazewm_workspaces:
-    type: glazewm.workspaces.GlazewmWorkspacesWidget
-    options:
-      hide_if_offline: true
-      monitor_exclusive: false
   traffic:
     type: yasb.traffic.TrafficWidget
     options:

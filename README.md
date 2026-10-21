@@ -177,18 +177,22 @@ Access all system documentation guides directly:
 | `Alt + R` | Enter Interactive Resize Mode (Use HJKL / Arrows, `Esc`/`Enter` to exit) |
 
 ### Workspaces & Multi-Monitor Navigation
-- **Left Display `DISPLAY1` (Monitor Index 0)**: Workspaces `1` to `5`
-- **Right Display `DISPLAY8` (Monitor Index 1)**: Workspaces `6` to `10`
+- **Screen 1 `DISPLAY1` (Monitor Index 0 - Center Primary: PLAYER MSG12)**: Workspaces `1` to `10`
+- **Screen 2 `DISPLAY8` (Monitor Index 1 - Right: Fujitsu L20T-1 ECO)**: Workspaces `a`, `z`, `e`, `r`, `t`
+- **Screen 3 `DISPLAY13` (Monitor Index 2 - Virtual Display: Deskreen VDD by MTT)**: Workspaces `y`, `u`, `i`, `o`, `p`
 
 | Keybinding | Action |
 |---|---|
-| `Alt + 1..5` | Focus workspace 1-5 (Left Monitor) |
-| `Alt + 6..0` | Focus workspace 6-10 (Right Monitor, `Alt+0` = 10) |
-| `Alt + Shift + 1..0` | Move window to workspace 1-10 and focus it |
+| `Alt + 1..0` | Focus workspace 1-10 (Screen 1: Primary Center) |
+| `Alt + A / Z / E / R / T` | Focus workspace a, z, e, r, t (Screen 2: Right Fujitsu) |
+| `Alt + Y / U / I / O / P` | Focus workspace y, u, i, o, p (Screen 3: Virtual Deskreen) |
+| `Alt + Shift + 1..0` | Move window to workspace 1-10 and follow focus |
+| `Alt + Shift + A / Z / E / R / T` | Move window to workspace a, z, e, r, t and follow focus |
+| `Alt + Shift + Y / U / I / O / P` | Move window to workspace y, u, i, o, p and follow focus |
 | `Alt + PageUp` | Focus previous workspace |
 | `Alt + PageDown` | Focus next workspace |
 | `Alt + D` | Focus recent workspace |
-| `Alt + Shift + A/F/D/S` | Move workspace to Left / Right / Top / Bottom monitor |
+| `Alt + Ctrl + Shift + Arrows` | Move active workspace to target display (Left/Right/Up/Down) |
 
 ### Applications & Management
 | Keybinding | Action |
