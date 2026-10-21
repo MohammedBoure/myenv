@@ -42,13 +42,19 @@ Configures external MCP servers to extend the AI agent with external APIs, datab
 - **Rules**: Additional domain-specific or team-specific guidelines loaded contextually.
 - **Skills**: Step-by-step procedures and tool workflows loaded on-demand via progressive disclosure.
 
-### 4. Multi-Account Switcher (`agy1` .. `agy20`)
-Integrated via [`powershell/antigravity-switcher.ps1`](file:///%USERPROFILE%/Documents/myenv/powershell/antigravity-switcher.ps1) and loaded automatically by `powershell/profile.ps1`:
-- **Independent Accounts**: Switches active Google OAuth tokens in Windows Credential Manager (`gemini:antigravity`) per command slot (`agy1`, `agy2`, etc.).
-- **Shared Environment**: All slots share the central `settings.json`, session histories (`conversations/*.db`, `conversation_summaries.db`), MCP configurations, and preferences.
-- **Seamless Session Continuity**: Resume conversations seamlessly across different accounts via `agy<N> -c` if quota is exhausted.
-- **Concurrency & Parity**: Protected by `Global\AgyCredentialMutex`, supports pipeline streaming (`$input | agy1 -p -`), and propagates native exit codes via `$global:LASTEXITCODE`.
-- **Account Re-Authentication**: Use `agy-sync <N>` or `agy<N> --login` to authenticate any slot in browser.
+### 4. Multi-Instance & Account Manager (`agys`, `agy1` .. `agyN`)
+Integrated via [`powershell/antigravity-switcher.ps1`](file:///%USERPROFILE%/Documents/myenv/powershell/antigravity-switcher.ps1) and [`scripts/agys.ps1`](file:///%USERPROFILE%/Documents/myenv/scripts/agys.ps1):
+- **Arbitrary Dynamic Instances**: Run `agy1`, `agy2`, through any arbitrary number (e.g. `agy100`).
+- **On-Demand Auto-Creation**: Typing a new command slot for the first time automatically provisions an isolated virtual profile root at `%USERPROFILE%\.gemini\instances\agy<N>`.
+- **100% Isolated `.gemini` Folders**: Each instance owns its independent `.gemini\antigravity-cli\` directory with dedicated SQLite session databases (`conversations/*.db`, `conversation_summaries.db`), history (`history.jsonl`), cache, and settings (`settings.json`). Zero database locking or session mix-ups.
+- **Strict Account & Credential Separation**: Each instance maintains its distinct Google OAuth token stored in `token.json` and synchronized to Windows Credential Manager under Mutex concurrency locks.
+- **Duplicate Account Detection**: Running `agys -l` highlights if any slots mistakenly share the same Google Account and provides one-click re-authentication commands (`agy<N> login`).
+- **Central Guidelines & SSH Sharing**: Automatically links `%USERPROFILE%\.ssh` (for Git authentication) and `%USERPROFILE%\Documents\myenv\gemini` (for centralized global rules, skills, and MCP servers) into each instance.
+- **Management CLI (`agys`)**:
+  - `agys -l` / `agys list`: Displays formatted status table of all active slots, account emails, session counts, and duplicate flags.
+  - `agys login <N>` (or `agy<N> login`): Re-authenticates slot `<N>` in browser with explicit prompt to choose a separate Google account.
+  - `agys logout <N>` (or `agy<N> logout`): Clears credentials and disconnects slot `<N>`.
+  - `agys rm <N>`: Deletes slot directory and tokens completely.
 
 ---
 

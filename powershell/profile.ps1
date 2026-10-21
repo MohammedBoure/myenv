@@ -327,7 +327,7 @@ function Invoke-ArabicCli {
 Set-Alias -Name ask-ai -Value Invoke-ArabicCli -Option AllScope -ErrorAction SilentlyContinue
 Set-Alias -Name antigravity -Value agy -Option AllScope -ErrorAction SilentlyContinue
 
-# Antigravity Multi-Account Switcher (agy1..agy20)
+# Antigravity Multi-Account & Multi-Instance Switcher (agys, agy1..agyN)
 $agySwitcherPath = Join-Path $myenvDir "powershell\antigravity-switcher.ps1"
 if (Test-Path -LiteralPath $agySwitcherPath) {
     . $agySwitcherPath

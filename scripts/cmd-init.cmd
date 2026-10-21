@@ -31,6 +31,8 @@ doskey nightpad="%USERPROFILE%\Documents\myenv\scripts\nightpad\NightPad.exe" $*
 doskey notepad="%USERPROFILE%\Documents\myenv\scripts\nightpad\NightPad.exe" $*
 doskey rtl="%USERPROFILE%\Documents\myenv\tools\rtlterminal\RtlTerminal.exe" $*
 doskey rtlterminal="%USERPROFILE%\Documents\myenv\tools\rtlterminal\RtlTerminal.exe" $*
+doskey agys="%USERPROFILE%\Documents\myenv\scripts\agys.cmd" $*
+for /L %%i in (1, 1, 30) do doskey agy%%i="%USERPROFILE%\Documents\myenv\scripts\agys.cmd" run %%i $*
 
 :: Prompt Styling
 prompt $E[36m$T[0..5]$E[0m $E[32m%USERNAME%@%COMPUTERNAME%$E[0m $E[34m$P$E[0m $E[35m$+$E[0m$G 

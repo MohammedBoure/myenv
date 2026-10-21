@@ -11,6 +11,8 @@ Central automation scripts, system configuration utilities, and native binary la
 | [`nightpad.cmd`](file:///C:/Users/moham/Documents/myenv/scripts/nightpad.cmd) | Command-line wrapper to launch NightPad (`nightpad [file]`). |
 | [`quick-translate/`](file:///C:/Users/moham/Documents/myenv/scripts/quick-translate) | Published binaries for QuickTranslate screen OCR and translation. |
 | [`bar-translator/`](file:///C:/Users/moham/Documents/myenv/scripts/bar-translator) | Published binaries and CLI helpers for status bar real-time selection translator. |
+| [`agys.ps1`](file:///C:/Users/moham/Documents/myenv/scripts/agys.ps1) | CLI management engine for Antigravity multi-account and isolated instances (`agys -l`, `agys login <N>`, `agys rm <N>`). |
+| [`agys.cmd`](file:///C:/Users/moham/Documents/myenv/scripts/agys.cmd) | Batch wrapper for `agys.ps1` enabling universal CLI execution across CMD and PowerShell. |
 | [`rtlterminal.cmd`](file:///C:/Users/moham/Documents/myenv/scripts/rtlterminal.cmd) | Command-line wrapper to launch RtlTerminal (`rtlterminal [path]`). |
 | [`rtl.cmd`](file:///C:/Users/moham/Documents/myenv/scripts/rtl.cmd) | Short command-line wrapper to launch RtlTerminal (`rtl [path]`). |
 | [`setup-all.ps1`](file:///C:/Users/moham/Documents/myenv/scripts/setup-all.ps1) | Master environment installer and setup script. |
