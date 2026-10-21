@@ -62,7 +62,7 @@ RtlTerminal stores its user configuration under the Windows Registry key:
 | `FontBold` | `DWord` | `1` for Bold, `0` for Regular font weight |
 | `Theme` | `String` | Window UI theme (`Dark` or `Light`) |
 | `ColorScheme` | `String` | Color palette (`Campbell`, `Catppuccin`, `Dracula`, `Tokyo Night`, `Nord`, `One Half`) |
-| `TerminalProfile` | `String` | Default startup profile: `Command Prompt`, `PowerShell`, or `WSL` |
+| `TerminalProfile` | `String` | Default startup profile: `PowerShell` (default in myenv), `Command Prompt`, or `WSL` |
 | `HistorySize` | `DWord` | Scrollback buffer lines (`2000`, `5000`, or `10000`) |
 
 ### Automated Setup Script

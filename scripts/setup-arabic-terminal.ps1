@@ -114,8 +114,8 @@ if (-not (Test-Path $rtlRegKey)) {
 Set-ItemProperty -Path $rtlRegKey -Name "FontFamily" -Value "Cascadia Code" -Force
 Set-ItemProperty -Path $rtlRegKey -Name "FontSize" -Value "14" -Force
 Set-ItemProperty -Path $rtlRegKey -Name "Theme" -Value "Dark" -Force
-Set-ItemProperty -Path $rtlRegKey -Name "TerminalProfile" -Value "Command Prompt" -Force
-Write-Host "[+] RtlTerminal registry preferences configured (Cascadia Code, Dark theme)." -ForegroundColor Green
+Set-ItemProperty -Path $rtlRegKey -Name "TerminalProfile" -Value "PowerShell" -Force
+Write-Host "[+] RtlTerminal registry preferences configured (Cascadia Code, Dark theme, PowerShell profile)." -ForegroundColor Green
 
 # 3. Compile Native Fast Terminal Launcher (OpenTerminalHere.cs)
 Write-Host "`n[3/6] Compiling Fast Native Terminal Launcher (open-terminal-here.exe)..." -ForegroundColor Yellow
