@@ -168,7 +168,7 @@ window_rules:
   # Always tile terminals and text editors (CMD, PowerShell, Windows Terminal, NightPad)
   - commands: ['set-tiling']
     match:
-      - window_process: { regex: '(?i)^(cmd|powershell|pwsh|WindowsTerminal|conhost|NightPad)$' }
+      - window_process: { regex: '(?i)^(cmd|powershell|pwsh|WindowsTerminal|conhost|NightPad|RtlTerminal)$' }
 
   - commands: ['set-floating --centered']
     match:
@@ -332,7 +332,7 @@ keybindings:
     bindings: ['alt+ctrl+w']
 
   # Terminals (Fast C# launcher with zero window flash)
-  - commands: ['shell-exec %USERPROFILE%\Documents\myenv\scripts\open-terminal-here.exe cmd']
+  - commands: ['shell-exec %USERPROFILE%\Documents\myenv\scripts\open-terminal-here.exe rtlterminal']
     bindings: ['alt+enter']
 
   - commands: ['shell-exec %USERPROFILE%\Documents\myenv\scripts\open-terminal-here.exe powershell']

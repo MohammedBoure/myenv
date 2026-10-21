@@ -1,13 +1,13 @@
 <#
 .SYNOPSIS
-    Opens PowerShell or CMD at the current active File Explorer location or Desktop.
+    Opens RtlTerminal, PowerShell, or CMD at the current active File Explorer location or Desktop.
 .DESCRIPTION
     Traverses Z-order windows to find the active File Explorer window or Desktop,
-    extracts its exact folder path, and launches PowerShell or CMD at that location.
+    extracts its exact folder path, and launches RtlTerminal (default), PowerShell, or CMD at that location.
 #>
 param(
-    [ValidateSet('powershell', 'cmd')]
-    [string]$Terminal = 'powershell'
+    [ValidateSet('rtlterminal', 'rtl', 'powershell', 'cmd')]
+    [string]$Terminal = 'rtlterminal'
 )
 
 Add-Type -TypeDefinition @"
@@ -85,7 +85,7 @@ try {
                     $p = $w.Document.Folder.Self.Path
                     if ($p -and (Test-Path -LiteralPath $p -PathType Container)) {
                         $targetPath = $p
-                        break
+                        break;
                     }
                 }
             } catch {}
@@ -93,7 +93,14 @@ try {
     }
 } catch {}
 
-if ($Terminal -eq 'cmd') {
+if ($Terminal -eq 'rtlterminal' -or $Terminal -eq 'rtl') {
+    $rtlExe = Join-Path $PSScriptRoot "..\tools\rtlterminal\RtlTerminal.exe"
+    if (Test-Path -LiteralPath $rtlExe) {
+        Start-Process -FilePath $rtlExe -ArgumentList "`"$targetPath`"" -WorkingDirectory $targetPath
+    } else {
+        Start-Process -FilePath 'cmd.exe' -WorkingDirectory $targetPath
+    }
+} elseif ($Terminal -eq 'cmd') {
     Start-Process -FilePath 'cmd.exe' -WorkingDirectory $targetPath
 } else {
     Start-Process -FilePath 'powershell.exe' -WorkingDirectory $targetPath

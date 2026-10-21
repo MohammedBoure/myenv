@@ -9,6 +9,7 @@ Central documentation repository for the MyEnv environment architecture, core co
 | [`len.md`](file:///C:/Users/moham/Documents/myenv/docs/len.md) | Guide for ProjectLens (`len`) directory tree visualizer and remote auto-installer. |
 | [`cmd.md`](file:///C:/Users/moham/Documents/myenv/docs/cmd.md) | Guide for Command Prompt (CMD), Clink predictions, and Doskey macros. |
 | [`powershell.md`](file:///C:/Users/moham/Documents/myenv/docs/powershell.md) | Guide for PowerShell profile, Midnight Aurora theme, and terminal settings. |
+| [`rtlterminal.md`](file:///C:/Users/moham/Documents/myenv/docs/rtlterminal.md) | Guide for RtlTerminal, native Arabic & RTL text shaping, and GlazeWM terminal integration. |
 | [`glazewm.md`](file:///C:/Users/moham/Documents/myenv/docs/glazewm.md) | GlazeWM tiling window manager configuration and keybindings cheat sheet. |
 | [`yasb.md`](file:///C:/Users/moham/Documents/myenv/docs/yasb.md) | YASB status bar configuration, widgets, and sharp dark styling. |
 | [`night-pad.md`](file:///C:/Users/moham/Documents/myenv/docs/night-pad.md) | NightPad text and code editor usage, features, and keybindings. |

@@ -103,8 +103,8 @@ if (Test-Path $borderExe) {
     }
 }
 
-# 9. Configure Arabic Terminal & Windows Terminal Support
-Write-Host "`n[9/13] Configuring Arabic & Windows Terminal Support..." -ForegroundColor Cyan
+# 9. Configure Arabic Terminal (RtlTerminal) & Windows Terminal Support
+Write-Host "`n[9/13] Configuring Arabic Terminal (RtlTerminal) & UTF-8 Support..." -ForegroundColor Cyan
 & "$myenvPath\scripts\setup-arabic-terminal.ps1"
 
 # 10. Build & Register NightPad (Professional Night Mode Text Editor)

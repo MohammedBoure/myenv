@@ -11,4 +11,5 @@ Source code and binaries for internal development tools and utilities in the MyE
 | [`bar-translator/`](file:///C:/Users/moham/Documents/myenv/tools/bar-translator) | Source code for **BarTranslator**, real-time English-to-Arabic selection monitor and status bar daemon (.NET 10). |
 | [`fzf/`](file:///C:/Users/moham/Documents/myenv/tools/fzf) | Precompiled Fuzzy Finder (`fzf.exe`) binary for interactive command-line fuzzy matching. |
 | [`focused-border/`](file:///C:/Users/moham/Documents/myenv/tools/focused-border) | Native C#/Win32 active window focus border overlay (`FocusedBorder.exe`). |
+| [`rtlterminal/`](file:///C:/Users/moham/Documents/myenv/tools/rtlterminal) | Binaries and ConPTY engine for **RtlTerminal**, the native Arabic and RTL terminal emulator for Windows. |
 | [`tacky-borders/`](file:///C:/Users/moham/Documents/myenv/tools/tacky-borders) | Alternative Rust Direct3D active window border manager (`tacky-borders.exe`). |

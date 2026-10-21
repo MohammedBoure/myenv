@@ -29,12 +29,14 @@ doskey docs=powershell -NoProfile -ExecutionPolicy Bypass -File "%USERPROFILE%\D
 doskey np="%USERPROFILE%\Documents\myenv\scripts\nightpad\NightPad.exe" $*
 doskey nightpad="%USERPROFILE%\Documents\myenv\scripts\nightpad\NightPad.exe" $*
 doskey notepad="%USERPROFILE%\Documents\myenv\scripts\nightpad\NightPad.exe" $*
+doskey rtl="%USERPROFILE%\Documents\myenv\tools\rtlterminal\RtlTerminal.exe" $*
+doskey rtlterminal="%USERPROFILE%\Documents\myenv\tools\rtlterminal\RtlTerminal.exe" $*
 
 :: Prompt Styling
 prompt $E[36m$T[0..5]$E[0m $E[32m%USERNAME%@%COMPUTERNAME%$E[0m $E[34m$P$E[0m $E[35m$+$E[0m$G 
 
-:: Add Clink, Python, MyEnv Tools (fzf), Scripts & NightPad to PATH & Inject Clink for History Auto-Suggestions
-set "PATH=%USERPROFILE%\Documents\myenv\scripts;%USERPROFILE%\Documents\myenv\scripts\nightpad;%LOCALAPPDATA%\Programs\Python\Python314\Scripts;%LOCALAPPDATA%\Programs\Python\Python314;%USERPROFILE%\Documents\myenv\tools\fzf;%LOCALAPPDATA%\clink\bin;%PATH%"
+:: Add Clink, Python, MyEnv Tools (fzf, RtlTerminal), Scripts & NightPad to PATH & Inject Clink for History Auto-Suggestions
+set "PATH=%USERPROFILE%\Documents\myenv\scripts;%USERPROFILE%\Documents\myenv\tools\rtlterminal;%USERPROFILE%\Documents\myenv\scripts\nightpad;%LOCALAPPDATA%\Programs\Python\Python314\Scripts;%LOCALAPPDATA%\Programs\Python\Python314;%USERPROFILE%\Documents\myenv\tools\fzf;%LOCALAPPDATA%\clink\bin;%PATH%"
 if exist "%LOCALAPPDATA%\clink\bin\clink.exe" (
     "%LOCALAPPDATA%\clink\bin\clink.exe" inject --quiet
 ) else (

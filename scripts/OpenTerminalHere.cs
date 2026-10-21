@@ -21,7 +21,17 @@ namespace MyEnv {
         public const uint GW_HWNDNEXT = 2;
 
         static void Main(string[] args) {
-            bool isCmd = args.Length > 0 && args[0].Equals("cmd", StringComparison.OrdinalIgnoreCase);
+            string terminalMode = "rtlterminal";
+            if (args.Length > 0) {
+                string mode = args[0].Trim().ToLowerInvariant();
+                if (mode == "cmd") {
+                    terminalMode = "cmd";
+                } else if (mode == "powershell" || mode == "pwsh") {
+                    terminalMode = "powershell";
+                } else if (mode == "rtl" || mode == "rtlterminal") {
+                    terminalMode = "rtlterminal";
+                }
+            }
             string userProfile = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
             string targetPath = userProfile;
 
@@ -59,34 +69,65 @@ namespace MyEnv {
             } catch {}
 
             string terminalExe = "powershell.exe";
-            if (isCmd) {
+            string arguments = "";
+
+            if (terminalMode == "rtlterminal") {
+                string rtlPath = FindRtlTerminalPath(userProfile);
+                if (!string.IsNullOrEmpty(rtlPath)) {
+                    terminalExe = rtlPath;
+                    arguments = "\"" + targetPath + "\"";
+                } else {
+                    terminalExe = "cmd.exe";
+                }
+            } else if (terminalMode == "cmd") {
                 terminalExe = "cmd.exe";
             } else {
                 string pwshPath = FindPwshPath();
                 if (!string.IsNullOrEmpty(pwshPath)) {
                     terminalExe = pwshPath;
                 }
+                arguments = "-NoLogo";
             }
 
             ProcessStartInfo psi = new ProcessStartInfo {
                 FileName = terminalExe,
                 WorkingDirectory = targetPath,
+                Arguments = arguments,
                 UseShellExecute = true
             };
-
-            if (!isCmd) {
-                psi.Arguments = "-NoLogo";
-            }
 
             try {
                 Process.Start(psi);
             } catch {
-                ProcessStartInfo fallback = new ProcessStartInfo(isCmd ? "cmd.exe" : "powershell.exe") {
+                ProcessStartInfo fallback = new ProcessStartInfo("cmd.exe") {
                     WorkingDirectory = targetPath,
                     UseShellExecute = true
                 };
                 Process.Start(fallback);
             }
+        }
+
+        static string FindRtlTerminalPath(string userProfile) {
+            string explicitPath = Path.Combine(userProfile, @"Documents\myenv\tools\rtlterminal\RtlTerminal.exe");
+            if (File.Exists(explicitPath)) return explicitPath;
+
+            try {
+                string appDir = AppDomain.CurrentDomain.BaseDirectory;
+                string relPath = Path.GetFullPath(Path.Combine(appDir, @"..\tools\rtlterminal\RtlTerminal.exe"));
+                if (File.Exists(relPath)) return relPath;
+            } catch {}
+
+            string pathEnv = Environment.GetEnvironmentVariable("PATH") ?? "";
+            string[] dirs = pathEnv.Split(';');
+            foreach (string dir in dirs) {
+                if (string.IsNullOrWhiteSpace(dir)) continue;
+                try {
+                    string candidate = Path.Combine(dir.Trim(), "RtlTerminal.exe");
+                    if (File.Exists(candidate)) return candidate;
+                } catch {}
+            }
+
+            return null;
         }
 
         static string FindPwshPath() {

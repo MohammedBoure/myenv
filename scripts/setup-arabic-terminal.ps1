@@ -1,13 +1,15 @@
 <#
 .SYNOPSIS
-    MyEnv - Arabic Terminal & UTF-8 Setup Script
+    MyEnv - Arabic Terminal (RtlTerminal) & UTF-8 Setup Script
 .DESCRIPTION
-    Configures full Arabic text rendering and UTF-8 support across PowerShell,
-    Windows Console Host, and Windows Terminal.
+    Configures full Arabic text rendering and RTL support across Windows.
+    - Installs and configures RtlTerminal from GitHub releases or builds from source
+    - Configures shims/wrappers (rtlterminal.cmd, rtl.cmd) and PATH registration
+    - Sets RtlTerminal preferences (Cascadia Code font, Dark theme) in Registry
+    - Compiles open-terminal-here.exe for instant native terminal launching
     - Sets Windows Terminal as default console host in Windows Registry
     - Configures Cascadia Code font and DirectWrite rendering in Windows Terminal settings.json
     - Enforces UTF-8 65001 code page in PowerShell profiles and environment
-    - Compiles open-terminal-here.exe for instant native terminal launching
 #>
 
 $ErrorActionPreference = "Stop"
@@ -15,11 +17,108 @@ $myenvPath = Split-Path -Parent $PSScriptRoot
 $userProfile = $env:USERPROFILE
 
 Write-Host "======================================================" -ForegroundColor Cyan
-Write-Host "  MyEnv - Arabic Terminal & UTF-8 Configuration       " -ForegroundColor Cyan
+Write-Host "  MyEnv - Arabic Terminal (RtlTerminal) Configuration " -ForegroundColor Cyan
 Write-Host "======================================================" -ForegroundColor Cyan
 
-# 1. Compile Native Fast Terminal Launcher (OpenTerminalHere.cs)
-Write-Host "`n[1/5] Compiling Fast Native Terminal Launcher (open-terminal-here.exe)..." -ForegroundColor Yellow
+# 1. Verify or Download/Build RtlTerminal
+Write-Host "`n[1/6] Verifying RtlTerminal installation..." -ForegroundColor Yellow
+$rtlDir = Join-Path $myenvPath "tools\rtlterminal"
+$rtlExe = Join-Path $rtlDir "RtlTerminal.exe"
+
+if (-not (Test-Path $rtlExe)) {
+    if (-not (Test-Path $rtlDir)) {
+        New-Item -ItemType Directory -Path $rtlDir -Force | Out-Null
+    }
+
+    $downloadSuccess = $false
+    $latestReleaseUrl = "https://github.com/mirbehnam/RtlTerminal/releases/latest/download/RtlTerminal.exe"
+    Write-Host "Checking direct download from: $latestReleaseUrl" -ForegroundColor Gray
+
+    try {
+        $tempExe = Join-Path $env:TEMP "RtlTerminal_direct.exe"
+        Invoke-WebRequest -Uri $latestReleaseUrl -OutFile $tempExe -UseBasicParsing -MaximumRedirection 5 -TimeoutSec 15
+        if ((Test-Path $tempExe) -and ((Get-Item $tempExe).Length -gt 1000000)) {
+            Move-Item -Path $tempExe -Destination $rtlExe -Force
+            $downloadSuccess = $true
+            Write-Host "[+] Downloaded RtlTerminal.exe directly." -ForegroundColor Green
+        }
+    } catch {
+        Write-Host "Direct binary download not available or failed: $_" -ForegroundColor Yellow
+    }
+
+    if (-not $downloadSuccess) {
+        Write-Host "Checking GitHub Releases API for latest release assets..." -ForegroundColor Gray
+        try {
+            $apiRelease = Invoke-WebRequest -Uri "https://api.github.com/repos/mirbehnam/RtlTerminal/releases/latest" -UseBasicParsing | ConvertFrom-Json
+            $zipAsset = $apiRelease.assets | Where-Object { $_.name -like "*.zip" } | Select-Object -First 1
+            if ($zipAsset) {
+                Write-Host "Found portable zip asset: $($zipAsset.name)" -ForegroundColor Gray
+                $tempZip = Join-Path $env:TEMP "RtlTerminal.zip"
+                Invoke-WebRequest -Uri $zipAsset.browser_download_url -OutFile $tempZip -UseBasicParsing
+                Expand-Archive -Path $tempZip -DestinationPath $rtlDir -Force
+                Remove-Item $tempZip -Force -ErrorAction SilentlyContinue
+                if (Test-Path $rtlExe) {
+                    $downloadSuccess = $true
+                    Write-Host "[+] Extracted RtlTerminal from release zip." -ForegroundColor Green
+                }
+            }
+        } catch {
+            Write-Host "GitHub API check failed: $_" -ForegroundColor Yellow
+        }
+    }
+
+    # Fallback: Build from source if dotnet is available
+    if ((-not (Test-Path $rtlExe)) -and (Get-Command dotnet -ErrorAction SilentlyContinue) -and (Get-Command git -ErrorAction SilentlyContinue)) {
+        Write-Host "Building RtlTerminal from source via git & dotnet..." -ForegroundColor Gray
+        $buildDir = Join-Path $env:TEMP "rtlterminal-build"
+        if (Test-Path $buildDir) { Remove-Item $buildDir -Recurse -Force -ErrorAction SilentlyContinue }
+        git clone --depth 1 https://github.com/mirbehnam/RtlTerminal.git $buildDir
+        dotnet publish (Join-Path $buildDir "src\RtlTerminal\RtlTerminal.csproj") -c Release -o $rtlDir --nologo -v q
+        Remove-Item $buildDir -Recurse -Force -ErrorAction SilentlyContinue
+        if (Test-Path $rtlExe) {
+            $downloadSuccess = $true
+            Write-Host "[+] Built and published RtlTerminal from source successfully." -ForegroundColor Green
+        }
+    }
+} else {
+    Write-Host "[+] RtlTerminal.exe is already present at $rtlExe." -ForegroundColor Green
+}
+
+# 2. Register Shims/Wrappers & User PATH
+Write-Host "`n[2/6] Registering RtlTerminal shims and PATH..." -ForegroundColor Yellow
+$scriptsDir = Join-Path $myenvPath "scripts"
+$wrapperCmd = Join-Path $scriptsDir "rtlterminal.cmd"
+$wrapperShortCmd = Join-Path $scriptsDir "rtl.cmd"
+$wrapperContent = "@echo off`r`nstart `"`" `"%~dp0..\tools\rtlterminal\RtlTerminal.exe`" %*"
+Set-Content -Path $wrapperCmd -Value $wrapperContent -Encoding ASCII
+Set-Content -Path $wrapperShortCmd -Value $wrapperContent -Encoding ASCII
+
+# Add to user PATH environment variable if not already present
+$userPath = [Environment]::GetEnvironmentVariable("PATH", [EnvironmentVariableTarget]::User)
+if ($userPath -notlike "*tools\rtlterminal*") {
+    $newUserPath = "$rtlDir;$userPath"
+    [Environment]::SetEnvironmentVariable("PATH", $newUserPath, [EnvironmentVariableTarget]::User)
+    Write-Host "[+] Added $rtlDir to User PATH." -ForegroundColor Green
+} else {
+    Write-Host "[+] RtlTerminal directory already in User PATH." -ForegroundColor Green
+}
+if ($env:PATH -notlike "*tools\rtlterminal*") {
+    $env:PATH = "$rtlDir;$env:PATH"
+}
+
+# Configure default settings in HKCU:\Software\RtlTerminal
+$rtlRegKey = "HKCU:\Software\RtlTerminal"
+if (-not (Test-Path $rtlRegKey)) {
+    New-Item -Path $rtlRegKey -Force | Out-Null
+}
+Set-ItemProperty -Path $rtlRegKey -Name "FontFamily" -Value "Cascadia Code" -Force
+Set-ItemProperty -Path $rtlRegKey -Name "FontSize" -Value "14" -Force
+Set-ItemProperty -Path $rtlRegKey -Name "Theme" -Value "Dark" -Force
+Set-ItemProperty -Path $rtlRegKey -Name "TerminalProfile" -Value "Command Prompt" -Force
+Write-Host "[+] RtlTerminal registry preferences configured (Cascadia Code, Dark theme)." -ForegroundColor Green
+
+# 3. Compile Native Fast Terminal Launcher (OpenTerminalHere.cs)
+Write-Host "`n[3/6] Compiling Fast Native Terminal Launcher (open-terminal-here.exe)..." -ForegroundColor Yellow
 $cscPath = "C:\Windows\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
 if (-not (Test-Path $cscPath)) {
     $cscPath = "C:\Windows\Microsoft.NET\Framework\v4.0.30319\csc.exe"
@@ -39,19 +138,18 @@ if (Test-Path $cscPath) {
     Write-Host "[WARNING] csc.exe compiler not found at $cscPath" -ForegroundColor Red
 }
 
-# 2. Set Windows Terminal as Default Console Host in Registry
-Write-Host "`n[2/5] Setting Windows Terminal as Default Terminal Emulator in Registry..." -ForegroundColor Yellow
+# 4. Set Windows Terminal as Default Console Host in Registry
+Write-Host "`n[4/6] Setting Windows Terminal as Default Terminal Emulator in Registry..." -ForegroundColor Yellow
 $startupRegKey = "HKCU:\Console\%%Startup"
 if (-not (Test-Path $startupRegKey)) {
     New-Item -Path $startupRegKey -Force | Out-Null
 }
-# Delegation IDs for Windows Terminal
 Set-ItemProperty -Path $startupRegKey -Name "DelegationConsole" -Value "{2EACA947-7F5F-4C45-8977-646CA9E523E0}" -Force
 Set-ItemProperty -Path $startupRegKey -Name "DelegationTerminal" -Value "{E12CFF52-A866-4C77-9A90-F570A7AA2C6B}" -Force
 Write-Host "[+] Windows Terminal registered as default terminal host." -ForegroundColor Green
 
-# 3. Configure Windows Terminal settings.json (Cascadia Code + DirectWrite Rendering)
-Write-Host "`n[3/5] Configuring Windows Terminal settings.json for Arabic Rendering..." -ForegroundColor Yellow
+# 5. Configure Windows Terminal settings.json (Cascadia Code + DirectWrite Rendering)
+Write-Host "`n[5/6] Configuring Windows Terminal settings.json for Arabic Rendering..." -ForegroundColor Yellow
 $wtSettingsPaths = @(
     "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json",
     "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminalPreview_8wekyb3d8bbwe\LocalState\settings.json",
@@ -71,14 +169,12 @@ foreach ($wtPath in $wtSettingsPaths) {
                 $wtSettings.profiles | Add-Member -MemberType NoteProperty -Name "defaults" -Value ([PSCustomObject]@{})
             }
 
-            # Set Cascadia Code font for proper Arabic glyph shaping
             if ($null -eq $wtSettings.profiles.defaults.font) {
                 $wtSettings.profiles.defaults | Add-Member -MemberType NoteProperty -Name "font" -Value ([PSCustomObject]@{ face = "Cascadia Code"; size = 11 })
             } else {
                 $wtSettings.profiles.defaults.font.face = "Cascadia Code"
             }
 
-            # Enable AtlasEngine and RTL support for modern DirectWrite text shaping
             if ($null -eq $wtSettings.profiles.defaults.useAtlasEngine) {
                 $wtSettings.profiles.defaults | Add-Member -MemberType NoteProperty -Name "useAtlasEngine" -Value $true
             } else {
@@ -100,16 +196,14 @@ foreach ($wtPath in $wtSettingsPaths) {
     }
 }
 
-# 4. Apply Console Registry Settings & Cascadia Code Theme
-Write-Host "`n[4/5] Applying Cascadia Code Font & Transparency to Windows Console..." -ForegroundColor Yellow
+# 6. Apply Console Registry Settings & UTF-8 Environment
+Write-Host "`n[6/6] Applying Console Palette & UTF-8 Environment Variables..." -ForegroundColor Yellow
 $consoleThemeScript = Join-Path $myenvPath "powershell\console-theme.ps1"
 if (Test-Path $consoleThemeScript) {
     & $consoleThemeScript
     Write-Host "[+] Applied Cascadia Code console palette and registry settings." -ForegroundColor Green
 }
 
-# 5. Set User-Level Environment Variables for UTF-8
-Write-Host "`n[5/5] Configuring User Environment Variables for UTF-8..." -ForegroundColor Yellow
 $utf8EnvVars = @{
     "PYTHONIOENCODING" = "utf-8"
     "PYTHONUTF8"       = "1"
@@ -122,8 +216,8 @@ foreach ($entry in $utf8EnvVars.GetEnumerator()) {
     [Environment]::SetEnvironmentVariable($entry.Key, $entry.Value, [EnvironmentVariableTarget]::User)
     [Environment]::SetEnvironmentVariable($entry.Key, $entry.Value, [EnvironmentVariableTarget]::Process)
 }
-Write-Host "[+] User environment variables (PYTHONIOENCODING, PYTHONUTF8, LESSCHARSET, LANG, LC_ALL) configured." -ForegroundColor Green
+Write-Host "[+] User environment variables configured." -ForegroundColor Green
 
 Write-Host "`n======================================================" -ForegroundColor Green
-Write-Host "  Arabic Terminal & UTF-8 Configured Successfully!    " -ForegroundColor Green
+Write-Host "  RtlTerminal & Arabic Terminal Configured!           " -ForegroundColor Green
 Write-Host "======================================================" -ForegroundColor Green

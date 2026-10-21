@@ -60,6 +60,7 @@ $pathsToAdd = @(
     "$userProfile\AppData\Local\agy\bin",
     "$userProfile\AppData\Local\Programs\Python\Python314",
     "$userProfile\AppData\Local\Programs\Python\Python314\Scripts",
+    "$myenvDir\tools\rtlterminal",
     "$myenvDir\scripts\nightpad",
     "$myenvDir\scripts"
 )
@@ -228,6 +229,24 @@ function np {
 }
 Set-Alias -Name nightpad -Value np -Option AllScope -ErrorAction SilentlyContinue
 Set-Alias -Name notepad -Value np -Option AllScope -ErrorAction SilentlyContinue
+
+# RtlTerminal - RTL & Arabic Terminal Emulator
+function rtl {
+    $rtlExe = Join-Path $myenvDir "tools\rtlterminal\RtlTerminal.exe"
+    if (Test-Path -LiteralPath $rtlExe) {
+        $workDir = (Get-Location).Path
+        if ($args.Count -gt 0) {
+            $target = $args -join ' '
+            if (Test-Path -LiteralPath $target) {
+                $workDir = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($target)
+            }
+        }
+        Start-Process -FilePath $rtlExe -ArgumentList "`"$workDir`"" -WorkingDirectory $workDir
+    } else {
+        Write-Warning "RtlTerminal not found at $rtlExe. Run setup-arabic-terminal.ps1 to install it."
+    }
+}
+Set-Alias -Name rtlterminal -Value rtl -Option AllScope -ErrorAction SilentlyContinue
 
 # Micro Terminal Editor (Default VS Code-like Editor)
 # Git core.editor is preconfigured to 'micro' globally in ~/.gitconfig to avoid spawning git.exe on shell startup.

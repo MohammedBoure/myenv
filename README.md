@@ -13,6 +13,7 @@ Access all system documentation guides directly:
 
 | Component | Documentation Guide |
 |---|---|
+| RtlTerminal (Arabic & RTL Terminal) | [`docs/rtlterminal.md`](file:///%USERPROFILE%/Documents/myenv/docs/rtlterminal.md) |
 | Command Prompt (CMD) | [`docs/cmd.md`](file:///%USERPROFILE%/Documents/myenv/docs/cmd.md) |
 | PowerShell Environment | [`docs/powershell.md`](file:///%USERPROFILE%/Documents/myenv/docs/powershell.md) |
 | GlazeWM (Tiling Window Manager) | [`docs/glazewm.md`](file:///%USERPROFILE%/Documents/myenv/docs/glazewm.md) |

@@ -11,6 +11,8 @@ Central automation scripts, system configuration utilities, and native binary la
 | [`nightpad.cmd`](file:///C:/Users/moham/Documents/myenv/scripts/nightpad.cmd) | Command-line wrapper to launch NightPad (`nightpad [file]`). |
 | [`quick-translate/`](file:///C:/Users/moham/Documents/myenv/scripts/quick-translate) | Published binaries for QuickTranslate screen OCR and translation. |
 | [`bar-translator/`](file:///C:/Users/moham/Documents/myenv/scripts/bar-translator) | Published binaries and CLI helpers for status bar real-time selection translator. |
+| [`rtlterminal.cmd`](file:///C:/Users/moham/Documents/myenv/scripts/rtlterminal.cmd) | Command-line wrapper to launch RtlTerminal (`rtlterminal [path]`). |
+| [`rtl.cmd`](file:///C:/Users/moham/Documents/myenv/scripts/rtl.cmd) | Short command-line wrapper to launch RtlTerminal (`rtl [path]`). |
 | [`setup-all.ps1`](file:///C:/Users/moham/Documents/myenv/scripts/setup-all.ps1) | Master environment installer and setup script. |
 | [`install-packages.ps1`](file:///C:/Users/moham/Documents/myenv/scripts/install-packages.ps1) | Installs developer tools via Winget manifest. |
 | [`set-taskbar-autohide.ps1`](file:///C:/Users/moham/Documents/myenv/scripts/set-taskbar-autohide.ps1) | Enables Taskbar Auto-Hide in Windows Registry. |
@@ -22,7 +24,8 @@ Central automation scripts, system configuration utilities, and native binary la
 | [`app-launcher.ps1`](file:///C:/Users/moham/Documents/myenv/scripts/app-launcher.ps1) | WPF centered application launcher dialog (`Alt + Q`). |
 | [`cb.cmd`](file:///C:/Users/moham/Documents/myenv/scripts/cb.cmd) | Runs command, prints output to console, and copies to clipboard. |
 | [`cpf-preview.cmd`](file:///C:/Users/moham/Documents/myenv/scripts/cpf-preview.cmd) | Ultra-fast universal file and directory preview helper for `cpf` (fzf). |
-| [`open-terminal-here.exe`](file:///C:/Users/moham/Documents/myenv/scripts/open-terminal-here.exe) | Native launcher to open CMD / PowerShell at active File Explorer path. |
+| [`open-terminal-here.exe`](file:///C:/Users/moham/Documents/myenv/scripts/open-terminal-here.exe) | Native fast launcher to open RtlTerminal (default), CMD, or PowerShell at active File Explorer path. |
+| [`open-terminal-here.ps1`](file:///C:/Users/moham/Documents/myenv/scripts/open-terminal-here.ps1) | PowerShell script to launch RtlTerminal, CMD, or PowerShell at active File Explorer path. |
 | [`OpenTerminalHere.cs`](file:///C:/Users/moham/Documents/myenv/scripts/OpenTerminalHere.cs) | C# source code for `open-terminal-here.exe`. |
 | [`sudo.cmd`](file:///C:/Users/moham/Documents/myenv/scripts/sudo.cmd) | Elevates commands with Administrator privileges in CMD. |
 | [`capture-screenshot.ps1`](file:///C:/Users/moham/Documents/myenv/scripts/capture-screenshot.ps1) | Instant full screenshot capture script (`Alt + Shift + S`). |
@@ -30,7 +33,7 @@ Central automation scripts, system configuration utilities, and native binary la
 | [`toggle-window-transparency.ps1`](file:///C:/Users/moham/Documents/myenv/scripts/toggle-window-transparency.ps1) | Window transparency toggle script (`Alt + Shift + Z`). |
 | [`smart-tiling-direction.ps1`](file:///C:/Users/moham/Documents/myenv/scripts/smart-tiling-direction.ps1) | Background helper for dynamic window tiling splits. |
 | [`focused-window-border.ps1`](file:///C:/Users/moham/Documents/myenv/scripts/focused-window-border.ps1) | Legacy WPF border helper (superseded by native `tools/focused-border/FocusedBorder.exe`). |
-| [`setup-arabic-terminal.ps1`](file:///C:/Users/moham/Documents/myenv/scripts/setup-arabic-terminal.ps1) | Arabic text rendering and UTF-8 setup (registers Windows Terminal as default host, configures Cascadia Code font, DirectWrite renderer, and CodePage 65001). |
+| [`setup-arabic-terminal.ps1`](file:///C:/Users/moham/Documents/myenv/scripts/setup-arabic-terminal.ps1) | Installs and configures RtlTerminal, compiles open-terminal-here.exe, sets up wrappers/PATH, and configures Windows Terminal DirectWrite UTF-8 support. |
 | [`setup-gemini-config.ps1`](file:///C:/Users/moham/Documents/myenv/scripts/setup-gemini-config.ps1) | Sets up central directory junction linking `%USERPROFILE%\.gemini\config` to `%USERPROFILE%\Documents\myenv\gemini`. |
 | [`install-len.ps1`](file:///C:/Users/moham/Documents/myenv/scripts/install-len.ps1) | Automated installer and smart updater for **len (ProjectLens)** CLI tool from remote GitHub repository. |
 | [`install-lensbridge.ps1`](file:///C:/Users/moham/Documents/myenv/scripts/install-lensbridge.ps1) | Automated installer, repository manager (`D:\git\LensBridge`), isolated venv builder, and background service manager for **LensBridge Server**. |
