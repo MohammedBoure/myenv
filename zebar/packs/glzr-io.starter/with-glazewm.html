@@ -39,7 +39,6 @@
 
       const BAR_ITEMS = [
         { key: 'workspaces', label: 'GlazeWM Workspaces', icon: 'nf-md-view_dashboard_outline', desc: 'Workspace navigation buttons' },
-        { key: 'translator', label: 'Translator Widget', icon: 'nf-md-microphone', desc: 'Live English ➔ Arabic status bar translation' },
         { key: 'date', label: 'Clock & Date', icon: 'nf-md-clock_outline', desc: 'Center date and time display' },
         { key: 'glazewm', label: 'GlazeWM Modes & Tiling', icon: 'nf-md-swap_horizontal', desc: 'Binding modes & tiling direction switch' },
         { key: 'network', label: 'Network & Wi-Fi', icon: 'nf-md-wifi', desc: 'Network status & active SSID' },
@@ -51,7 +50,6 @@
 
       const defaultVisibility = {
         workspaces: true,
-        translator: true,
         date: true,
         glazewm: true,
         network: true,
@@ -63,11 +61,7 @@
 
       function App() {
         const [output, setOutput] = useState(providers.outputMap);
-        const [translation, setTranslation] = useState(null);
-        const [isExpanded, setIsExpanded] = useState(false);
         const [showMenu, setShowMenu] = useState(false);
-        const [menuTab, setMenuTab] = useState('translator'); // 'translator' | 'items'
-        const [isSpeaking, setIsSpeaking] = useState(false);
 
         const [visibility, setVisibility] = useState(() => {
           try {
@@ -99,155 +93,7 @@
 
         useEffect(() => {
           providers.onOutput(() => setOutput(providers.outputMap));
-
-          const fetchTranslation = async () => {
-            try {
-              const res = await fetch('http://127.0.0.1:49876/state');
-              if (res.ok) {
-                const data = await res.json();
-                setTranslation(data);
-              }
-            } catch (e) {}
-          };
-          fetchTranslation();
-          const interval = setInterval(fetchTranslation, 350);
-          return () => clearInterval(interval);
         }, []);
-
-        const isTranslationMode = translation?.translation_mode ?? false;
-        const isAutoCapture = translation?.auto_capture ?? true;
-        const isClipboardTranslate = translation?.clipboard_translate ?? true;
-        const isShowEnglish = translation?.show_english ?? true;
-        const hasData = translation?.has_data ?? false;
-
-        const toggleClipboardTranslate = async (e) => {
-          e?.stopPropagation();
-          try {
-            const res = await fetch('http://127.0.0.1:49876/toggle_clipboard_translate');
-            if (res.ok) {
-              const data = await res.json();
-              setTranslation(data);
-            }
-          } catch (e) {}
-        };
-
-        const toggleAutoCapture = async (e) => {
-          e?.stopPropagation();
-          try {
-            const res = await fetch('http://127.0.0.1:49876/toggle_auto_capture');
-            if (res.ok) {
-              const data = await res.json();
-              setTranslation(data);
-            }
-          } catch (e) {}
-        };
-
-        const toggleTranslationMode = async (e) => {
-          e?.stopPropagation();
-          try {
-            const res = await fetch('http://127.0.0.1:49876/toggle_translation_mode');
-            if (res.ok) {
-              const data = await res.json();
-              setTranslation(data);
-            }
-          } catch (e) {}
-        };
-
-        const toggleShowEnglish = async (e) => {
-          e?.stopPropagation();
-          try {
-            const res = await fetch('http://127.0.0.1:49876/toggle_show_english');
-            if (res.ok) {
-              const data = await res.json();
-              setTranslation(data);
-            }
-          } catch (e) {}
-        };
-
-        const handleCopy = async (e) => {
-          e?.stopPropagation();
-          try {
-            await fetch('http://127.0.0.1:49876/copy');
-          } catch (e) {}
-        };
-
-        const handleClear = async (e) => {
-          e?.stopPropagation();
-          try {
-            const res = await fetch('http://127.0.0.1:49876/clear');
-            if (res.ok) {
-              const data = await res.json();
-              setTranslation(data);
-            }
-          } catch (e) {}
-        };
-
-        const handlePronounce = (e, customText) => {
-          e?.stopPropagation();
-          const text = customText || translation?.english || translation?.original || (hasData ? '' : 'English');
-          if (!text) return;
-
-          setIsSpeaking(true);
-          let ended = false;
-          const markDone = () => {
-            if (!ended) {
-              ended = true;
-              setIsSpeaking(false);
-            }
-          };
-
-          try {
-            const encoded = encodeURIComponent(text);
-            const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=en&client=tw-ob&q=${encoded}`;
-            const audio = new Audio(ttsUrl);
-            audio.onended = markDone;
-            audio.onerror = () => {
-              if (window.speechSynthesis) {
-                try {
-                  window.speechSynthesis.cancel();
-                  const utter = new SpeechSynthesisUtterance(text);
-                  utter.lang = 'en-US';
-                  utter.rate = 0.95;
-                  utter.onend = markDone;
-                  utter.onerror = () => {
-                    fetch(`http://127.0.0.1:49876/speak?text=${encoded}`).finally(() => setTimeout(markDone, 1200));
-                  };
-                  window.speechSynthesis.speak(utter);
-                  return;
-                } catch (err) {}
-              }
-              fetch(`http://127.0.0.1:49876/speak?text=${encoded}`).finally(() => setTimeout(markDone, 1200));
-            };
-
-            const p = audio.play();
-            if (p && typeof p.catch === 'function') {
-              p.catch(() => {
-                if (window.speechSynthesis) {
-                  try {
-                    window.speechSynthesis.cancel();
-                    const utter = new SpeechSynthesisUtterance(text);
-                    utter.lang = 'en-US';
-                    utter.rate = 0.95;
-                    utter.onend = markDone;
-                    utter.onerror = () => {
-                      fetch(`http://127.0.0.1:49876/speak?text=${encoded}`).finally(() => setTimeout(markDone, 1200));
-                    };
-                    window.speechSynthesis.speak(utter);
-                    return;
-                  } catch (err) {}
-                }
-                fetch(`http://127.0.0.1:49876/speak?text=${encoded}`).finally(() => setTimeout(markDone, 1200));
-              });
-            }
-          } catch (err) {
-            fetch(`http://127.0.0.1:49876/speak?text=${encodeURIComponent(text)}`).finally(() => setTimeout(markDone, 1200));
-          }
-
-          // Safety timeout so speaker state always resets
-          setTimeout(() => {
-            if (!ended) markDone();
-          }, 8000);
-        };
 
         // Get icon to show for current network status.
         function getNetworkIcon(networkOutput) {
@@ -324,165 +170,49 @@
           }
         }
 
-        // Formatted display text for compact widget
-        const getCompactDisplayText = () => {
-          if (!hasData) {
-            return isShowEnglish ? "English ➔ العربية" : "العربية";
-          }
-          if (isShowEnglish) {
-            return isExpanded
-              ? (translation.display_full || translation.full)
-              : (translation.display_short || translation.short);
-          }
-          return isExpanded ? translation.full : translation.short;
-        };
-
         // Render Settings Dropdown
         const renderSettingsDropdown = () => (
           <div className="topbar-dropdown" onClick={(e) => e.stopPropagation()}>
             <div className="dropdown-header">
-              <span>Top Bar Controls & Settings</span>
+              <span>Top Bar Controls</span>
               <span style={{ fontSize: '9px', color: '#58a6ff' }}>v2.5</span>
             </div>
 
-            {/* Tab switcher */}
-            <div className="dropdown-tabs">
-              <button
-                className={`dropdown-tab-btn ${menuTab === 'translator' ? 'active' : ''}`}
-                onClick={() => setMenuTab('translator')}
-              >
-                <i className="nf nf-md-microphone"></i> Translator
-              </button>
-              <button
-                className={`dropdown-tab-btn ${menuTab === 'items' ? 'active' : ''}`}
-                onClick={() => setMenuTab('items')}
-              >
-                <i className="nf nf-md-view_list"></i> Bar Items ({Object.values(visibility).filter(Boolean).length}/{BAR_ITEMS.length})
-              </button>
-            </div>
-
-            {menuTab === 'translator' ? (
+            <div>
               <div className="dropdown-items-scroll">
-                {/* Toggle 1: Auto-Translate Copied Text (Ctrl+C / Copy) */}
-                <div className="dropdown-item" onClick={toggleClipboardTranslate} title="Toggle automatic translation upon copying text (Ctrl+C)">
-                  <div className="item-main-row">
-                    <span className="item-label">
-                      <i className="nf nf-md-clipboard_text_outline"></i>
-                      Auto-Translate Copied Text
-                    </span>
-                    <span className={`toggle-badge ${isClipboardTranslate ? 'on' : 'off'}`}>
-                      {isClipboardTranslate ? 'ON' : 'OFF'}
-                    </span>
-                  </div>
-                  <div className="item-desc">
-                    {isClipboardTranslate
-                      ? "Translates copied text automatically (Ctrl+C / Copy)"
-                      : "Manual copy translation OFF"}
-                  </div>
-                </div>
-
-                {/* Toggle 2: Auto-Select Text Capture (Mouse Selection) */}
-                <div className="dropdown-item" onClick={toggleAutoCapture} title="Toggle automatic translation upon mouse text selection">
-                  <div className="item-main-row">
-                    <span className="item-label">
-                      <i className="nf nf-md-cursor_default_click_outline"></i>
-                      Auto-Select Capture
-                    </span>
-                    <span className={`toggle-badge ${isAutoCapture ? 'on' : 'off'}`}>
-                      {isAutoCapture ? 'ON' : 'OFF'}
-                    </span>
-                  </div>
-                  <div className="item-desc">
-                    {isAutoCapture
-                      ? "Translates highlighted text automatically upon selection"
-                      : "Mouse auto-selection OFF (Copy text with Ctrl+C to translate)"}
-                  </div>
-                </div>
-
-                {/* Toggle 3: Translation Focus Mode */}
-                <div className="dropdown-item" onClick={toggleTranslationMode} title="Maximize top bar area for full sentence reading">
-                  <div className="item-main-row">
-                    <span className="item-label">
-                      <i className="nf nf-md-fullscreen"></i>
-                      Translation Focus Mode
-                    </span>
-                    <span className={`toggle-badge ${isTranslationMode ? 'on' : 'off'}`}>
-                      {isTranslationMode ? 'ON' : 'OFF'}
-                    </span>
-                  </div>
-                  <div className="item-desc">
-                    {isTranslationMode
-                      ? "Wide sentence reader active (Hides extra widgets)"
-                      : "Standard compact bar layout"}
-                  </div>
-                </div>
-
-                {/* Toggle 4: Show English Word (Bilingual) */}
-                <div className="dropdown-item" onClick={toggleShowEnglish} title="Toggle bilingual display vs Arabic translation only">
-                  <div className="item-main-row">
-                    <span className="item-label">
-                      <i className="nf nf-md-format_letter_case"></i>
-                      Show English Text
-                    </span>
-                    <span className={`toggle-badge ${isShowEnglish ? 'on' : 'off'}`}>
-                      {isShowEnglish ? 'ON' : 'OFF'}
-                    </span>
-                  </div>
-                  <div className="item-desc">
-                    {isShowEnglish ? "Displays English ➔ العربية" : "Displays Arabic translation only"}
-                  </div>
-                </div>
-
-                {/* Quick Actions */}
-                <div className="dropdown-actions">
-                  <button className="action-btn" onClick={(e) => handlePronounce(e)} title="Pronounce English text out loud">
-                    <i className={`nf ${isSpeaking ? 'nf-md-volume_high' : 'nf-md-microphone'}`}></i> Speak
-                  </button>
-                  <button className="action-btn" onClick={handleCopy} title="Copy Arabic translation to clipboard">
-                    <i className="nf nf-md-content_copy"></i> Copy
-                  </button>
-                  <button className="action-btn" onClick={handleClear} title="Clear current translation">
-                    <i className="nf nf-md-delete_outline"></i> Clear
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div>
-                <div className="dropdown-items-scroll">
-                  {BAR_ITEMS.map((item) => {
-                    const isActive = !!visibility[item.key];
-                    return (
-                      <div
-                        key={item.key}
-                        className="dropdown-item"
-                        onClick={() => toggleItemVisibility(item.key)}
-                        title={`Click to ${isActive ? 'deactivate' : 'activate'} ${item.label}`}
-                      >
-                        <div className="item-main-row">
-                          <span className="item-label">
-                            <i className={`nf ${item.icon}`}></i>
-                            {item.label}
-                          </span>
-                          <span className={`toggle-badge ${isActive ? 'on' : 'off'}`}>
-                            {isActive ? 'ON' : 'OFF'}
-                          </span>
-                        </div>
-                        <div className="item-desc">{item.desc}</div>
+                {BAR_ITEMS.map((item) => {
+                  const isActive = !!visibility[item.key];
+                  return (
+                    <div
+                      key={item.key}
+                      className="dropdown-item"
+                      onClick={() => toggleItemVisibility(item.key)}
+                      title={`Click to ${isActive ? 'deactivate' : 'activate'} ${item.label}`}
+                    >
+                      <div className="item-main-row">
+                        <span className="item-label">
+                          <i className={`nf ${item.icon}`}></i>
+                          {item.label}
+                        </span>
+                        <span className={`toggle-badge ${isActive ? 'on' : 'off'}`}>
+                          {isActive ? 'ON' : 'OFF'}
+                        </span>
                       </div>
-                    );
-                  })}
-                </div>
-
-                <div className="dropdown-actions">
-                  <button className="action-btn" onClick={() => setAllVisibility(true)} title="Show all top bar items">
-                    <i className="nf nf-md-eye"></i> Show All
-                  </button>
-                  <button className="action-btn" onClick={() => setAllVisibility(false)} title="Hide all optional top bar items">
-                    <i className="nf nf-md-eye_off"></i> Hide All
-                  </button>
-                </div>
+                      <div className="item-desc">{item.desc}</div>
+                    </div>
+                  );
+                })}
               </div>
-            )}
+
+              <div className="dropdown-actions">
+                <button className="action-btn" onClick={() => setAllVisibility(true)} title="Show all top bar items">
+                  <i className="nf nf-md-eye"></i> Show All
+                </button>
+                <button className="action-btn" onClick={() => setAllVisibility(false)} title="Hide all optional top bar items">
+                  <i className="nf nf-md-eye_off"></i> Hide All
+                </button>
+              </div>
+            </div>
           </div>
         );
 
@@ -495,7 +225,7 @@
                 e.stopPropagation();
                 setShowMenu(!showMenu);
               }}
-              title="Top Bar Controls & Translation Settings"
+              title="Top Bar Controls"
             >
               <span className="stacked-squares">
                 <span className="square"></span>
@@ -508,107 +238,7 @@
         );
 
         // ====================================================================
-        // View 1: Translation Focus Mode Layout (Maximizes Bar Space)
-        // ====================================================================
-        if (isTranslationMode) {
-          return (
-            <div className="app translation-mode-active" onClick={() => setShowMenu(false)}>
-              {/* Left: Workspaces + Three Squares Menu */}
-              <div className="left">
-                <i className="logo nf nf-fa-windows"></i>
-                {visibility.workspaces && output.glazewm && (
-                  <div className="workspaces">
-                    {output.glazewm.currentWorkspaces.map(workspace => (
-                      <button
-                        className={`workspace ${workspace.hasFocus && 'focused'} ${workspace.isDisplayed && 'displayed'}`}
-                        onClick={() =>
-                          output.glazewm.runCommand(
-                            `focus --workspace ${workspace.name}`,
-                          )
-                        }
-                        key={workspace.name}
-                      >
-                        {workspace.displayName ?? workspace.name}
-                      </button>
-                    ))}
-                  </div>
-                )}
-                {renderMenuButton()}
-              </div>
-
-              {/* External Pronounce Button (can be pressed) */}
-              <button
-                className={`focus-speak-btn ${isSpeaking ? 'speaking' : ''} ${!hasData ? 'disabled' : ''}`}
-                onClick={(e) => handlePronounce(e)}
-                disabled={!hasData || isSpeaking}
-                title={
-                  !hasData
-                    ? "Microphone (no English text to pronounce)"
-                    : isSpeaking
-                    ? "Pronouncing English text..."
-                    : `Pronounce English: "${translation.english || translation.original}"`
-                }
-              >
-                <i className={`nf ${isSpeaking ? 'nf-md-volume_high' : 'nf-md-microphone'}`}></i>
-              </button>
-
-              {/* Center: Full-Width Prominent Sentence Translation Banner (cannot be pressed) */}
-              <div
-                className="translation-focus-banner"
-                onContextMenu={(e) => {
-                  e.preventDefault();
-                  handleCopy(e);
-                }}
-                title="[Right Click to Copy Arabic Translation]"
-              >
-                {hasData ? (
-                  <div className="focus-content">
-                    {isShowEnglish && (
-                      <>
-                        <span
-                          className="focus-en"
-                          title={translation.english || translation.original}
-                        >
-                          {translation.english || translation.original}
-                        </span>
-                        <i className="nf nf-md-arrow_right_bold focus-arrow"></i>
-                      </>
-                    )}
-                    <span
-                      className="focus-ar"
-                      title={translation.arabic || translation.full}
-                    >
-                      {translation.arabic || translation.full}
-                    </span>
-                  </div>
-                ) : (
-                  <div className="focus-empty">
-                    <span>
-                      {isAutoCapture
-                        ? "Select or copy any text to translate..."
-                        : "Copy any text (Ctrl+C) to translate..."}
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {/* Right: Mode Controls */}
-              <div className="focus-controls">
-                <span className="focus-badge">Translation Mode</span>
-                <button
-                  className="exit-focus-btn"
-                  onClick={toggleTranslationMode}
-                  title="Exit Translation Mode and restore full status bar"
-                >
-                  <i className="nf nf-md-close"></i> Exit Mode
-                </button>
-              </div>
-            </div>
-          );
-        }
-
-        // ====================================================================
-        // View 2: Standard Status Bar Layout
+        // Status Bar Layout
         // ====================================================================
         return (
           <div className="app" onClick={() => setShowMenu(false)}>
@@ -634,72 +264,6 @@
 
               {/* Three Squares Menu Button beside Workspaces Navigation */}
               {renderMenuButton()}
-
-              {/* Standalone Translator Widget & External Speak Button */}
-              {visibility.translator && (
-                <div className="translator-container">
-                  {/* External Pronounce Button (can be pressed) */}
-                  <button
-                    className={`translator-speak-btn ${isSpeaking ? 'speaking' : ''} ${!hasData ? 'disabled' : ''}`}
-                    onClick={(e) => handlePronounce(e)}
-                    disabled={!hasData || isSpeaking}
-                    title={
-                      !hasData
-                        ? "Microphone (no English text to pronounce)"
-                        : isSpeaking
-                        ? "Pronouncing English text..."
-                        : `Pronounce English: "${translation.english || translation.original}"`
-                    }
-                  >
-                    <i className={`nf ${isSpeaking ? 'nf-md-volume_high' : 'nf-md-microphone'}`}></i>
-                  </button>
-
-                  {/* Text Frame (displays text, cannot be pressed / non-clickable) */}
-                  <div
-                    className="translator-text-frame"
-                    onContextMenu={(e) => {
-                      e.preventDefault();
-                      handleCopy(e);
-                    }}
-                    title={
-                      hasData
-                        ? `English: ${translation.english || translation.original}\nArabic: ${translation.arabic || translation.full}\n[Right Click: Copy Arabic]`
-                        : `Status Bar Translator\n• Auto-Copy: ${isClipboardTranslate ? 'ON' : 'OFF'}\n• Auto-Select: ${isAutoCapture ? 'ON' : 'OFF'}\n\n[Select or copy text to translate]`
-                    }
-                  >
-                    {isShowEnglish ? (
-                      <div className="translator-divided">
-                        <span
-                          className="part-en"
-                          title={hasData ? (translation.english || translation.original) : "English"}
-                        >
-                          {hasData
-                            ? (translation.english || translation.original)
-                            : "English"}
-                        </span>
-                        <span className="part-sep">➔</span>
-                        <span
-                          className="part-ar"
-                          title={hasData ? (translation.arabic || translation.full) : "العربية"}
-                        >
-                          {hasData
-                            ? (translation.arabic || translation.full)
-                            : "العربية"}
-                        </span>
-                      </div>
-                    ) : (
-                      <span
-                        className="part-ar-only"
-                        title={hasData ? (translation.arabic || translation.full) : "العربية"}
-                      >
-                        {hasData
-                          ? (translation.arabic || translation.full)
-                          : "العربية"}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              )}
             </div>
 
             {visibility.date && <div className="center">{output.date?.formatted}</div>}
