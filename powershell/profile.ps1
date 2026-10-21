@@ -207,19 +207,43 @@ if ($env:MYENV_SHOW_FASTFETCH -eq '1' -and -not [Console]::IsInputRedirected -an
     sysinfo
 }
 
-# Sudo Utility Function for PowerShell (Elevates command or opens elevated PowerShell in current working directory)
+# Sudo Utility Function for PowerShell (Elevates command or opens elevated terminal in current working directory)
 function sudo {
     $currentDir = (Get-Location).ProviderPath
+    $rtlExe = Join-Path $myenvDir "tools\rtlterminal\RtlTerminal.exe"
+    $isRtlTerminal = ($env:TERM_PROGRAM -eq 'RtlTerminal') -or 
+                     ($env:RTLTERMINAL_SESSION_ID -ne $null -and $env:RTLTERMINAL_SESSION_ID -ne '')
+    if (-not $isRtlTerminal) {
+        try {
+            $parent = Get-CimInstance Win32_Process -Filter "ProcessId = $PID" -ErrorAction SilentlyContinue
+            if ($parent -and $parent.ParentProcessId) {
+                $parentProc = Get-Process -Id $parent.ParentProcessId -ErrorAction SilentlyContinue
+                if ($parentProc -and $parentProc.ProcessName -like "*RtlTerminal*") {
+                    $isRtlTerminal = $true
+                }
+            }
+        } catch {}
+    }
+
     $shellExe = if (Get-Command pwsh.exe -ErrorAction SilentlyContinue) { "pwsh" } else { "powershell" }
+
     if ($args.Count -eq 0) {
-        Start-Process $shellExe -WorkingDirectory $currentDir -ArgumentList "-NoExit -Command Set-Location -LiteralPath '$currentDir'" -Verb RunAs
+        if ($isRtlTerminal -and (Test-Path -LiteralPath $rtlExe)) {
+            Start-Process -FilePath $rtlExe -ArgumentList "`"$currentDir`"" -WorkingDirectory $currentDir -Verb RunAs
+        } else {
+            Start-Process $shellExe -WorkingDirectory $currentDir -ArgumentList "-NoExit -Command Set-Location -LiteralPath '$currentDir'" -Verb RunAs
+        }
     } else {
         $exe = $args[0]
-        if ($args.Count -gt 1) {
-            $cmdArgs = $args[1..($args.Count - 1)] -join ' '
-            Start-Process -FilePath $exe -ArgumentList $cmdArgs -WorkingDirectory $currentDir -Verb RunAs
+        if ($isRtlTerminal -and (Test-Path -LiteralPath $rtlExe) -and ($exe -in @('powershell', 'pwsh', 'rtl', 'rtlterminal', 'powershell.exe', 'pwsh.exe', 'RtlTerminal.exe'))) {
+            Start-Process -FilePath $rtlExe -ArgumentList "`"$currentDir`"" -WorkingDirectory $currentDir -Verb RunAs
         } else {
-            Start-Process -FilePath $exe -WorkingDirectory $currentDir -Verb RunAs
+            if ($args.Count -gt 1) {
+                $cmdArgs = $args[1..($args.Count - 1)] -join ' '
+                Start-Process -FilePath $exe -ArgumentList $cmdArgs -WorkingDirectory $currentDir -Verb RunAs
+            } else {
+                Start-Process -FilePath $exe -WorkingDirectory $currentDir -Verb RunAs
+            }
         }
     }
 }

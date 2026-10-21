@@ -29,7 +29,7 @@ Central automation scripts, system configuration utilities, and native binary la
 | [`open-terminal-here.exe`](file:///C:/Users/moham/Documents/myenv/scripts/open-terminal-here.exe) | Native fast launcher to open RtlTerminal (default), CMD, or PowerShell at active File Explorer path. |
 | [`open-terminal-here.ps1`](file:///C:/Users/moham/Documents/myenv/scripts/open-terminal-here.ps1) | PowerShell script to launch RtlTerminal, CMD, or PowerShell at active File Explorer path. |
 | [`OpenTerminalHere.cs`](file:///C:/Users/moham/Documents/myenv/scripts/OpenTerminalHere.cs) | C# source code for `open-terminal-here.exe`. |
-| [`sudo.cmd`](file:///C:/Users/moham/Documents/myenv/scripts/sudo.cmd) | Elevates commands with Administrator privileges in CMD. |
+| [`sudo.cmd`](file:///C:/Users/moham/Documents/myenv/scripts/sudo.cmd) | Elevates commands with Administrator privileges in CMD (supports RtlTerminal and CMD). |
 | [`capture-screenshot.ps1`](file:///C:/Users/moham/Documents/myenv/scripts/capture-screenshot.ps1) | Instant full screenshot capture script (`Alt + Shift + S`). |
 | [`toggle-mute.ps1`](file:///C:/Users/moham/Documents/myenv/scripts/toggle-mute.ps1) | Master audio mute toggle script (`Alt + Shift + M`). |
 | [`toggle-window-transparency.ps1`](file:///C:/Users/moham/Documents/myenv/scripts/toggle-window-transparency.ps1) | Window transparency toggle script (`Alt + Shift + Z`). |
