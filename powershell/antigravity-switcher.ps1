@@ -546,7 +546,10 @@ function Format-AgyResetTime {
 }
 
 function Get-AgyUsageReport {
-    param([string]$TargetSlot)
+    param(
+        [string]$TargetSlot,
+        [switch]$Force
+    )
 
     $realUserProfile = [Environment]::GetEnvironmentVariable("USERPROFILE")
     if (-not $realUserProfile) { $realUserProfile = [Environment]::GetFolderPath([Environment+SpecialFolder]::UserProfile) }
@@ -577,8 +580,30 @@ function Get-AgyUsageReport {
         }
     }
 
+    # Load persistent disk cache
+    $cacheFile = Join-Path $tokensDir ".usage_cache.json"
+    $diskCache = @{}
+    if (Test-Path -LiteralPath $cacheFile) {
+        try {
+            $rawCache = Get-Content -LiteralPath $cacheFile -Raw -ErrorAction SilentlyContinue
+            if ($rawCache) {
+                $parsedObj = $rawCache | ConvertFrom-Json
+                if ($parsedObj) {
+                    foreach ($prop in $parsedObj.PSObject.Properties) {
+                        $diskCache[$prop.Name] = $prop.Value
+                    }
+                }
+            }
+        } catch {}
+    }
+
+    $nowEpoch = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+    $cacheTTL = 300 # 5 minutes TTL
+
     $origCred = [AgyCredVault]::Read('gemini:antigravity')
-    $tokenUsageCache = @{}
+    $sessionCache = @{}
+
+    Write-Host "`nFetching Antigravity accounts quota usage..." -ForegroundColor Cyan
 
     try {
         $tableRows = @()
@@ -598,13 +623,13 @@ function Get-AgyUsageReport {
 
             if (-not $tokenRaw -or -not $email) {
                 $tableRows += [PSCustomObject]@{
-                    Slot                  = $slot
-                    Email                 = if ($email) { $email } else { "-" }
-                    '5h (Gemini)' = "[!] Needs Login"
-                    'Reset 5h'         = "-"
+                    Slot            = $slot
+                    Email           = if ($email) { $email } else { "-" }
+                    '5h (Gemini)'   = "[!] Needs Login"
+                    'Reset 5h'       = "-"
                     'Weekly (Gemini)' = "[!] Needs Login"
-                    'Reset Wk'         = "-"
-                    'Claude/GPT'          = "-"
+                    'Reset Wk'       = "-"
+                    'Claude/GPT'    = "-"
                 }
                 continue
             }
@@ -612,13 +637,63 @@ function Get-AgyUsageReport {
             $cacheKey = $email.ToLowerInvariant()
             $parsedUsage = $null
 
-            if ($tokenUsageCache.ContainsKey($cacheKey)) {
-                $parsedUsage = $tokenUsageCache[$cacheKey]
-            } else {
-                [AgyCredVault]::Write('gemini:antigravity', 'antigravity', $tokenRaw) | Out-Null
-                $lines = & agy.exe -p "/usage" 2>&1
+            # 1. Check in-memory session cache (for slots sharing the same account in the same run)
+            if ($sessionCache.ContainsKey($cacheKey)) {
+                $parsedUsage = $sessionCache[$cacheKey]
+                Write-Host "  -> $email ($slot): Reusing quota from this session" -ForegroundColor DarkGray
+            }
+            # 2. Check persistent disk cache (unless -Force specified)
+            elseif (-not $Force -and $diskCache.ContainsKey($cacheKey)) {
+                $entry = $diskCache[$cacheKey]
+                if ($entry.Timestamp -and (($nowEpoch - $entry.Timestamp) -lt $cacheTTL)) {
+                    $parsedUsage = $entry
+                    $sessionCache[$cacheKey] = $entry
+                    $ageMin = [int][Math]::Max(0, [Math]::Round(($nowEpoch - $entry.Timestamp) / 60))
+                    Write-Host "  -> $email ($slot): Cached (${ageMin}m ago)" -ForegroundColor DarkGray
+                }
+            }
 
-                $pInfo = @{
+            if (-not $parsedUsage) {
+                Write-Host "  -> Querying $email ($slot)... " -NoNewline -ForegroundColor Gray
+
+                [AgyCredVault]::Write('gemini:antigravity', 'antigravity', $tokenRaw) | Out-Null
+
+                $stdout = ""
+                $stderr = ""
+                try {
+                    $pinfo = New-Object System.Diagnostics.ProcessStartInfo
+                    $pinfo.FileName = "agy.exe"
+                    $pinfo.Arguments = "-p `"/usage`" --print-timeout 18s"
+                    $pinfo.RedirectStandardOutput = $true
+                    $pinfo.RedirectStandardError = $true
+                    $pinfo.UseShellExecute = $false
+                    $pinfo.CreateNoWindow = $true
+                    $pinfo.WorkingDirectory = $env:TEMP
+                    $proc = [System.Diagnostics.Process]::Start($pinfo)
+                    $stdout = $proc.StandardOutput.ReadToEnd()
+                    $stderr = $proc.StandardError.ReadToEnd()
+                    $proc.WaitForExit(20000) | Out-Null
+                } catch {
+                    $stderr += "`n" + $_.Exception.Message
+                }
+
+                # Check if token was refreshed by agy and synchronize back to token files
+                $refreshedCred = [AgyCredVault]::Read('gemini:antigravity')
+                if ($refreshedCred -and ($refreshedCred.Trim() -ne $tokenRaw.Trim())) {
+                    $refEmail = Get-AgyTokenEmail $refreshedCred
+                    if ($refEmail -and ($refEmail -ieq $email)) {
+                        try {
+                            [System.IO.File]::WriteAllText($instanceToken, $refreshedCred.Trim(), [System.Text.Encoding]::UTF8)
+                            [System.IO.File]::WriteAllText($legacyToken, $refreshedCred.Trim(), [System.Text.Encoding]::UTF8)
+                        } catch {}
+                    }
+                }
+
+                $combined = ($stdout + "`n" + $stderr)
+                $lines = $combined -split "`r?`n"
+
+                $pInfo = [PSCustomObject]@{
+                    Timestamp     = $nowEpoch
                     Gemini5hPct   = $null
                     Gemini5hReset = "-"
                     GeminiWkPct   = $null
@@ -628,11 +703,15 @@ function Get-AgyUsageReport {
                     ErrorMsg      = $null
                 }
 
-                $rawText = ($lines | Out-String)
-                if ($rawText -match "Eligibility check failed|not eligible") {
+                if ($combined -match "Eligibility check failed|not eligible") {
                     $pInfo.ErrorMsg = "[!] Not Eligible"
-                } elseif ($rawText -match "login|sign in|auth") {
+                    Write-Host "Not Eligible" -ForegroundColor Yellow
+                } elseif ($combined -match "Authentication required|sign in|auth") {
                     $pInfo.ErrorMsg = "[!] Needs Login"
+                    Write-Host "Needs Login" -ForegroundColor Yellow
+                } elseif ($combined -match "timeout|timed out") {
+                    $pInfo.ErrorMsg = "[!] Timeout"
+                    Write-Host "Timeout" -ForegroundColor Yellow
                 } else {
                     foreach ($l in $lines) {
                         $parts = $l -split "`t"
@@ -659,21 +738,29 @@ function Get-AgyUsageReport {
                             }
                         }
                     }
+
+                    if ($pInfo.Gemini5hPct -ne $null -or $pInfo.GeminiWkPct -ne $null) {
+                        Write-Host "Done (5h: $($pInfo.Gemini5hPct)%, Wk: $($pInfo.GeminiWkPct)%)" -ForegroundColor Green
+                    } else {
+                        $pInfo.ErrorMsg = "[!] No Data"
+                        Write-Host "No Data" -ForegroundColor DarkGray
+                    }
                 }
 
-                $tokenUsageCache[$cacheKey] = $pInfo
+                $diskCache[$cacheKey] = $pInfo
+                $sessionCache[$cacheKey] = $pInfo
                 $parsedUsage = $pInfo
             }
 
             if ($parsedUsage.ErrorMsg) {
                 $tableRows += [PSCustomObject]@{
-                    Slot                  = $slot
-                    Email                 = $email
-                    '5h (Gemini)' = $parsedUsage.ErrorMsg
-                    'Reset 5h'         = "-"
+                    Slot            = $slot
+                    Email           = $email
+                    '5h (Gemini)'   = $parsedUsage.ErrorMsg
+                    'Reset 5h'       = "-"
                     'Weekly (Gemini)' = $parsedUsage.ErrorMsg
-                    'Reset Wk'         = "-"
-                    'Claude/GPT'          = "-"
+                    'Reset Wk'       = "-"
+                    'Claude/GPT'    = "-"
                 }
             } else {
                 $g5hStr = if ($parsedUsage.Gemini5hPct -ne $null) { Get-AgyProgressBar $parsedUsage.Gemini5hPct } else { "-" }
@@ -681,21 +768,27 @@ function Get-AgyUsageReport {
                 $cStr   = if ($parsedUsage.Claude5hPct -ne $null) { Get-AgyProgressBar $parsedUsage.Claude5hPct } else { "-" }
 
                 $tableRows += [PSCustomObject]@{
-                    Slot                  = $slot
-                    Email                 = $email
-                    '5h (Gemini)' = $g5hStr
-                    'Reset 5h'         = $parsedUsage.Gemini5hReset
+                    Slot            = $slot
+                    Email           = $email
+                    '5h (Gemini)'   = $g5hStr
+                    'Reset 5h'       = $parsedUsage.Gemini5hReset
                     'Weekly (Gemini)' = $gWkStr
-                    'Reset Wk'         = $parsedUsage.GeminiWkReset
-                    'Claude/GPT'          = $cStr
+                    'Reset Wk'       = $parsedUsage.GeminiWkReset
+                    'Claude/GPT'    = $cStr
                 }
             }
         }
+
+        # Save persistent disk cache
+        try {
+            $diskCache | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $cacheFile -Encoding UTF8 -Force
+        } catch {}
 
         Write-Host "`n==========================================================================================================" -ForegroundColor Cyan
         Write-Host "                            Antigravity Accounts Usage & Quotas (agys -u)                                " -ForegroundColor Cyan
         Write-Host "==========================================================================================================" -ForegroundColor Cyan
         $tableRows | Format-Table -AutoSize
+        Write-Host "[Tip] Data cached for 5 mins. Use 'agys usage -f' to force reload, or 'agys usage <N>' to test a single slot.`n" -ForegroundColor DarkGray
     } finally {
         if ($origCred) {
             [AgyCredVault]::Write('gemini:antigravity', 'antigravity', $origCred) | Out-Null
@@ -716,8 +809,24 @@ function global:agys {
     )
 
     if ($Usage -or $Action -in @('-u', '--usage', 'usage', '-quota', '--quota', 'quota')) {
-        $slotTarget = if ($Usage -and $Action -and $Action -ne 'list') { $Action } else { $Target }
-        Get-AgyUsageReport -TargetSlot $slotTarget
+        $forceRefresh = $false
+        $slotTarget = $null
+        $checkList = @()
+        if ($Usage) {
+            if ($Action -and $Action -ne 'list') { $checkList += $Action }
+            if ($Target) { $checkList += $Target }
+        } else {
+            if ($Target) { $checkList += $Target }
+        }
+        if ($RemainingArgs) { $checkList += $RemainingArgs }
+        foreach ($arg in $checkList) {
+            if ($arg -in @('-f', '--force', 'force', '-r', '--refresh', 'refresh')) {
+                $forceRefresh = $true
+            } elseif ($arg -match '^\d+$' -or $arg -match '^agy\d+$') {
+                $slotTarget = $arg
+            }
+        }
+        Get-AgyUsageReport -TargetSlot $slotTarget -Force:$forceRefresh
         return
     }
 
