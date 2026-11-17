@@ -3,14 +3,18 @@
     MyEnv - Arabic Terminal (RtlTerminal) & UTF-8 Setup Script
 .DESCRIPTION
     Configures full Arabic text rendering and RTL support across Windows.
-    - Installs and configures RtlTerminal from GitHub releases or builds from source
+    - Installs/updates and builds MyRtlTerminal from source (https://github.com/MohammedBoure/MyRtlTerminal.git)
     - Configures shims/wrappers (rtlterminal.cmd, rtl.cmd) and PATH registration
-    - Sets RtlTerminal preferences (Cascadia Code font, Dark theme) in Registry
+    - Sets RtlTerminal default preferences in Registry (PowerShell7 default when pwsh is installed)
     - Compiles open-terminal-here.exe for instant native terminal launching
     - Sets Windows Terminal as default console host in Windows Registry
     - Configures Cascadia Code font and DirectWrite rendering in Windows Terminal settings.json
     - Enforces UTF-8 65001 code page in PowerShell profiles and environment
 #>
+
+param(
+    [switch]$Update
+)
 
 $ErrorActionPreference = "Stop"
 $myenvPath = Split-Path -Parent $PSScriptRoot
@@ -20,68 +24,75 @@ Write-Host "======================================================" -ForegroundC
 Write-Host "  MyEnv - Arabic Terminal (RtlTerminal) Configuration " -ForegroundColor Cyan
 Write-Host "======================================================" -ForegroundColor Cyan
 
-# 1. Verify or Download/Build RtlTerminal
+# 1. Verify or Build/Update RtlTerminal from MohammedBoure/MyRtlTerminal
 Write-Host "`n[1/6] Verifying RtlTerminal installation..." -ForegroundColor Yellow
 $rtlDir = Join-Path $myenvPath "tools\rtlterminal"
 $rtlExe = Join-Path $rtlDir "RtlTerminal.exe"
+$repoUrl = "https://github.com/MohammedBoure/MyRtlTerminal.git"
 
-if (-not (Test-Path $rtlExe)) {
+if ($Update -or (-not (Test-Path $rtlExe))) {
     if (-not (Test-Path $rtlDir)) {
         New-Item -ItemType Directory -Path $rtlDir -Force | Out-Null
     }
 
-    $downloadSuccess = $false
-    $latestReleaseUrl = "https://github.com/mirbehnam/RtlTerminal/releases/latest/download/RtlTerminal.exe"
-    Write-Host "Checking direct download from: $latestReleaseUrl" -ForegroundColor Gray
+    $installSuccess = $false
+    if ((Get-Command dotnet -ErrorAction SilentlyContinue) -and (Get-Command git -ErrorAction SilentlyContinue)) {
+        Write-Host "Building MyRtlTerminal from source ($repoUrl)..." -ForegroundColor Gray
+        $buildDir = Join-Path $env:TEMP "myrtlterminal-build"
+        $stageDir = Join-Path $env:TEMP "myrtlterminal-stage"
+        if (Test-Path $buildDir) { Remove-Item $buildDir -Recurse -Force -ErrorAction SilentlyContinue }
+        if (Test-Path $stageDir) { Remove-Item $stageDir -Recurse -Force -ErrorAction SilentlyContinue }
 
-    try {
-        $tempExe = Join-Path $env:TEMP "RtlTerminal_direct.exe"
-        Invoke-WebRequest -Uri $latestReleaseUrl -OutFile $tempExe -UseBasicParsing -MaximumRedirection 5 -TimeoutSec 15
-        if ((Test-Path $tempExe) -and ((Get-Item $tempExe).Length -gt 1000000)) {
-            Move-Item -Path $tempExe -Destination $rtlExe -Force
-            $downloadSuccess = $true
-            Write-Host "[+] Downloaded RtlTerminal.exe directly." -ForegroundColor Green
+        git clone --depth 1 $repoUrl $buildDir
+        if ($LASTEXITCODE -ne 0) {
+            throw "Failed to clone $repoUrl"
         }
-    } catch {
-        Write-Host "Direct binary download not available or failed: $_" -ForegroundColor Yellow
+
+        dotnet publish (Join-Path $buildDir "src\RtlTerminal\RtlTerminal.csproj") `
+            -c Release `
+            -r win-x64 `
+            --no-self-contained `
+            -p:EnableCliTestLab=false `
+            -o $stageDir `
+            --nologo -v q
+
+        if (($LASTEXITCODE -eq 0) -and (Test-Path (Join-Path $stageDir "RtlTerminal.exe"))) {
+            Get-ChildItem -Path $rtlDir -Force | Where-Object { $_.Name -ne "README.md" } | Remove-Item -Recurse -Force
+            Copy-Item -Path (Join-Path $stageDir "*") -Destination $rtlDir -Recurse -Force
+            $installSuccess = $true
+            Write-Host "[+] Built and deployed MyRtlTerminal from source successfully." -ForegroundColor Green
+        }
+
+        Remove-Item $buildDir -Recurse -Force -ErrorAction SilentlyContinue
+        Remove-Item $stageDir -Recurse -Force -ErrorAction SilentlyContinue
     }
 
-    if (-not $downloadSuccess) {
-        Write-Host "Checking GitHub Releases API for latest release assets..." -ForegroundColor Gray
+    if (-not $installSuccess) {
+        Write-Host "Checking GitHub Releases API for MohammedBoure/MyRtlTerminal..." -ForegroundColor Gray
         try {
-            $apiRelease = Invoke-WebRequest -Uri "https://api.github.com/repos/mirbehnam/RtlTerminal/releases/latest" -UseBasicParsing | ConvertFrom-Json
+            $apiRelease = Invoke-WebRequest -Uri "https://api.github.com/repos/MohammedBoure/MyRtlTerminal/releases/latest" -UseBasicParsing | ConvertFrom-Json
             $zipAsset = $apiRelease.assets | Where-Object { $_.name -like "*.zip" } | Select-Object -First 1
             if ($zipAsset) {
-                Write-Host "Found portable zip asset: $($zipAsset.name)" -ForegroundColor Gray
                 $tempZip = Join-Path $env:TEMP "RtlTerminal.zip"
                 Invoke-WebRequest -Uri $zipAsset.browser_download_url -OutFile $tempZip -UseBasicParsing
+                Get-ChildItem -Path $rtlDir -Force | Where-Object { $_.Name -ne "README.md" } | Remove-Item -Recurse -Force
                 Expand-Archive -Path $tempZip -DestinationPath $rtlDir -Force
                 Remove-Item $tempZip -Force -ErrorAction SilentlyContinue
                 if (Test-Path $rtlExe) {
-                    $downloadSuccess = $true
+                    $installSuccess = $true
                     Write-Host "[+] Extracted RtlTerminal from release zip." -ForegroundColor Green
                 }
             }
         } catch {
-            Write-Host "GitHub API check failed: $_" -ForegroundColor Yellow
+            Write-Host "GitHub release fallback failed: $_" -ForegroundColor Yellow
         }
     }
 
-    # Fallback: Build from source if dotnet is available
-    if ((-not (Test-Path $rtlExe)) -and (Get-Command dotnet -ErrorAction SilentlyContinue) -and (Get-Command git -ErrorAction SilentlyContinue)) {
-        Write-Host "Building RtlTerminal from source via git & dotnet..." -ForegroundColor Gray
-        $buildDir = Join-Path $env:TEMP "rtlterminal-build"
-        if (Test-Path $buildDir) { Remove-Item $buildDir -Recurse -Force -ErrorAction SilentlyContinue }
-        git clone --depth 1 https://github.com/mirbehnam/RtlTerminal.git $buildDir
-        dotnet publish (Join-Path $buildDir "src\RtlTerminal\RtlTerminal.csproj") -c Release -o $rtlDir --nologo -v q
-        Remove-Item $buildDir -Recurse -Force -ErrorAction SilentlyContinue
-        if (Test-Path $rtlExe) {
-            $downloadSuccess = $true
-            Write-Host "[+] Built and published RtlTerminal from source successfully." -ForegroundColor Green
-        }
+    if (-not $installSuccess) {
+        Write-Host "[WARNING] Could not install or build MyRtlTerminal. Ensure git and .NET 10 SDK are installed." -ForegroundColor Red
     }
 } else {
-    Write-Host "[+] RtlTerminal.exe is already present at $rtlExe." -ForegroundColor Green
+    Write-Host "[+] RtlTerminal.exe is already present at $rtlExe (pass -Update to rebuild from source)." -ForegroundColor Green
 }
 
 # 2. Register Shims/Wrappers & User PATH
@@ -106,16 +117,26 @@ if ($env:PATH -notlike "*tools\rtlterminal*") {
     $env:PATH = "$rtlDir;$env:PATH"
 }
 
-# Configure default settings in HKCU:\Software\RtlTerminal
+# Configure default settings in HKCU:\Software\RtlTerminal if not already set
 $rtlRegKey = "HKCU:\Software\RtlTerminal"
 if (-not (Test-Path $rtlRegKey)) {
     New-Item -Path $rtlRegKey -Force | Out-Null
 }
-Set-ItemProperty -Path $rtlRegKey -Name "FontFamily" -Value "Cascadia Code" -Force
-Set-ItemProperty -Path $rtlRegKey -Name "FontSize" -Value "14" -Force
-Set-ItemProperty -Path $rtlRegKey -Name "Theme" -Value "Dark" -Force
-Set-ItemProperty -Path $rtlRegKey -Name "TerminalProfile" -Value "PowerShell" -Force
-Write-Host "[+] RtlTerminal registry preferences configured (Cascadia Code, Dark theme, PowerShell profile)." -ForegroundColor Green
+$defaultProfile = if (Get-Command pwsh -ErrorAction SilentlyContinue) { "PowerShell7" } else { "PowerShell" }
+$rtlDefaults = @{
+    "FontFamily"      = "Cascadia Code"
+    "FontSize"        = "14"
+    "Theme"           = "Dark"
+    "TerminalProfile" = $defaultProfile
+}
+$existingProps = Get-ItemProperty -Path $rtlRegKey -ErrorAction SilentlyContinue
+foreach ($entry in $rtlDefaults.GetEnumerator()) {
+    $currentVal = if ($existingProps) { $existingProps.PSObject.Properties[$entry.Key].Value } else { $null }
+    if ([string]::IsNullOrWhiteSpace([string]$currentVal)) {
+        Set-ItemProperty -Path $rtlRegKey -Name $entry.Key -Value $entry.Value -Force
+    }
+}
+Write-Host "[+] RtlTerminal registry preferences verified (Default profile: $defaultProfile)." -ForegroundColor Green
 
 # 3. Compile Native Fast Terminal Launcher (OpenTerminalHere.cs)
 Write-Host "`n[3/6] Compiling Fast Native Terminal Launcher (open-terminal-here.exe)..." -ForegroundColor Yellow

@@ -1,15 +1,16 @@
 # RtlTerminal (Arabic & RTL Windows Terminal) Documentation
 
-**RtlTerminal** is an open-source, high-performance terminal emulator designed for Windows with native Right-to-Left (RTL) text shaping and bidirectional rendering for Arabic, Persian, and mixed Unicode command-line workflows.
+**RtlTerminal** (built from [`MohammedBoure/MyRtlTerminal`](https://github.com/MohammedBoure/MyRtlTerminal.git)) is a customized .NET 10 WPF terminal emulator for Windows with native Right-to-Left (RTL) text shaping and bidirectional rendering for Arabic, Persian, and mixed Unicode command-line workflows, tailored for borderless tiling in GlazeWM.
 
 ---
 
 ## 🌟 Overview & Architecture
 
 In `myenv`, **RtlTerminal** is configured as the primary terminal emulator bound to `Alt + Enter`:
+- **Source Repository**: [`MohammedBoure/MyRtlTerminal`](https://github.com/MohammedBoure/MyRtlTerminal)
 - **Location**: [`tools/rtlterminal/RtlTerminal.exe`](file:///C:/Users/moham/Documents/myenv/tools/rtlterminal/RtlTerminal.exe)
-- **Engine**: Windows ConPTY API + custom WPF hardware-accelerated cell renderer.
-- **Profiles Supported**: Command Prompt (`cmd.exe`), PowerShell (`powershell.exe` / `pwsh`), and WSL distributions.
+- **Engine**: Windows ConPTY API + custom .NET 10 WPF hardware-accelerated cell renderer (with top title, tab, and menu bars removed for clean borderless tiling, prelaunched initial shell, and no startup banner delay).
+- **Profiles Supported**: PowerShell 7 (`pwsh`, default when installed), Windows PowerShell (`powershell.exe`), Command Prompt (`cmd.exe`), Git Bash, and WSL distributions.
 - **GlazeWM Integration**: Bound to `Alt + Enter` via the fast native launcher [`scripts/open-terminal-here.exe`](file:///C:/Users/moham/Documents/myenv/scripts/open-terminal-here.exe) with automatic tiling matching rules.
 
 ---
@@ -62,14 +63,18 @@ RtlTerminal stores its user configuration under the Windows Registry key:
 | `FontBold` | `DWord` | `1` for Bold, `0` for Regular font weight |
 | `Theme` | `String` | Window UI theme (`Dark` or `Light`) |
 | `ColorScheme` | `String` | Color palette (`Campbell`, `Catppuccin`, `Dracula`, `Tokyo Night`, `Nord`, `One Half`) |
-| `TerminalProfile` | `String` | Default startup profile: `PowerShell` (default in myenv), `Command Prompt`, or `WSL` |
+| `TerminalProfile` | `String` | Default startup profile: `PowerShell7` (default in myenv when `pwsh` is available), `PowerShell`, `CommandPrompt`, `GitBash`, or `Wsl` |
 | `HistorySize` | `DWord` | Scrollback buffer lines (`2000`, `5000`, or `10000`) |
 
 ### Automated Setup Script
 
-To reinstall, update, or configure RtlTerminal settings and system bindings at any time, run:
+To configure RtlTerminal settings and system bindings at any time, run:
 ```powershell
 & "$env:USERPROFILE\Documents\myenv\scripts\setup-arabic-terminal.ps1"
+```
+To rebuild and update `tools/rtlterminal` from `MohammedBoure/MyRtlTerminal`, pass `-Update`:
+```powershell
+& "$env:USERPROFILE\Documents\myenv\scripts\setup-arabic-terminal.ps1" -Update
 ```
 Or execute the master environment setup:
 ```powershell
