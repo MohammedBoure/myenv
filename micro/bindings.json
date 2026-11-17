@@ -3,6 +3,7 @@
     "Alt-Shift-Down": "DuplicateLine",
     "Alt-Shift-Up": "DuplicateLine",
     "Alt-Up": "MoveLinesUp",
+    "Alt-v": "Paste",
     "Alt-d": "command:definition",
     "Alt-f": "command:format",
     "Alt-k": "command:hover",

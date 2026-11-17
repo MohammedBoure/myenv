@@ -519,6 +519,9 @@ local function try_open_at_y(y)
 	elseif y > 2 and not scanlist_is_empty() then
 		-- -2 to conform to our scanlist "missing" first 3 indicies
 		y = y - 2
+		if scanlist[y] == nil then
+			return
+		end
 		if scanlist[y].dirmsg == "+" then
 			uncompress_target(y)
 		elseif scanlist[y].dirmsg == "-" then
@@ -1113,8 +1116,17 @@ end
 function preMousePress(view, event)
 	if view == tree_view then
 		local x, y = event:Position()
-		-- Fixes the y because softwrap messes with it
-		local new_x, new_y = tree_view:GetMouseClickLocation(x, y)
+		-- Resolve visual coordinates to buffer line index (compatible with micro >= 2.0.10 and legacy API)
+		local new_y
+		local ok, loc = pcall(function() return tree_view:LocFromVisual(buffer.Loc(x, y)) end)
+		if ok and loc ~= nil then
+			new_y = loc.Y
+		elseif tree_view.GetMouseClickLocation ~= nil then
+			local _, legacy_y = tree_view:GetMouseClickLocation(x, y)
+			new_y = legacy_y
+		else
+			new_y = y
+		end
 		-- Try to open whatever is at the click's y index
 		-- Will go into/back dirs based on what's clicked, nothing gets expanded
 		try_open_at_y(new_y)
