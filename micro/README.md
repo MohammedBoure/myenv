@@ -8,7 +8,7 @@ This directory contains the central configuration, keybindings, and custom color
 
 | File / Folder | Purpose |
 |---|---|
-| [`settings.json`](file:///C:/Users/moham/Documents/myenv/micro/settings.json) | Central settings for `micro`. Configures line (I-beam) cursor, full mouse interaction, system clipboard sync, 4-space tab indentation, word & soft wrapping, bracket auto-close, LSP autocompletion, diagnostic error recognition, and eye-friendly dark themes. |
+| [`settings.json`](file:///C:/Users/moham/Documents/myenv/micro/settings.json) | Central settings for `micro`. Configures full mouse interaction, system clipboard sync, literal code pasting (`smartpaste: false`), fast dirty tracking (`fastdirty: true`), 4-space tab indentation, bracket auto-close, eye-friendly dark themes (`soft-dark`), and disables `softwrap`/`wordwrap` and `lsp` by default to keep large-file editing lag-free. |
 | [`bindings.json`](file:///C:/Users/moham/Documents/myenv/micro/bindings.json) | Keybinding overrides matching VS Code shortcuts: standard copy/paste/cut/undo/redo/save/find, `Ctrl+D` for multi-cursor next occurrence, `Ctrl+B` for file tree toggle, `Ctrl+Space` for LSP autocomplete, `Alt+K` for hover, `Alt+D` for definition, `Alt+F` for formatting, `Shift+Alt+Up/Down` for line duplication, and `Alt+Up/Down` for line moving. |
 | [`init.lua`](file:///C:/Users/moham/Documents/myenv/micro/init.lua) | Micro Lua startup script that emits DECSCUSR `\027[6 q` on initialization and buffer changes to enforce a vertical line / I-beam cursor across all terminal sessions. |
 | [`colorschemes/`](file:///C:/Users/moham/Documents/myenv/micro/colorschemes) | Directory containing eye-friendly custom dark themes with solid non-transparent backgrounds. |
